@@ -1,5 +1,4 @@
 import { AvatarIcon } from "@radix-ui/react-icons";
-import { Camera } from "lucide-react"
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import {
@@ -16,6 +15,7 @@ import React from "react";
 import { Database } from "@/types/supabase";
 import ClientSideCredits from "./realtime/ClientSideCredits";
 import { ThemeToggle } from "./homepage/theme-toggle";
+import Image from "next/image";
 
 export const dynamic = "force-dynamic";
 
@@ -40,10 +40,16 @@ export default async function Navbar() {
     <header className="sticky top-0 z-[100] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-          <Camera className="h-5 w-5 text-primary" />
+          <Image
+            src="/logo.png"
+            alt="AI Maven Logo"
+            width={28}
+            height={28}
+            className="rounded-full"
+          />
           <span>AI Maven</span>
         </Link>
-        
+
         {user && (
           <nav className="hidden md:flex gap-6">
             <Link href="/overview" className="text-sm font-medium hover:text-primary transition-colors">
@@ -64,7 +70,7 @@ export default async function Navbar() {
 
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          
+
           {!user && (
             <>
               <Link href="/login" className="hidden sm:block text-sm font-medium hover:text-primary transition-colors">

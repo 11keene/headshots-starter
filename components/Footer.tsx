@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Camera } from "lucide-react";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -8,8 +8,14 @@ export default function Footer() {
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-              <Camera className="h-5 w-5 text-primary" />
-              <span>Headshots AI</span>
+              <Image
+                src="/logo.png"
+                alt="AI Maven Logo"
+                width={24}
+                height={24}
+                className="rounded-full"
+              />
+              <span>AI Maven</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Professional AI-generated headshots for your online presence.
@@ -92,7 +98,7 @@ export default function Footer() {
         </div>
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t pt-8 md:flex-row">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Headshots AI. All rights reserved.
+            © {new Date().getFullYear()} AI Maven. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <p className="text-sm text-muted-foreground">
@@ -137,3 +143,4 @@ export default function Footer() {
     </footer>
   );
 }
+
