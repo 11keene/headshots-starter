@@ -3,9 +3,9 @@ import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { Suspense } from "react";
-import AnnouncementBar from "@/components/homepage/announcement-bar"
+import AnnouncementBar from "@/components/homepage/announcement-bar";
 import { Analytics } from "@vercel/analytics/react";
-import { ThemeProvider } from "@/components/homepage/theme-provider"
+import { ThemeProvider } from "@/components/homepage/theme-provider";
 import { validateConfig } from "@/lib/config";
 
 // Validate configuration at app initialization
@@ -18,7 +18,7 @@ export const viewport = {
 };
 
 export const metadata = {
-  title: "Headshots AI",
+  title: "AI Maven",
   description: "Generate awesome headshots in minutes using AI",
 };
 
@@ -29,10 +29,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.png" type="image/png" />
+        {/* You can use .ico instead if that's your file format */}
+        {/* <link rel="icon" href="/favicon.ico" type="image/x-icon" /> */}
+      </head>
       <body className="min-h-screen flex flex-col bg-background">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AnnouncementBar />
-          {/* Remove the section wrapper as it's interfering with sticky positioning */}
           <Suspense
             fallback={
               <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -42,9 +46,7 @@ export default function RootLayout({
           >
             <Navbar />
           </Suspense>
-          <main className="flex-1">
-            {children}
-          </main>
+          <main className="flex-1">{children}</main>
           <Footer />
           <Toaster />
           <Analytics />
@@ -53,3 +55,4 @@ export default function RootLayout({
     </html>
   );
 }
+
