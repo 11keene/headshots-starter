@@ -52,7 +52,7 @@ export const Login = ({
         title: "Something went wrong",
         variant: "destructive",
         description:
-          "Please try again, if the problem persists, contact us at hello@tryleap.ai",
+          "Please try again, if the problem persists, contact us at support@aimavenstudio.com",
         duration: 5000,
       });
     }
@@ -66,17 +66,17 @@ export const Login = ({
   const protocol = host?.includes("localhost") ? "http" : "https";
   const redirectUrl = `${protocol}://${host}/auth/callback`;
 
-  console.log({ redirectUrl });
-
   const signInWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: redirectUrl,
       },
     });
 
-    console.log(data, error);
+    if (error) {
+      console.error("Google login error:", error.message);
+    }
   };
 
   const signInWithMagicLink = async (email: string) => {
@@ -106,15 +106,17 @@ export const Login = ({
           <p className="text-xs opacity-60">
             Sign in or create an account to get started.
           </p>
-          {/* <Button
+
+          <Button
             onClick={signInWithGoogle}
             variant={"outline"}
-            className="font-semibold"
+            className="font-semibold w-full flex items-center gap-2 justify-center"
           >
             <AiOutlineGoogle size={20} />
             Continue with Google
           </Button>
-          <OR /> */}
+
+          <OR />
 
           <form
             onSubmit={handleSubmit(onSubmit)}
