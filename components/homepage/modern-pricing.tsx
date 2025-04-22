@@ -22,11 +22,11 @@ interface PricingTier {
 export default function ModernPricing() {
   const tiers: PricingTier[] = [
     {
-      title: "Starter",
+      title: "Basic",
       price: "25 Credits",
       description: "First-time users trying the service.",
       features: ["4 AI Headshots", "1 credit per image", "Instant delivery"],
-      buttonText: "Choose Starter",
+      buttonText: "Choose Basic",
     },
     {
       title: "Standard",
