@@ -4,7 +4,6 @@ import { cookies } from "next/headers";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -29,12 +28,6 @@ export default async function Navbar() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const { data: credits } = await supabase
-    .from("credits")
-    .select("*")
-    .eq("user_id", user?.id ?? "")
-    .single();
 
   return (
     <header className="sticky top-0 z-[100] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -84,9 +77,7 @@ export default async function Navbar() {
 
           {user && (
             <div className="flex items-center gap-4">
-              {stripeIsConfigured && (
-                <ClientSideCredits creditsRow={credits ? credits : null} />
-              )}
+              {stripeIsConfigured && <ClientSideCredits />}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8 p-0">

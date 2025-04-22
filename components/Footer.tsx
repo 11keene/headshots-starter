@@ -102,40 +102,8 @@ export default function Footer() {
           </p>
           <div className="flex items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              Open-source powered by{" "}
-              <Link
-                href="https://www.astria.ai/"
-                className="text-primary hover:underline"
-                target="_blank"
-              >
-                Astria
-              </Link>
-              ,{" "}
-              <Link
-                href="https://supabase.com/"
-                className="text-primary hover:underline"
-                target="_blank"
-              >
-                Supabase
-              </Link>
-              , and{" "}
-              {process.env.DEPLOYMENT_PROVIDER === "replit" ? (
-                <Link
-                  href="https://replit.com/@leap-ai/Headshot-AI-Professional-Headshots-with-Leap-AI"
-                  className="text-primary hover:underline"
-                  target="_blank"
-                >
-                  Replit
-                </Link>
-              ) : (
-                <Link
-                  href="https://vercel.com/"
-                  className="text-primary hover:underline"
-                  target="_blank"
-                >
-                  Vercel
-                </Link>
-              )}
+              
+              
             </p>
           </div>
         </div>
