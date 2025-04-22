@@ -1,13 +1,16 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import type React from "react"
-import { Check } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import Link from "next/link";
+import type React from "react";
+import { Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-// Define the brand's red color
-const brandRed = "#E11D48"; // Example of brand red, adjust as necessary
+interface PricingFeature {
+  icon: React.ReactNode;
+  text: string;
+  tooltip?: string;
+}
 
 interface PricingTier {
   title: string;
@@ -22,11 +25,11 @@ interface PricingTier {
 export default function ModernPricing() {
   const tiers: PricingTier[] = [
     {
-      title: "Basic",
+      title: "Starter",
       price: "25 Credits",
       description: "First-time users trying the service.",
       features: ["4 AI Headshots", "1 credit per image", "Instant delivery"],
-      buttonText: "Choose Basic",
+      buttonText: "Choose Starter",
     },
     {
       title: "Standard",
@@ -51,26 +54,26 @@ export default function ModernPricing() {
       features: ["50 AI Headshots", "Best for bulk purchases", "Unlimited edits"],
       buttonText: "Choose Studio",
     },
-  ]
+  ];
 
   return (
     <div className="mx-auto max-w-4xl px-4">
       <div className="flex flex-col items-center justify-center space-y-8">
         {/* Pricing Cards */}
-        <div className="mt-8 grid gap-6 md:grid-cols-4 lg:gap-8">
+        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           {tiers.map((tier, index) => (
             <div
               key={index}
               className={cn(
                 "pricing-card",
                 tier.popular && "pricing-card-popular",
-                "flex flex-col p-6 bg-white border rounded-lg shadow-md h-[500px] w-[215px] flex-grow hover:bg-[#f7f7f7] hover:scale-105 transition-all duration-300" // Adjusted hover effect on the card
+                "flex flex-col p-6 bg-white border rounded-lg shadow-md transition-all ease-in-out", // Transition for animation
+                "h-[350px] sm:h-[400px] md:h-[500px] w-full md:w-[215px] flex-grow", // Shortened height for mobile and standard height for desktop
+                "hover:scale-105 hover:shadow-xl" // Hover effect for all screen sizes
               )}
             >
               {tier.popular && (
-                <div className="pricing-badge">
-                  Most Popular
-                </div>
+                <div className="pricing-badge">Most Popular</div>
               )}
 
               {tier.bestValue && (
@@ -111,13 +114,14 @@ export default function ModernPricing() {
                 ))}
               </ul>
 
-              {/* Add this div to align and position the "Choose" button correctly */}
               <div className="mt-auto">
                 <Link href="/login" className="block w-full" aria-label={`Select ${tier.title} plan`}>
                   <Button
                     className={cn(
                       "w-full",
-                      "bg-[#E11D48] hover:bg-[#B91C4A] text-white transition-colors"
+                      tier.popular
+                        ? "bg-primary hover:bg-primary/90 text-primary-foreground"
+                        : "bg-secondary hover:bg-secondary/80"
                     )}
                     aria-label={`Select ${tier.title} plan`}
                   >
@@ -140,5 +144,6 @@ export default function ModernPricing() {
         </p>
       </div>
     </div>
-  )
+  );
 }
+
