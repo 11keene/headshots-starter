@@ -1,17 +1,15 @@
-// app/components/realtime/ClientSideCredits.tsx
-
-import React from "react";
-
-// Define the type for the prop
 interface ClientSideCreditsProps {
-  creditsRow: { credits: number } | null; // Allow creditsRow to be null
+  creditsRow: { credits: number } | null; // Accepts either an object or null
 }
 
-const ClientSideCredits: React.FC<ClientSideCreditsProps> = ({ creditsRow }) => {
+const ClientSideCredits = ({ creditsRow }: ClientSideCreditsProps) => {
   return (
     <div>
-      <h3>Your Credits</h3>
-      <p>You have {creditsRow ? creditsRow.credits : 0} credits remaining.</p> {/* If creditsRow is null, show 0 */}
+      {creditsRow ? (
+        <span>{creditsRow.credits} Credits</span>
+      ) : (
+        <span>No credits available</span>
+      )}
     </div>
   );
 };
