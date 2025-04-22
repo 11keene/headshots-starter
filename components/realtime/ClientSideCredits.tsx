@@ -1,50 +1,19 @@
-"use client";
+// app/components/realtime/ClientSideCredits.tsx
 
-import { Database } from "@/types/supabase";
-import { creditsRow } from "@/types/utils";
-import { createClient } from "@supabase/supabase-js";
-import { useEffect, useState } from "react";
+import React from "react";
 
-export const revalidate = 0;
+// Define the type for the prop
+interface ClientSideCreditsProps {
+  creditsRow: { credits: number } | null; // Allow creditsRow to be null
+}
 
-type ClientSideCreditsProps = {
-  creditsRow: creditsRow | null;
+const ClientSideCredits: React.FC<ClientSideCreditsProps> = ({ creditsRow }) => {
+  return (
+    <div>
+      <h3>Your Credits</h3>
+      <p>You have {creditsRow ? creditsRow.credits : 0} credits remaining.</p> {/* If creditsRow is null, show 0 */}
+    </div>
+  );
 };
 
-export default function ClientSideCredits({
-  creditsRow,
-}: ClientSideCreditsProps) {
-
-  if (!creditsRow) return (
-    <p>Credits: 0</p>
-  )
-
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  );
-  const [credits, setCredits] = useState<creditsRow>(creditsRow);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel("realtime credits")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "credits" },
-        (payload: { new: creditsRow }) => {
-          setCredits(payload.new);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase, credits, setCredits]);
-
-  if (!credits) return null;
-
-  return (
-    <p>Credits: {credits.credits}</p>
-  );
-}
+export default ClientSideCredits;
