@@ -9,8 +9,6 @@ export const dynamic = "force-dynamic";
 const astriaApiKey = process.env.ASTRIA_API_KEY;
 const astriaTestModeIsOn = process.env.ASTRIA_TEST_MODE === "true";
 const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
-// For local development, recommend using an Ngrok tunnel for the domain
-
 const appWebhookSecret = process.env.APP_WEBHOOK_SECRET;
 const stripeIsConfigured = process.env.NEXT_PUBLIC_STRIPE_IS_ENABLED === "true";
 
@@ -33,138 +31,70 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json(
-      {
-        message: "Unauthorized",
-      },
-      { status: 401 }
-    );
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   if (!astriaApiKey) {
     return NextResponse.json(
-      {
-        message:
-          "Missing API Key: Add your Astria API Key to generate headshots",
-      },
-      {
-        status: 500,
-      }
+      { message: "Missing API Key: Add your Astria API Key to generate headshots" },
+      { status: 500 }
     );
   }
 
   if (images?.length < 4) {
-    return NextResponse.json(
-      {
-        message: "Upload at least 4 sample images",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Upload at least 4 sample images" }, { status: 500 });
   }
-  let _credits = null;
 
-  console.log({ stripeIsConfigured });
+  let creditRow = null;
+
   if (stripeIsConfigured) {
-    const { error: creditError, data: credits } = await supabase
+    const { error, data } = await supabase
       .from("credits")
       .select("credits")
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .single();
 
-    if (creditError) {
-      console.error({ creditError });
+    if (error) {
+      console.error("Error checking credits:", error);
+      return NextResponse.json({ message: "Could not check credits." }, { status: 500 });
+    }
+
+    if (!data || data.credits < 1) {
       return NextResponse.json(
-        {
-          message: "Something went wrong!",
-        },
-        { status: 500 }
+        { message: "Not enough credits. Please purchase credits and try again." },
+        { status: 400 }
       );
     }
 
-    if (credits.length === 0) {
-      // create credits for user.
-      const { error: errorCreatingCredits } = await supabase
-        .from("credits")
-        .insert({
-          user_id: user.id,
-          credits: 0,
-        });
-
-      if (errorCreatingCredits) {
-        console.error({ errorCreatingCredits });
-        return NextResponse.json(
-          {
-            message: "Something went wrong!",
-          },
-          { status: 500 }
-        );
-      }
-
-      return NextResponse.json(
-        {
-          message:
-            "Not enough credits, please purchase some credits and try again.",
-        },
-        { status: 500 }
-      );
-    } else if (credits[0]?.credits < 1) {
-      return NextResponse.json(
-        {
-          message:
-            "Not enough credits, please purchase some credits and try again.",
-        },
-        { status: 500 }
-      );
-    } else {
-      _credits = credits;
-    }
+    creditRow = data;
   }
 
-  // create a model row in supabase
-  const { error: modelError, data } = await supabase
+  const { error: modelError, data: modelData } = await supabase
     .from("models")
-    .insert({
-      user_id: user.id,
-      name,
-      type,
-    })
+    .insert({ user_id: user.id, name, type })
     .select("id")
     .single();
 
   if (modelError) {
-    console.error("modelError: ", modelError);
-    return NextResponse.json(
-      {
-        message: "Something went wrong!",
-      },
-      { status: 500 }
-    );
+    console.error("modelError:", modelError);
+    return NextResponse.json({ message: "Something went wrong!" }, { status: 500 });
   }
-  
-  // Get the modelId from the created model
-  const modelId = data?.id;
+
+  const modelId = modelData?.id;
 
   try {
     const deploymentUrl = process.env.DEPLOYMENT_URL || '';
-    const baseUrl = deploymentUrl.startsWith('http://') || deploymentUrl.startsWith('https://') 
-      ? deploymentUrl 
-      : `https://${deploymentUrl}`;
+    const baseUrl = deploymentUrl.startsWith('http') ? deploymentUrl : `https://${deploymentUrl}`;
 
-    const trainWebhook = `${baseUrl}/astria/train-webhook`;
-    const trainWebhookWithParams = `${trainWebhook}?user_id=${user.id}&model_id=${modelId}&webhook_secret=${appWebhookSecret}`;
+    const trainWebhookWithParams = `${baseUrl}/astria/train-webhook?user_id=${user.id}&model_id=${modelId}&webhook_secret=${appWebhookSecret}`;
+    const promptWebhookWithParams = `${baseUrl}/astria/prompt-webhook?user_id=${user.id}&model_id=${modelId}&webhook_secret=${appWebhookSecret}`;
 
-    const promptWebhook = `${baseUrl}/astria/prompt-webhook`;
-    const promptWebhookWithParams = `${promptWebhook}?user_id=${user.id}&model_id=${modelId}&webhook_secret=${appWebhookSecret}`;
-
-    console.log({ trainWebhookWithParams, promptWebhookWithParams });
-    const API_KEY = astriaApiKey;
     const DOMAIN = "https://api.astria.ai";
+    const API_KEY = astriaApiKey;
 
-    // Create a fine tuned model using Astria tune API
     const tuneBody = {
       tune: {
         title: name,
-        // Hard coded tune id of Realistic Vision v5.1 from the gallery - https://www.astria.ai/gallery/tunes
-        // https://www.astria.ai/gallery/tunes/690204/prompts
         base_tune_id: 690204,
         name: type,
         branch: astriaTestModeIsOn ? "fast" : "sd15",
@@ -187,7 +117,6 @@ export async function POST(request: Request) {
       },
     };
 
-    // Create a fine tuned model using Astria packs API
     const packBody = {
       tune: {
         title: name,
@@ -212,89 +141,49 @@ export async function POST(request: Request) {
       }
     );
 
-    const { status } = response;
+    if (response.status !== 201) {
+      console.error("Training error status:", response.status);
+      if (modelId) await supabase.from("models").delete().eq("id", modelId);
 
-    if (status !== 201) {
-      console.error({ status });
-      // Rollback: Delete the created model if something goes wrong
-      if (modelId) {
-        await supabase.from("models").delete().eq("id", modelId);
-      }
+      const message = response.status === 400
+        ? "webhookUrl must be a URL address"
+        : response.status === 402
+          ? "Training models is only available on paid plans."
+          : "Something went wrong during training.";
 
-      if (status === 400) {
-        return NextResponse.json(
-          {
-            message: "webhookUrl must be a URL address",
-          },
-          { status }
-        );
-      }
-      if (status === 402) {
-        return NextResponse.json(
-          {
-            message: "Training models is only available on paid plans.",
-          },
-          { status }
-        );
-      }
+      return NextResponse.json({ message }, { status: response.status });
     }
 
     const { error: samplesError } = await supabase.from("samples").insert(
-      images.map((sample: string) => ({
-        modelId: modelId,
-        uri: sample,
-      }))
+      images.map((sample: string) => ({ modelId, uri: sample }))
     );
 
     if (samplesError) {
-      console.error("samplesError: ", samplesError);
-      return NextResponse.json(
-        {
-          message: "Something went wrong!",
-        },
-        { status: 500 }
-      );
+      console.error("samplesError:", samplesError);
+      return NextResponse.json({ message: "Failed to save sample images." }, { status: 500 });
     }
 
-    if (stripeIsConfigured && _credits && _credits.length > 0) {
-      const subtractedCredits = _credits[0].credits - 1;
-      const { error: updateCreditError, data } = await supabase
+    if (stripeIsConfigured && creditRow) {
+      const newCreditCount = creditRow.credits - 1;
+
+      const { error: updateError } = await supabase
         .from("credits")
-        .update({ credits: subtractedCredits })
-        .eq("user_id", user.id)
-        .select("*");
+        .update({ credits: newCreditCount })
+        .eq("user_id", user.id);
 
-      console.log({ data });
-      console.log({ subtractedCredits });
-
-      if (updateCreditError) {
-        console.error({ updateCreditError });
+      if (updateError) {
+        console.error("Error updating credits:", updateError);
         return NextResponse.json(
-          {
-            message: "Something went wrong!",
-          },
+          { message: "Failed to deduct credits" },
           { status: 500 }
         );
       }
     }
   } catch (e) {
-    console.error(e);
-    // Rollback: Delete the created model if something goes wrong
-    if (modelId) {
-      await supabase.from("models").delete().eq("id", modelId);
-    }
-    return NextResponse.json(
-      {
-        message: "Something went wrong!",
-      },
-      { status: 500 }
-    );
+    console.error("Unexpected training error:", e);
+    if (modelId) await supabase.from("models").delete().eq("id", modelId);
+    return NextResponse.json({ message: "Training failed." }, { status: 500 });
   }
 
-  return NextResponse.json(
-    {
-      message: "success",
-    },
-    { status: 200 }
-  );
+  return NextResponse.json({ message: "success" }, { status: 200 });
 }

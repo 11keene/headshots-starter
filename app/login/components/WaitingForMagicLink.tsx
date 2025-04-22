@@ -9,8 +9,8 @@ export const WaitingForMagicLink = ({
   return (
     <>
       <div className="flex items-center justify-center p-8">
-        <div className="flex flex-col gap-4 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 p-4 rounded-xl max-w-sm w-full">
-          <h1 className="text-xl">Check your email to continue</h1>
+      <div className="flex flex-col gap-4 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 p-6 rounded-xl max-w-md w-full">
+      <h1 className="text-xl">Check your email to continue</h1>
           <div className="flex flex-col gap-2">
             <p className="text-sm">
               We've emailed you a magic link to access your account.

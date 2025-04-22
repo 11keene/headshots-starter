@@ -8,7 +8,10 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import disposableDomains from "disposable-email-domains";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { AiOutlineGoogle } from "react-icons/ai";
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebookF, FaLock } from "react-icons/fa";
+import { HiShieldCheck } from "react-icons/hi";
+import { MdEmail } from "react-icons/md";
 import { WaitingForMagicLink } from "./WaitingForMagicLink";
 
 type Inputs = {
@@ -69,86 +72,103 @@ export const Login = ({
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: redirectUrl,
-      },
+      options: { redirectTo: redirectUrl },
     });
+    if (error) console.error("Google login error:", error.message);
+  };
 
-    if (error) {
-      console.error("Google login error:", error.message);
-    }
+  const signInWithFacebook = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "facebook",
+      options: { redirectTo: redirectUrl },
+    });
+    if (error) console.error("Facebook login error:", error.message);
   };
 
   const signInWithMagicLink = async (email: string) => {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: redirectUrl,
-      },
+      options: { emailRedirectTo: redirectUrl },
     });
-
-    if (error) {
-      console.log(`Error: ${error.message}`);
-    }
+    if (error) console.log(`Error: ${error.message}`);
   };
 
   if (isMagicLinkSent) {
-    return (
-      <WaitingForMagicLink toggleState={() => setIsMagicLinkSent(false)} />
-    );
+    return <WaitingForMagicLink toggleState={() => setIsMagicLinkSent(false)} />;
   }
 
   return (
-    <>
-      <div className="flex items-center justify-center p-8">
-        <div className="flex flex-col gap-4 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 p-4 rounded-xl max-w-sm w-full">
-          <h1 className="text-xl">Welcome</h1>
-          <p className="text-xs opacity-60">
-            Sign in or create an account to get started.
-          </p>
+    <div className="flex min-h-screen">
+      {/* Left side - branding */}
+      <div className="hidden lg:flex flex-col justify-center items-center w-1/2 bg-neutral-100 p-10">
+        <img src="/logo.png" alt="AI Maven Logo" className="w-20 h-20 mb-6 rounded-full" />
+        <h1 className="text-3xl font-bold text-gray-800 mb-4 text-center">Welcome to AI Maven</h1>
+        <p className="text-md text-gray-600 text-center max-w-md">
+          Elevate your brand with stunning AI-generated headshots. Trusted by professionals worldwide.
+        </p>
+      </div>
+
+      {/* Right side - login */}
+      <div className="flex justify-end items-center w-full lg:w-1/2 pr-[10%] -translate-y-36">
+        <div className="w-full max-w-md px-6 lg:ml-16 lg:mr-8">
+          <div className="flex items-center gap-2 mb-4">
+            <img src="/logo.png" alt="AI Maven Logo" className="w-8 h-8 rounded-full" />
+            <span className="text-xl font-bold">AI Maven</span>
+          </div>
 
           <Button
             onClick={signInWithGoogle}
-            variant={"outline"}
-            className="font-semibold w-full flex items-center gap-2 justify-center"
+            className="w-full flex items-center justify-center gap-2 rounded-md bg-red-600 hover:bg-red-700 text-white py-6 text-base font-semibold transition"
           >
-            <AiOutlineGoogle size={20} />
+            <div className="bg-white rounded-full p-1">
+              <FcGoogle size={20} />
+            </div>
             Continue with Google
+          </Button>
+
+          <Button
+            onClick={signInWithFacebook}
+            className="w-full flex items-center gap-3 justify-center bg-white text-black border border-neutral-200 shadow-sm hover:bg-neutral-100 transition-colors mt-2 py-6"
+          >
+            <div className="bg-[#1877F2] rounded-full w-6 h-6 flex items-center justify-center">
+              <FaFacebookF className="text-white text-sm" />
+            </div>
+            <span className="text-sm font-medium">Continue with Facebook</span>
           </Button>
 
           <OR />
 
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-4"
           >
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  {...register("email", {
-                    required: true,
-                    validate: {
-                      emailIsValid: (value: string) =>
-                        /^[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value) ||
-                        "Please enter a valid email",
-                      emailDoesntHavePlus: (value: string) =>
-                        /^[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value) ||
-                        "Email addresses with a '+' are not allowed",
-                      emailIsntDisposable: (value: string) =>
-                        !disposableDomains.includes(value.split("@")[1]) ||
-                        "Please use a permanent email address",
-                    },
-                  })}
-                />
-                {isSubmitted && errors.email && (
-                  <span className={"text-xs text-red-400"}>
-                    {errors.email?.message || "Email is required to sign in"}
-                  </span>
-                )}
-              </div>
+            <div className="relative">
+              <Input
+                type="email"
+                placeholder="Type your email address"
+                {...register("email", {
+                  required: true,
+                  validate: {
+                    emailIsValid: (value: string) =>
+                      /^[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value) ||
+                      "Please enter a valid email",
+                    emailDoesntHavePlus: (value: string) =>
+                      /^[A-Z0-9._%-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value) ||
+                      "Email addresses with a '+' are not allowed",
+                    emailIsntDisposable: (value: string) =>
+                      !disposableDomains.includes(value.split("@")[1]) ||
+                      "Please use a permanent email address",
+                  },
+                })}
+                className="pr-10"
+              />
+              <MdEmail className="absolute right-3 top-3 text-red-500" size={20} />
             </div>
+            {isSubmitted && errors.email && (
+              <span className="text-xs text-red-400">
+                {errors.email?.message || "Email is required to sign in"}
+              </span>
+            )}
 
             <Button
               isLoading={isSubmitting}
@@ -160,9 +180,24 @@ export const Login = ({
               Continue with Email
             </Button>
           </form>
+
+          <div className="flex flex-col items-start text-sm text-muted-foreground mt-6 px-1">
+            <p className="text-[13px] mt-2 text-muted-foreground px-1">
+              New accounts are subject to our{" "}
+              <span className="underline cursor-pointer">Terms</span> and{" "}
+              <span className="underline cursor-pointer">Privacy Policy</span>.
+            </p>
+            <div className="h-4" />
+            <p className="text-sm font-semibold text-gray-800 flex items-center justify-center gap-2">
+              <FaLock className="text-green-600 w-5 h-3.5" /> Security built for Fortune 500 companies
+            </p>
+            <p className="text-sm font-semibold text-gray-800 flex items-center justify-center gap-2">
+              <HiShieldCheck className="text-green-600 w-5 h-4" /> 100% Money Back Guarantee
+            </p>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
