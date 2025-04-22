@@ -6,46 +6,50 @@ import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-interface PricingFeature {
-  icon: React.ReactNode
-  text: string
-  tooltip?: string
-}
+// Define the brand's red color
+const brandRed = "#E11D48"; // Example of brand red, adjust as necessary
 
 interface PricingTier {
-  title: string
-  price: string
-  description: string
-  features: string[]
-  buttonText: string
-  popular?: boolean
-  bestValue?: boolean
+  title: string;
+  price: string;
+  description: string;
+  features: string[];
+  buttonText: string;
+  popular?: boolean;
+  bestValue?: boolean;
 }
 
 export default function ModernPricing() {
   const tiers: PricingTier[] = [
     {
       title: "Starter",
-      price: "1 Credit",
-      description: "Perfect for individuals looking to enhance their online presence.",
-      features: ["4 AI Headshots"],
+      price: "25 Credits",
+      description: "First-time users trying the service.",
+      features: ["4 AI Headshots", "1 credit per image", "Instant delivery"],
       buttonText: "Choose Starter",
     },
     {
-      title: "Basic",
-      price: "3 Credits",
-      description: "Ideal for professionals requiring frequent updates to their profiles.",
-      features: ["12 AI Headshots"],
-      buttonText: "Choose Basic",
+      title: "Standard",
+      price: "75 Credits",
+      description: "Ideal for professionals requiring frequent updates.",
+      features: ["12 AI Headshots", "15 credits for 1 package", "Save 17% on bundle"],
+      buttonText: "Choose Standard",
       popular: true,
     },
     {
-      title: "Premium",
-      price: "5 Credits",
-      description: "The best value with unlimited possibilities.",
-      features: ["20 AI Headshots"],
-      buttonText: "Choose Premium",
+      title: "Pro",
+      price: "200 Credits",
+      description: "Professional users and businesses.",
+      features: ["20 AI Headshots", "40 credits for 1 package", "Best value, save 33%"],
+      buttonText: "Choose Pro",
       bestValue: true,
+    },
+    {
+      title: "Studio",
+      price: "500 Credits",
+      description: "High-volume or agency users.",
+      features: ["50 AI Headshots", "Best for bulk purchases", "Unlimited edits"],
+      buttonText: "Choose Studio",
     },
   ]
 
@@ -53,13 +57,14 @@ export default function ModernPricing() {
     <div className="mx-auto max-w-4xl px-4">
       <div className="flex flex-col items-center justify-center space-y-8">
         {/* Pricing Cards */}
-        <div className="mt-8 grid gap-6 md:grid-cols-3 lg:gap-8">
+        <div className="mt-8 grid gap-6 md:grid-cols-4 lg:gap-8">
           {tiers.map((tier, index) => (
             <div
               key={index}
               className={cn(
                 "pricing-card",
-                tier.popular && "pricing-card-popular"
+                tier.popular && "pricing-card-popular",
+                "flex flex-col p-6 bg-white border rounded-lg shadow-md h-[500px] w-[215px] flex-grow hover:bg-[#f7f7f7] hover:scale-105 transition-all duration-300" // Adjusted hover effect on the card
               )}
             >
               {tier.popular && (
@@ -105,20 +110,21 @@ export default function ModernPricing() {
                   </li>
                 ))}
               </ul>
-              
-              <Link href="/login" className="mt-8 block w-full" aria-label={`Select ${tier.title} plan`}>
-                <Button
-                  className={cn(
-                    "w-full",
-                    tier.popular
-                      ? "bg-primary hover:bg-primary/90 text-primary-foreground"
-                      : "bg-secondary hover:bg-secondary/80"
-                  )}
-                  aria-label={`Select ${tier.title} plan`}
-                >
-                  {tier.buttonText}
-                </Button>
-              </Link>
+
+              {/* Add this div to align and position the "Choose" button correctly */}
+              <div className="mt-auto">
+                <Link href="/login" className="block w-full" aria-label={`Select ${tier.title} plan`}>
+                  <Button
+                    className={cn(
+                      "w-full",
+                      "bg-[#E11D48] hover:bg-[#B91C4A] text-white transition-colors"
+                    )}
+                    aria-label={`Select ${tier.title} plan`}
+                  >
+                    {tier.buttonText}
+                  </Button>
+                </Link>
+              </div>
             </div>
           ))}
         </div>
@@ -136,6 +142,3 @@ export default function ModernPricing() {
     </div>
   )
 }
-
-
-
