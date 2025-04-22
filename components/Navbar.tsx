@@ -1,18 +1,12 @@
 import { AvatarIcon } from "@radix-ui/react-icons";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import React from "react";
 import { Database } from "@/types/supabase";
-import ClientSideCredits from "./realtime/ClientSideCredits";
+import ClientSideCredits from "./realtime/ClientSideCredits"; // Make sure this import is correct
 import { ThemeToggle } from "./homepage/theme-toggle";
 import Image from "next/image";
 
@@ -25,21 +19,20 @@ export const revalidate = 0;
 export default async function Navbar() {
   const supabase = createServerComponentClient<Database>({ cookies });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Fetch credits for the current user
+  const { data: credits } = await supabase
+    .from("credits")
+    .select("*")
+    .eq("user_id", user?.id ?? "")
+    .single();
 
   return (
     <header className="sticky top-0 z-[100] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-          <Image
-            src="/logo.png"
-            alt="AI Maven Logo"
-            width={28}
-            height={28}
-            className="rounded-full"
-          />
+          <Image src="/logo.png" alt="AI Maven Logo" width={28} height={28} className="rounded-full" />
           <span>AI Maven</span>
         </Link>
 
@@ -77,7 +70,10 @@ export default async function Navbar() {
 
           {user && (
             <div className="flex items-center gap-4">
-              {stripeIsConfigured && <ClientSideCredits />}
+              {stripeIsConfigured && credits && (
+                // Passing the credits row to ClientSideCredits
+                <ClientSideCredits creditsRow={credits} />
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
@@ -90,11 +86,7 @@ export default async function Navbar() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <form action="/auth/sign-out" method="post">
-                    <Button
-                      type="submit"
-                      className="w-full text-left"
-                      variant="ghost"
-                    >
+                    <Button type="submit" className="w-full text-left" variant="ghost">
                       Log out
                     </Button>
                   </form>
