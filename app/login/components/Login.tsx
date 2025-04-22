@@ -109,8 +109,8 @@ export const Login = ({
       </div>
 
       {/* Right side - login */}
-      <div className="flex justify-end items-center w-full lg:w-1/2 pr-[10%] -translate-y-36">
-        <div className="w-full max-w-md px-6 lg:ml-16 lg:mr-8">
+      <div className="flex justify-center lg:justify-end items-center w-full lg:w-1/2 px-6 lg:px-12 -translate-y-36">
+      <div className="w-full max-w-md px-6 lg:ml-16 lg:mr-8">
           <div className="flex items-center gap-2 mb-4">
             <img src="/logo.png" alt="AI Maven Logo" className="w-8 h-8 rounded-full" />
             <span className="text-xl font-bold">AI Maven</span>
