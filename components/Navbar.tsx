@@ -37,8 +37,8 @@ export default async function Navbar() {
         </Link>
 
         {user && (
-          <nav className="hidden md:flex gap-6">
-            <Link href="/overview" className="text-sm font-medium hover:text-primary transition-colors">
+ <nav className="flex gap-4 md:gap-6">
+<Link href="/overview" className="text-sm font-medium hover:text-primary transition-colors">
               Home
             </Link>
             {packsIsEnabled && (
