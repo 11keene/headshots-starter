@@ -70,6 +70,8 @@ export default function ModernPricing() {
   "w-[160px] h-[500px]",
   // tablet+ override to your old dimensions:
   "sm:w-full sm:h-[400px] md:h-[500px] md:w-[215px] lg:flex-grow",
+   "hover:bg-red-200",
+
                 tier.popular && "pricing-card-popular"
               )}
             >
