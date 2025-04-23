@@ -118,10 +118,11 @@ export default function GetCreditsPage() {
             </div>
             <div className="mt-auto flex justify-end">
               <Button
+              type="button" 
                 onClick={() => handleCheckout("price_1")}
                 disabled={loading}
               >
-                {loading ? "Loading…" : "Get 25 Credit — $9.99"}
+                {loading ? "Loading…" : "Choose a Plan"}
               </Button>
             </div>
           </div>
@@ -151,6 +152,7 @@ export default function GetCreditsPage() {
                 Or pay with Apple Pay
               </label>
               <Button
+              type="button" 
                 variant="outline"
                 className="flex items-center gap-2"
               >
@@ -161,9 +163,11 @@ export default function GetCreditsPage() {
 
             <div className="mt-auto flex justify-between">
               <Button variant="outline" onClick={goBack}>
+                
                 Back
               </Button>
               <Button onClick={goNext} disabled={!cardNumber}>
+                
                 Next: Confirm
               </Button>
             </div>
