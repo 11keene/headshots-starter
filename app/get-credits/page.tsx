@@ -34,8 +34,7 @@ export default function GetCreditsPage() {
      // Initialize Stripe.js
      const stripe = await stripePromise;
       // Call your backend to create a Checkout Session
-      const res = await fetch("/api/stripe/checkout/session", {
-        method: "POST",
+      const res = await fetch("/api/stripe/checkout", {        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ priceId }),
       });
@@ -119,8 +118,8 @@ export default function GetCreditsPage() {
             <div className="mt-auto flex justify-end">
               <Button
               type="button" 
-                onClick={() => handleCheckout("price_1")}
-                disabled={loading}
+              onClick={() => selectedPlan && handleCheckout(selectedPlan.id)}                
+              disabled={loading || !selectedPlan}              
               >
                 {loading ? "Loading…" : "Choose a Plan"}
               </Button>
