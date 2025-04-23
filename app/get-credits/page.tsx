@@ -1,17 +1,20 @@
-"use client";  // This tells Next.js to treat this as a Client Component
+"use client"
+import StripeCheckoutButton from '@/components/StripeCheckoutButton'
+
 
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 export default function GetCreditsPage() {
-  const [loading, setLoading] = useState(false);
-
   return (
-    <div>
-      <Button onClick={() => setLoading(!loading)}>
-        {loading ? "Loading..." : "Get Credits"}
-      </Button>
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold">Buy Credits</h1>
+      <StripeCheckoutButton priceId="price_1" />  {/* 25 credits */}
+      <StripeCheckoutButton priceId="price_3" />  {/* 75 credits */}
+      <StripeCheckoutButton priceId="price_5" />  {/* 200 credits */}
+      {/* etc… */}
     </div>
-  );
+  )
 }
+
 
