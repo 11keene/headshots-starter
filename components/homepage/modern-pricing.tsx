@@ -60,14 +60,16 @@ export default function ModernPricing() {
     <div className="mx-auto max-w-4xl px-4">
       <div className="flex flex-col items-center justify-center space-y-8">
         {/* Pricing Cards */}
-        <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-8">
-          {tiers.map((tier, idx) => (
+        <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
+        {tiers.map((tier, idx) => (
             <div
               key={idx}
               className={cn(
-                "relative flex flex-col p-6 bg-white border rounded-lg shadow-md",
-                "transition-all ease-in-out hover:scale-105 hover:shadow-xl hover:bg-red-50",
-                "h-[350px] sm:h-[400px] md:h-[500px] w-full md:w-[215px] flex-grow",
+                "relative flex flex-col p-4 bg-white border rounded-lg shadow-md transition-all ease-in-out hover:scale-105 hover:shadow-xl",
+  // mobile fixed size:
+  "w-[160px] h-[500px]",
+  // tablet+ override to your old dimensions:
+  "sm:w-full sm:h-[400px] md:h-[500px] md:w-[215px] lg:flex-grow",
                 tier.popular && "pricing-card-popular"
               )}
             >
@@ -97,17 +99,18 @@ export default function ModernPricing() {
               <h3 className="text-xl font-bold">{tier.title}</h3>
 
               <div className="mt-4 flex items-baseline">
-                <span className="text-5xl font-extrabold">{tier.price}</span>
-              </div>
+              <span className="text-3xl md:text-5xl font-extrabold">
+  {tier.price}
+</span>              </div>
 
               <p className="mt-4 text-sm text-muted-foreground">{tier.description}</p>
 
               <ul className="my-6 space-y-4">
                 {tier.features.map((feat, i) => (
                   <li key={i} className="flex items-center gap-2">
-                    <Check className="h-5 w-5 text-primary" />
-                    <span>{feat}</span>
-                  </li>
+                    <Check className="h-4 w-3 text-primary" />
+                    +     <span className="text-sm md:text-base leading-snug">{feat}</span>
+                    </li>
                 ))}
               </ul>
 
