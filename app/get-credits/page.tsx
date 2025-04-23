@@ -4,10 +4,14 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { loadStripe } from "@stripe/stripe-js";
+
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FaApple, FaCreditCard, FaCheckCircle } from "react-icons/fa";
-
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+);
 type Plan = {
   id: string;
   name: string;
@@ -23,6 +27,25 @@ const PLANS: Plan[] = [
 
 export default function GetCreditsPage() {
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  // Create a Stripe Checkout session and redirect the user
+  const handleCheckout = async (priceId: string) => {
+    setLoading(true);
+     // Initialize Stripe.js
+     const stripe = await stripePromise;
+      // Call your backend to create a Checkout Session
+      const res = await fetch("/api/stripe/checkout/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId }),
+      });
+      const { sessionId } = await res.json();
+      // Redirect to Stripe Checkout
+      if (stripe && sessionId) {
+        await stripe.redirectToCheckout({ sessionId });
+      }
+      setLoading(false);
+    };
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [cardNumber, setCardNumber] = useState("");
 
@@ -95,10 +118,10 @@ export default function GetCreditsPage() {
             </div>
             <div className="mt-auto flex justify-end">
               <Button
-                disabled={!selectedPlan}
-                onClick={goNext}
+                onClick={() => handleCheckout("price_1")}
+                disabled={loading}
               >
-                Next: Payment Info
+                {loading ? "Loading…" : "Get 25 Credit — $9.99"}
               </Button>
             </div>
           </div>
