@@ -5,7 +5,6 @@ import Login from "./components/Login";
 export const dynamic = "force-dynamic";
 
 export default function Page() {
-  // build our redirect URL
   const host = headers().get("host") ?? "";
   const protocol = host.includes("localhost") ? "http" : "https";
   const redirectTo = `${protocol}://${host}/auth/callback`;
@@ -28,3 +27,4 @@ export default function Page() {
     </div>
   );
 }
+
