@@ -60,24 +60,21 @@ export default function ModernPricing() {
     <div className="mx-auto max-w-4xl px-4">
       <div className="flex flex-col items-center justify-center space-y-8">
         {/* Pricing Cards */}
-        <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
-          {tiers.map((tier, index) => (
+        <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-8">
+          {tiers.map((tier, idx) => (
             <div
-              key={index}
+              key={idx}
               className={cn(
-                "pricing-card",
-                tier.popular && "pricing-card-popular",
-                "flex flex-col p-6 bg-white border rounded-lg shadow-md transition-all ease-in-out", // Transition for animation
-                "h-[350px] sm:h-[400px] md:h-[500px] w-full md:w-[215px] flex-grow", // Shortened height for mobile and standard height for desktop
-                "hover:scale-105 hover:shadow-xl" // Hover effect for all screen sizes
+                "relative flex flex-col p-6 bg-white border rounded-lg shadow-md",
+                "transition-all ease-in-out hover:scale-105 hover:shadow-xl hover:bg-red-50",
+                "h-[350px] sm:h-[400px] md:h-[500px] w-full md:w-[215px] flex-grow",
+                tier.popular && "pricing-card-popular"
               )}
             >
-              {tier.popular && (
-                <div className="pricing-badge">Most Popular</div>
-              )}
+              {tier.popular && <div className="pricing-badge">Most Popular</div>}
 
               {tier.bestValue && (
-                <div className="absolute -top-3 right-6 rounded-full bg-blue-600 px-3 py-1 text-xs font-medium text-white dark:bg-blue-500">
+                <div className="absolute -top-3 right-6 rounded-full bg-blue-600 px-3 py-1 text-xs font-medium text-white">
                   <span className="flex items-center gap-1">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -106,24 +103,25 @@ export default function ModernPricing() {
               <p className="mt-4 text-sm text-muted-foreground">{tier.description}</p>
 
               <ul className="my-6 space-y-4">
-                {tier.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="pricing-feature">
+                {tier.features.map((feat, i) => (
+                  <li key={i} className="flex items-center gap-2">
                     <Check className="h-5 w-5 text-primary" />
-                    <span>{feature}</span>
+                    <span>{feat}</span>
                   </li>
                 ))}
               </ul>
 
               <div className="mt-auto">
-                <Link href="/login" className="block w-full" aria-label={`Select ${tier.title} plan`}>
+                <Link
+                  href="/login"
+                  className="block w-full"
+                  aria-label={`Select ${tier.title} plan`}
+                >
                   <Button
                     className={cn(
-                      "w-full",
-                      tier.popular
-                        ? "bg-primary hover:bg-primary/90 text-primary-foreground"
-                        : "bg-secondary hover:bg-secondary/80"
+                      "w-full text-white",
+                      "bg-red-600 hover:bg-red-700"
                     )}
-                    aria-label={`Select ${tier.title} plan`}
                   >
                     {tier.buttonText}
                   </Button>
@@ -135,10 +133,11 @@ export default function ModernPricing() {
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
           All plans include a 7-day satisfaction guarantee. Need a custom plan?{" "}
-          <Link 
-            href="/contact" 
+          <Link
+            href="/contact"
             className="text-primary hover:underline"
-            aria-label="Contact our sales team">
+            aria-label="Contact our sales team"
+          >
             Contact sales
           </Link>
         </p>
@@ -146,4 +145,3 @@ export default function ModernPricing() {
     </div>
   );
 }
-
