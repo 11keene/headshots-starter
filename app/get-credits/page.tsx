@@ -17,12 +17,37 @@ type Plan = {
   name: string;
   credits: number;
   price: string;
+  priceId: string; // Added priceId to the Plan type
 };
 
-const PLANS: Plan[] = [
-  { id: "starter", name: "Starter", credits: 25, price: "$9.99" },
-  { id: "standard", name: "Standard", credits: 75, price: "$24.99" },
-  { id: "pro", name: "Pro", credits: 200, price: "$49.99" },
+const PLANS: Plan[] = [  {
+    id: "starter",
+    priceId: "prod_S9E3iglglvx3ad",    // ← your real Stripe Price ID
+    name: "Starter",
+    credits: 25,
+    price: "$9.99",
+  },
+  {
+    id: "standard",
+    priceId: "prod_S9E3stepXRcNLI",
+    name: "Standard",
+    credits: 75,
+    price: "$24.99",
+  },
+  {
+    id: "pro",
+    priceId: "prod_S9E3Zki9XwnhJI",
+    name: "Pro",
+    credits: 200,
+    price: "$49.99",
+  },
+  {
+    id: "studio",
+    priceId: "prod_SBAmbLCKLaVDQy",
+    name: "Pro",
+    credits: 500,
+    price: "$99.99",
+  },
 ];
 
 export default function GetCreditsPage() {
@@ -99,7 +124,7 @@ export default function GetCreditsPage() {
               {PLANS.map((plan) => (
                 <Card
                   key={plan.id}
-                  onClick={() => setSelectedPlan(plan)}
+                  onClick={() => selectedPlan && handleCheckout(selectedPlan.priceId)}
                   className={`cursor-pointer border-2 transition ${
                     selectedPlan?.id === plan.id
                       ? "border-red-600"
