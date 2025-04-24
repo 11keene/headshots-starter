@@ -2,9 +2,15 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-08-16',
-})
+ // make sure your stripe package is up-to-date (≥18.0.0)
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecretKey) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is not set.');
+}
+
+const stripe = new Stripe(stripeSecretKey, {
+  apiVersion: '2025-03-31.basil',
+});
 
 export async function POST(req: Request) {
   const { priceId } = await req.json()
@@ -12,10 +18,10 @@ export async function POST(req: Request) {
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
-    payment_method_types: ['card', 'link'], // add Link Pay; Apple/Google Pay auto-show
+    payment_method_types: ['card', 'link'],
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${YOUR_DOMAIN}/success`,
     cancel_url: `${YOUR_DOMAIN}/cancel`,
   })
 
-  return NextResponse.json({ sessionId: session.id })}
+  return NextResponse.json({ sessionId: session.id }); }
