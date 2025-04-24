@@ -185,12 +185,12 @@ export default function GetCreditsPage() {
   onClick={() => {
     if (!selectedPlan) return;
      setLoading(true);
-    handleCheckout(selectedPlan.id);
+     handleCheckout(selectedPlan.priceId);
 }}
 disabled={loading || !selectedPlan}
 >
               
-                <FaApple size={20} />
+                <FaApple size={30} />
                 Apple Pay
               </Button>
             </div>
