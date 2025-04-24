@@ -145,7 +145,8 @@ export default function GetCreditsPage() {
               <Button
               type="button" 
               
-                              onClick={() => selectedPlan && handleCheckout(selectedPlan.priceId)}  
+              onClick={goNext}
+                              
               disabled={!selectedPlan}              
               >
                 {loading ? "Loading…" : "Choose a Plan"}
@@ -177,7 +178,7 @@ export default function GetCreditsPage() {
               <label className="block text-sm font-medium text-gray-700">
                 Or pay with Apple Pay
               </label>
-              + <Button
+              <Button
   type="button"
   variant="outline"
   className="flex items-center gap-2"
@@ -200,11 +201,13 @@ disabled={loading || !selectedPlan}
                 Back
               </Button>
               <Button
+              type="button"
               onClick={() => {
-                 setLoading(true);
-                 handleCheckout(selectedPlan!.id);
-                }}
-                 disabled={loading || !cardNumber}
+                if (!selectedPlan) return;
+                setLoading(true);
+                handleCheckout(selectedPlan.priceId);                
+              }}
+              disabled={loading}
                  >
                  {loading ? "Processing…" : "Pay Now"}
                  </Button>
