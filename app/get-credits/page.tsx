@@ -151,11 +151,18 @@ export default function GetCreditsPage() {
               <label className="block text-sm font-medium text-gray-700">
                 Or pay with Apple Pay
               </label>
-              <Button
-              type="button" 
-                variant="outline"
-                className="flex items-center gap-2"
-              >
+              + <Button
+  type="button"
+  variant="outline"
+  className="flex items-center gap-2"
+  onClick={() => {
+    if (!selectedPlan) return;
+     setLoading(true);
+    handleCheckout(selectedPlan.id);
+}}
+disabled={loading || !selectedPlan}
+>
+              
                 <FaApple size={20} />
                 Apple Pay
               </Button>
