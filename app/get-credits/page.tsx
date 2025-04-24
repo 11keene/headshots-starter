@@ -124,7 +124,7 @@ export default function GetCreditsPage() {
               {PLANS.map((plan) => (
                 <Card
                   key={plan.id}
-                  onClick={() => selectedPlan && handleCheckout(selectedPlan.priceId)}
+                  onClick={() => setSelectedPlan(plan)}
                   className={`cursor-pointer border-2 transition ${
                     selectedPlan?.id === plan.id
                       ? "border-red-600"
@@ -145,7 +145,7 @@ export default function GetCreditsPage() {
               <Button
               type="button" 
               
-              onClick={goNext}           
+                              onClick={() => selectedPlan && handleCheckout(selectedPlan.priceId)}  
               disabled={!selectedPlan}              
               >
                 {loading ? "Loading…" : "Choose a Plan"}
