@@ -34,7 +34,8 @@ export default function GetCreditsPage() {
      // Initialize Stripe.js
      const stripe = await stripePromise;
       // Call your backend to create a Checkout Session
-      const res = await fetch("/api/stripe/checkout/session", {        method: "POST",
+      const res = await fetch("/api/stripe/checkout/session", {       
+         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ priceId }),
       });
