@@ -75,7 +75,7 @@ export default function GetCreditsPage() {
       }
       
       // Call your backend to create a Checkout Session
-      const response = await fetch("/api/stripe/checkout/session", {       
+      const response = await fetch("/api/stripe/checkout", {       
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ priceId }),
