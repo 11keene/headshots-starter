@@ -25,28 +25,28 @@ type Plan = {
 const PLANS: Plan[] = [
   {
     id: "starter",
-    priceId: "prod_SCB9ojFisXQQPA", // Update with your actual Price ID
+    priceId: "price_1RHmnVCs03tLUXoK4iTvnduW", // Update with your actual Price ID
     name: "Starter",
     credits: 25,
     price: "$9.99",
   },
   {
     id: "standard",
-    priceId: "prod_SCBAgVic2rQVvt", // Update with your actual Price ID
+    priceId: "price_1RHmnnCs03tLUXoKLXWGbUqt", // Update with your actual Price ID
     name: "Standard",
     credits: 75,
     price: "$24.99",
   },
   {
     id: "pro",
-    priceId: "prod_SCBAOmbUWXp2rX", // Update with your actual Price ID
+    priceId: "price_1RHmo9Cs03tLUXoKiIai8D2O", // Update with your actual Price ID
     name: "Pro",
     credits: 200,
     price: "$49.99",
   },
   {
     id: "studio",
-    priceId: "prod_SCBAD1r0O8B1ok", // Update with your actual Price ID
+    priceId: "price_1RHmoNCs03tLUXoKRpzgeqUu", // Update with your actual Price ID
     name: "Studio",
     credits: 500,
     price: "$99.99",
