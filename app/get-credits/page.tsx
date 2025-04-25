@@ -108,10 +108,8 @@ export default function GetCreditsPage() {
         throw new Error("Invalid response from server");
       }
       
-      if (!data.URL) {
-        console.error("Redirecting to checkout URL:", data.url);
-        window.location.href = data.url;
-        return;
+      if (!data.sessionId) {
+        console.error("Missing sessionId in response:", data);
         throw new Error("Invalid checkout session");
       }
       
