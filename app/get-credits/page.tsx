@@ -1,50 +1,52 @@
-"use client"
-// app/get-credits/page.tsx
 "use client";
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { loadStripe } from "@stripe/stripe-js";
-
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FaApple, FaCreditCard, FaCheckCircle } from "react-icons/fa";
+
+// Make sure this key is correctly set in your .env.local file
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
+
 type Plan = {
   id: string;
   name: string;
   credits: number;
   price: string;
-  priceId: string; // Added priceId to the Plan type
+  priceId: string; // This should be a Price ID, not a Product ID
 };
 
-const PLANS: Plan[] = [  {
+// IMPORTANT: These should be Price IDs, not Product IDs
+const PLANS: Plan[] = [  
+  {
     id: "starter",
-    priceId: "prod_S9E3iglglvx3ad",    // ← your real Stripe Price ID
+    priceId: "price_XYZ123", // Replace with actual Stripe Price ID (not Product ID)
     name: "Starter",
     credits: 25,
     price: "$9.99",
   },
   {
     id: "standard",
-    priceId: "prod_S9E3stepXRcNLI",
+    priceId: "price_ABC456", // Replace with actual Stripe Price ID
     name: "Standard",
     credits: 75,
     price: "$24.99",
   },
   {
     id: "pro",
-    priceId: "prod_S9E3Zki9XwnhJI",
+    priceId: "price_DEF789", // Replace with actual Stripe Price ID
     name: "Pro",
     credits: 200,
     price: "$49.99",
   },
   {
     id: "studio",
-    priceId: "prod_SBAmbLCKLaVDQy",
-    name: "Pro",
+    priceId: "price_GHI012", // Replace with actual Stripe Price ID
+    name: "Studio",
     credits: 500,
     price: "$99.99",
   },
@@ -53,26 +55,48 @@ const PLANS: Plan[] = [  {
 export default function GetCreditsPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  
   // Create a Stripe Checkout session and redirect the user
   const handleCheckout = async (priceId: string) => {
-    setLoading(true);
-     // Initialize Stripe.js
-     const stripe = await stripePromise;
+    try {
+      setLoading(true);
+      setError("");
+      
+      // Initialize Stripe.js
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error("Stripe failed to initialize");
+      }
+      
       // Call your backend to create a Checkout Session
       const res = await fetch("/api/stripe/checkout/session", {       
-         method: "POST",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ priceId }),
       });
-      const { sessionId } = await res.json();
-      // Redirect to Stripe Checkout
-      if (stripe && sessionId) {
-        await stripe.redirectToCheckout({ sessionId });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to create checkout session");
       }
+      
+      const { sessionId } = await res.json();
+      
+      // Redirect to Stripe Checkout
+      const { error: redirectError } = await stripe.redirectToCheckout({ sessionId });
+      
+      if (redirectError) {
+        throw new Error(redirectError.message);
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      setError((err as Error).message || "An unknown error occurred");
+    } finally {
       setLoading(false);
-    };
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [cardNumber, setCardNumber] = useState("");
+    }
+  };
 
   const goNext = () => setStep((s) => Math.min(3, s + 1));
   const goBack = () => setStep((s) => Math.max(1, s - 1));
@@ -115,6 +139,12 @@ export default function GetCreditsPage() {
 
       {/* Main Content */}
       <div className="flex-grow p-8 flex flex-col">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+        
         {step === 1 && (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-800">
@@ -125,7 +155,7 @@ export default function GetCreditsPage() {
                 <Card
                   key={plan.id}
                   onClick={() => setSelectedPlan(plan)}
-                  className={`cursor-pointer border-2 transition ${
+                  className={`cursor-pointer border-2 transition p-4 ${
                     selectedPlan?.id === plan.id
                       ? "border-red-600"
                       : "border-gray-200"
@@ -143,13 +173,14 @@ export default function GetCreditsPage() {
             </div>
             <div className="mt-auto flex justify-end">
               <Button
-              type="button" 
-              
-              onClick={goNext}
-                              
-              disabled={!selectedPlan}              
+                onClick={() => {
+                  if (selectedPlan) {
+                    handleCheckout(selectedPlan.priceId);
+                  }
+                }}
+                disabled={!selectedPlan || loading}
               >
-                {loading ? "Loading…" : "Choose a Plan"}
+                {loading ? "Processing…" : "Choose a Plan"}
               </Button>
             </div>
           </div>
@@ -161,56 +192,28 @@ export default function GetCreditsPage() {
               Enter payment details
             </h2>
             <div className="space-y-4 max-w-md">
-              <label className="block text-sm font-medium text-gray-700">
-                Card Number
-              </label>
-              <div className="flex gap-2">
-                <FaCreditCard className="text-gray-500 mt-2" />
-                <Input
-                  placeholder="•••• •••• •••• ••••"
-                  value={cardNumber}
-                  onChange={(e) =>
-                    setCardNumber(e.target.value)
-                  }
-                />
-              </div>
-
-              <label className="block text-sm font-medium text-gray-700">
-                Or pay with Apple Pay
-              </label>
               <Button
-  type="button"
-  variant="outline"
-  className="flex items-center gap-2"
-  onClick={() => {
-    if (!selectedPlan) return;
-     setLoading(true);
-     handleCheckout(selectedPlan.priceId);
-}}
-disabled={loading || !selectedPlan}
->
-              
-                <FaApple size={30} />
-                Apple Pay
+                type="button"
+                className="w-full"
+                onClick={() => {
+                  if (selectedPlan) {
+                    handleCheckout(selectedPlan.priceId);
+                  }
+                }}
+                disabled={loading || !selectedPlan}
+              >
+                {loading ? "Processing…" : "Proceed to Payment"}
               </Button>
+
+              <div className="text-center text-gray-500">
+                You'll be redirected to our secure payment processor
+              </div>
             </div>
 
             <div className="mt-auto flex justify-between">
               <Button variant="outline" onClick={goBack}>
-                
                 Back
               </Button>
-              <Button
-              type="button"
-              onClick={() => {
-                if (!selectedPlan) return;
-                setLoading(true);
-                handleCheckout(selectedPlan.priceId);                
-              }}
-              disabled={loading}
-                 >
-                 {loading ? "Processing…" : "Pay Now"}
-                 </Button>
             </div>
           </div>
         )}
@@ -218,10 +221,10 @@ disabled={loading || !selectedPlan}
         {step === 3 && (
           <div className="space-y-6 text-center">
             <h2 className="text-2xl font-bold text-gray-800">
-              You’re all set!
+              You're all set!
             </h2>
             <p className="text-gray-600">
-              {`You’ve purchased ${selectedPlan?.credits} credits.`}
+              {`You've purchased ${selectedPlan?.credits} credits.`}
             </p>
             <FaCheckCircle className="mx-auto text-green-500 text-6xl" />
             <p className="text-gray-600">
