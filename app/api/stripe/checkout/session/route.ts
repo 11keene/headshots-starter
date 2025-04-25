@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     });
     
     console.log("Session created:", session.id);
-    return NextResponse.json({ url: session.url });  // Changed from { sessionId: session.id }
+    return NextResponse.json({ sessionId: session.id });
     
   } catch (error: any) {
     // Log the full error for debugging
