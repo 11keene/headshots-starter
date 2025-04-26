@@ -1,12 +1,21 @@
+// components/Navbar.tsx
+
 import { AvatarIcon } from "@radix-ui/react-icons";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import React from "react";
 import { Database } from "@/types/supabase";
-import ClientSideCredits from "./realtime/ClientSideCredits"; // Make sure this import is correct
+import ClientSideCredits from "./realtime/ClientSideCredits";
 import { ThemeToggle } from "./homepage/theme-toggle";
 import Image from "next/image";
 
@@ -18,10 +27,10 @@ export const revalidate = 0;
 
 export default async function Navbar() {
   const supabase = createServerComponentClient<Database>({ cookies });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // Fetch credits for the current user
   const { data: credits } = await supabase
     .from("credits")
     .select("*")
@@ -31,29 +40,59 @@ export default async function Navbar() {
   return (
     <header className="sticky top-0 z-[100] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <Link href="/"   className="flex items-center gap-2 font-bold text-xl whitespace-nowrap"
+        {/* Logo + site name */}
+        <Link
+          href="/"
+          className="flex-shrink-0 flex items-center gap-2 font-bold text-xl whitespace-nowrap"
         >
-          <Image src="/logo.png" alt="AI Maven Logo" width={28} height={28} className="rounded-full" />
-          <span className="whitespace-nowrap">AI Maven</span>
+          <Image
+            src="/logo.png"
+            alt="AI Maven Logo"
+            width={28}
+            height={28}
+            className="rounded-full"
+          />
+          <span>AI Maven</span>
         </Link>
 
         {user && (
- <nav className="flex gap-4 md:gap-6 whitespace-nowrap">
-<Link href="/overview" className="text-sm font-medium hover:text-primary transition-colors">
-              Home
-            </Link>
-            {packsIsEnabled && (
-              <Link href="/overview/packs" className="text-sm font-medium hover:text-primary transition-colors">
-                Packs
-              </Link>
-            )}
-            {stripeIsConfigured && (
-              <Link href="/get-credits" className="flex-shrink-0 text-sm sm:text-base font-medium hover:text-primary transition-colors whitespace-nowrap"
+          <>
+            {/* Desktop: full nav */}
+            <nav className="hidden md:flex gap-4 md:gap-6 whitespace-nowrap">
+              <Link
+                href="/overview"
+                className="text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
               >
-              Get Credits
+                Home
+              </Link>
+              {packsIsEnabled && (
+                <Link
+                  href="/overview/packs"
+                  className="text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
+                >
+                  Packs
+                </Link>
+              )}
+              {stripeIsConfigured && (
+                <Link
+                  href="/get-credits"
+                  className="text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
+                >
+                  Get Credits
+                </Link>
+              )}
+            </nav>
+
+            {/* Mobile: only Get Credits */}
+            {stripeIsConfigured && (
+              <Link
+                href="/get-credits"
+                className="block md:hidden flex-shrink-0 text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
+              >
+                Get Credits
               </Link>
             )}
-          </nav>
+          </>
         )}
 
         <div className="flex items-center gap-4">
@@ -61,7 +100,10 @@ export default async function Navbar() {
 
           {!user && (
             <>
-              <Link href="/login" className="hidden sm:block text-sm font-medium hover:text-primary transition-colors">
+              <Link
+                href="/login"
+                className="hidden sm:block text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
+              >
                 Login
               </Link>
               <Link href="/login">
@@ -73,22 +115,29 @@ export default async function Navbar() {
           {user && (
             <div className="flex items-center gap-4">
               {stripeIsConfigured && credits && (
-                // Passing the credits row to ClientSideCredits
                 <ClientSideCredits creditsRow={credits} />
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 p-0"
+                  >
                     <AvatarIcon className="h-6 w-6 text-primary" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56 z-[101]">
-                  <DropdownMenuLabel className="text-primary text-center overflow-hidden text-ellipsis">
+                  <DropdownMenuLabel className="text-primary text-center overflow-hidden text-ellipsis whitespace-nowrap">
                     {user.email}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <form action="/auth/sign-out" method="post">
-                    <Button type="submit" className="w-full text-left" variant="ghost">
+                    <Button
+                      type="submit"
+                      className="w-full text-left"
+                      variant="ghost"
+                    >
                       Log out
                     </Button>
                   </form>
