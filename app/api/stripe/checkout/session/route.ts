@@ -7,10 +7,9 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Safe environment variable access
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-if (!stripeSecretKey) {
-  console.error("STRIPE_SECRET_KEY is missing!");
-}
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY!
+if (!stripeSecretKey) throw new Error('Missing STRIPE_SECRET_KEY')
+console.error("STRIPE_SECRET_KEY is missing!");
 
 // Create Stripe instance with error handling
 const stripe = new Stripe(stripeSecretKey || "", {
