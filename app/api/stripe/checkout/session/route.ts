@@ -37,10 +37,10 @@ export async function POST(req: Request) {
     }
     
     // Extract domain from request
-    const YOUR_DOMAIN = req.headers.get("origin") || 
-                         req.headers.get("referer")?.replace(/\/[^\/]*$/, '') || 
-                         "https://www.aimavenstudio.com";
-
+    const YOUR_DOMAIN =
+    process.env.NODE_ENV === 'production'                         
+        ? 'https://www.aimavenstudio.com'
+    : 'http://localhost:3000';
     console.log("Creating checkout session with:", {
       priceId,
       domain: YOUR_DOMAIN
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     });
     
     console.log("Session created:", session.id);
-    return NextResponse.json({ sessionId: session.id });
+    return NextResponse.json({ id: session.id });
     
   } catch (error: any) {
     // Log the full error for debugging
