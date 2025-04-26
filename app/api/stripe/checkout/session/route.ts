@@ -7,14 +7,15 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Safe environment variable access
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY!
-if (!stripeSecretKey) throw new Error('Missing STRIPE_SECRET_KEY')
-console.error("STRIPE_SECRET_KEY is missing!");
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecretKey) {
+  console.error("STRIPE_SECRET_KEY is missing!");
+}
 
 // Create Stripe instance with error handling
-const stripe = new Stripe(stripeSecretKey, {
-    apiVersion: '2025-03-31.basil',
-  })
+const stripe = new Stripe(stripeSecretKey || "", {
+  apiVersion: '2025-03-31.basil',
+});
 
 export async function POST(req: Request) {
   // Wrap everything in try-catch to ensure we always return valid JSON
@@ -36,10 +37,10 @@ export async function POST(req: Request) {
     }
     
     // Extract domain from request
-    const YOUR_DOMAIN =
-    process.env.NODE_ENV === 'production'                         
-        ? 'https://www.aimavenstudio.com'
-    : 'http://localhost:3000';
+    const YOUR_DOMAIN = req.headers.get("origin") || 
+                         req.headers.get("referer")?.replace(/\/[^\/]*$/, '') || 
+                         "https://www.aimavenstudio.com";
+
     console.log("Creating checkout session with:", {
       priceId,
       domain: YOUR_DOMAIN
@@ -76,3 +77,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
+
