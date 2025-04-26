@@ -56,8 +56,7 @@ export async function POST(req: Request) {
     });
     
     console.log("Session created:", session.id);
-    return NextResponse.json({ id: session.id });
-    
+    return NextResponse.json({ sessionId: session.id });    
   } catch (error: any) {
     // Log the full error for debugging
     console.error("Stripe checkout error details:", error);
