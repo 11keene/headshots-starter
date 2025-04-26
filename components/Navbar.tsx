@@ -31,13 +31,14 @@ export default async function Navbar() {
   return (
     <header className="sticky top-0 z-[100] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl">
+        <Link href="/"   className="flex items-center gap-2 font-bold text-xl whitespace-nowrap"
+        >
           <Image src="/logo.png" alt="AI Maven Logo" width={28} height={28} className="rounded-full" />
-          <span>AI Maven</span>
+          <span className="whitespace-nowrap">AI Maven</span>
         </Link>
 
         {user && (
- <nav className="flex gap-4 md:gap-6">
+ <nav className="flex gap-4 md:gap-6 whitespace-nowrap">
 <Link href="/overview" className="text-sm font-medium hover:text-primary transition-colors">
               Home
             </Link>
@@ -47,8 +48,9 @@ export default async function Navbar() {
               </Link>
             )}
             {stripeIsConfigured && (
-              <Link href="/get-credits" className="text-sm font-medium hover:text-primary transition-colors">
-                Get Credits
+              <Link href="/get-credits" className="flex-shrink-0 text-sm sm:text-base font-medium hover:text-primary transition-colors whitespace-nowrap"
+              >
+              Get Credits
               </Link>
             )}
           </nav>

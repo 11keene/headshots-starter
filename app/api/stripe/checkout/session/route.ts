@@ -50,8 +50,8 @@ export async function POST(req: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${YOUR_DOMAIN}/success`,
-      cancel_url: `${YOUR_DOMAIN}/cancel`,
+      success_url: `${YOUR_DOMAIN}/get-credits?status=success`,
+      cancel_url: `${YOUR_DOMAIN}/get-credits?status=canceled`,
     });
     
     console.log("Session created:", session.id);
