@@ -9,7 +9,6 @@ if (process.env.NODE_ENV === 'development') {
 // Safe environment variable access
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 if (!stripeSecretKey) {
-  console.error("STRIPE_SECRET_KEY is missing!");
 }
 
 // Create Stripe instance with error handling
@@ -26,15 +25,15 @@ export async function POST(req: Request) {
       return {};
     });
     
-    const { priceId } = body;
+    const { priceId } = await req.json();
     
     if (!priceId) {
-      console.error("Missing priceId in request");
-      return NextResponse.json(
-        { error: "Missing priceId parameter" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing priceId' }, { status: 400 });
     }
+
+
+
+
     
     // Extract domain from request
     const YOUR_DOMAIN = req.headers.get("origin") || 
