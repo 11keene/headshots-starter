@@ -19,14 +19,15 @@ const stripe = new Stripe(stripeSecretKey || "", {
 export async function POST(req: Request) {
   // Wrap everything in try-catch to ensure we always return valid JSON
   try {
-    // Parse request body with error handling
-    const body = await req.json().catch(e => {
+    let body: any;
+    try {
+      body = await req.json();
+    } catch (e: any) {
       console.error("Failed to parse request body:", e);
-      return {};
-    });
-    
-    const { priceId } = await req.json();
-    
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+    const { priceId } = body;
+
     if (!priceId) {
       return NextResponse.json({ error: 'Missing priceId' }, { status: 400 });
     }
