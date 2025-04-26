@@ -1,7 +1,15 @@
++ "use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+   // Don’t render the footer on the Stripe checkout page
+   if (pathname === "/get-credits") {
+    return null;
+  }
   return (
     <footer className="border-t py-12 md:py-16">
       <div className="container px-4 md:px-6">
