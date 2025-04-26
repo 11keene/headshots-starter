@@ -1,4 +1,5 @@
-+ "use client";
+// components/Footer.tsx
+"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -6,10 +7,12 @@ import { usePathname } from "next/navigation";
 
 export default function Footer() {
   const pathname = usePathname();
-   // Don’t render the footer on the Stripe checkout page
-   if (pathname === "/get-credits") {
+
+  // Don’t render the footer on the Overview page
+  if (pathname === "/overview") {
     return null;
   }
+
   return (
     <footer className="border-t py-12 md:py-16">
       <div className="container px-4 md:px-6">
@@ -33,17 +36,26 @@ export default function Footer() {
             <h3 className="text-sm font-medium">Product</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link
+                  href="#how-it-works"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
                   How It Works
                 </Link>
               </li>
               <li>
-                <Link href="#examples" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link
+                  href="#examples"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
                   Examples
                 </Link>
               </li>
               <li>
-                <Link href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link
+                  href="#pricing"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
                   Pricing
                 </Link>
               </li>
@@ -53,28 +65,31 @@ export default function Footer() {
             <h3 className="text-sm font-medium">Resources</h3>
             <ul className="space-y-2">
               <li>
-                <Link 
-                  href="https://github.com/astriaai/headshots-starter" 
+                <Link
+                  href="https://github.com/astriaai/headshots-starter"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   GitHub
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="https://docs.astria.ai/docs/api/pack/pack/" 
+                <Link
+                  href="https://docs.astria.ai/docs/api/pack/pack/"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   Documentation
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="https://twitter.com/Astria_AI" 
+                <Link
+                  href="https://twitter.com/Astria_AI"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   Twitter
                 </Link>
@@ -85,18 +100,19 @@ export default function Footer() {
             <h3 className="text-sm font-medium">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <Link 
-                  href="mailto:support@astria.ai" 
+                <Link
+                  href="mailto:support@astria.ai"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Contact
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="https://choosealicense.com/licenses/mit/" 
+                <Link
+                  href="https://choosealicense.com/licenses/mit/"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   target="_blank"
+                  rel="noopener noreferrer"
                 >
                   License
                 </Link>
@@ -109,14 +125,10 @@ export default function Footer() {
             © {new Date().getFullYear()} AI Maven. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              
-              
-            </p>
+            {/* any social icons or extra links */}
           </div>
         </div>
       </div>
     </footer>
   );
 }
-
