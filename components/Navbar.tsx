@@ -6,7 +6,6 @@ import { cookies } from "next/headers";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -40,10 +39,10 @@ export default async function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* Logo */}
+        {/* Logo + Site Name */}
         <Link
           href="/"
-          className="flex-shrink-0 flex items-center gap-2 font-semibold whitespace-nowrap text-lg sm:text-xl"
+          className="flex-shrink-0 flex items-center gap-2 font-semibold whitespace-nowrap text-xl sm:text-2xl"
         >
           <Image
             src="/logo.png"
@@ -55,27 +54,29 @@ export default async function Navbar() {
           <span>AI Maven</span>
         </Link>
 
-        {/* Nav – always visible, but horizontal-scroll on tiny */}
+        {/* Nav – scrollable on small, full gap on larger */}
         {user && (
-          <nav className="flex flex-nowrap overflow-x-auto gap-2 sm:gap-4 md:gap-6 whitespace-nowrap">
+          <nav className="flex flex-nowrap overflow-x-auto gap-3 sm:gap-5 md:gap-6 whitespace-nowrap">
             <Link
               href="/overview"
-              className="flex-shrink-0 text-xs sm:text-sm font-medium hover:text-primary transition-colors"
+              className="flex-shrink-0 text-sm sm:text-base font-medium hover:text-primary transition-colors"
             >
               Home
             </Link>
+
             {packsIsEnabled && (
               <Link
                 href="/overview/packs"
-                className="flex-shrink-0 text-xs sm:text-sm font-medium hover:text-primary transition-colors"
+                className="flex-shrink-0 text-sm sm:text-base font-medium hover:text-primary transition-colors"
               >
                 Packs
               </Link>
             )}
+
             {stripeIsConfigured && (
               <Link
                 href="/get-credits"
-                className="flex-shrink-0 text-xs sm:text-sm font-medium hover:text-primary transition-colors"
+                className="flex-shrink-0 text-sm sm:text-base font-medium hover:text-primary transition-colors"
               >
                 Get Credits
               </Link>
@@ -91,7 +92,7 @@ export default async function Navbar() {
             <>
               <Link
                 href="/login"
-                className="hidden sm:block text-xs sm:text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
+                className="hidden sm:block text-sm sm:text-base font-medium hover:text-primary transition-colors whitespace-nowrap"
               >
                 Login
               </Link>
