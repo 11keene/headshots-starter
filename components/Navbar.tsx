@@ -38,63 +38,52 @@ export default async function Navbar() {
     .single();
 
   return (
-    <header className="sticky top-0 z-[100] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        {/* Logo + site name */}
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        {/* Logo */}
         <Link
           href="/"
-          className="flex-shrink-0 flex items-center gap-2 font-bold text-xl whitespace-nowrap"
+          className="flex-shrink-0 flex items-center gap-2 font-semibold whitespace-nowrap text-lg sm:text-xl"
         >
           <Image
             src="/logo.png"
             alt="AI Maven Logo"
-            width={28}
-            height={28}
+            width={24}
+            height={24}
             className="rounded-full"
           />
           <span>AI Maven</span>
         </Link>
 
+        {/* Nav – always visible, but horizontal-scroll on tiny */}
         {user && (
-          <>
-            {/* Desktop: full nav */}
-            <nav className="hidden md:flex gap-4 md:gap-6 whitespace-nowrap">
+          <nav className="flex flex-nowrap overflow-x-auto gap-2 sm:gap-4 md:gap-6 whitespace-nowrap">
+            <Link
+              href="/overview"
+              className="flex-shrink-0 text-xs sm:text-sm font-medium hover:text-primary transition-colors"
+            >
+              Home
+            </Link>
+            {packsIsEnabled && (
               <Link
-                href="/overview"
-                className="text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
+                href="/overview/packs"
+                className="flex-shrink-0 text-xs sm:text-sm font-medium hover:text-primary transition-colors"
               >
-                Home
+                Packs
               </Link>
-              {packsIsEnabled && (
-                <Link
-                  href="/overview/packs"
-                  className="text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
-                >
-                  Packs
-                </Link>
-              )}
-              {stripeIsConfigured && (
-                <Link
-                  href="/get-credits"
-                  className="text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
-                >
-                  Get Credits
-                </Link>
-              )}
-            </nav>
-
-            {/* Mobile: only Get Credits */}
+            )}
             {stripeIsConfigured && (
               <Link
                 href="/get-credits"
-                className="block md:hidden flex-shrink-0 text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
+                className="flex-shrink-0 text-xs sm:text-sm font-medium hover:text-primary transition-colors"
               >
                 Get Credits
               </Link>
             )}
-          </>
+          </nav>
         )}
 
+        {/* Right side */}
         <div className="flex items-center gap-4">
           <ThemeToggle />
 
@@ -102,12 +91,12 @@ export default async function Navbar() {
             <>
               <Link
                 href="/login"
-                className="hidden sm:block text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
+                className="hidden sm:block text-xs sm:text-sm font-medium hover:text-primary transition-colors whitespace-nowrap"
               >
                 Login
               </Link>
               <Link href="/login">
-                <Button>Create headshots</Button>
+                <Button size="sm">Create headshots</Button>
               </Link>
             </>
           )}
@@ -119,24 +108,20 @@ export default async function Navbar() {
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 p-0"
-                  >
+                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
                     <AvatarIcon className="h-6 w-6 text-primary" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 z-[101]">
-                  <DropdownMenuLabel className="text-primary text-center overflow-hidden text-ellipsis whitespace-nowrap">
+                <DropdownMenuContent className="w-56 z-50">
+                  <DropdownMenuLabel className="text-primary text-center whitespace-nowrap">
                     {user.email}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <form action="/auth/sign-out" method="post">
                     <Button
                       type="submit"
-                      className="w-full text-left"
                       variant="ghost"
+                      className="w-full text-left whitespace-nowrap"
                     >
                       Log out
                     </Button>
