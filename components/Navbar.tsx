@@ -59,7 +59,7 @@ export default async function Navbar() {
           <nav className="flex flex-nowrap overflow-x-auto gap-3 sm:gap-5 md:gap-6 whitespace-nowrap">
             <Link
               href="/overview"
-              className="flex-shrink-0 text-sm sm:text-base font-medium hover:text-primary transition-colors"
+              className="flex-shrink-0 text-sm sm:text-base font-bold hover:text-primary transition-colors"
             >
               Home
             </Link>
@@ -67,7 +67,7 @@ export default async function Navbar() {
             {packsIsEnabled && (
               <Link
                 href="/overview/packs"
-                className="flex-shrink-0 text-sm sm:text-base font-medium hover:text-primary transition-colors"
+                className="flex-shrink-0 text-sm sm:text-base font-bold hover:text-primary transition-colors"
               >
                 Packs
               </Link>
@@ -76,7 +76,7 @@ export default async function Navbar() {
             {stripeIsConfigured && (
               <Link
                 href="/get-credits"
-                className="flex-shrink-0 text-sm sm:text-base font-medium hover:text-primary transition-colors"
+                className="flex-shrink-0 text-sm sm:text-base font-bold hover:text-primary transition-colors"
               >
                 Get Credits
               </Link>
@@ -92,7 +92,7 @@ export default async function Navbar() {
             <>
               <Link
                 href="/login"
-                className="hidden sm:block text-sm sm:text-base font-medium hover:text-primary transition-colors whitespace-nowrap"
+                className="hidden sm:block text-sm sm:text-base font-semibold hover:text-primary transition-colors whitespace-nowrap"
               >
                 Login
               </Link>
