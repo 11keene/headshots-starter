@@ -47,9 +47,9 @@ export default async function Navbar() {
           <Image
             src="/logo.png"
             alt="AI Maven Logo"
-            width={24}
-            height={24}
-            className="rounded-full w-5 h-5 sm:w-6 sm:h-6"
+            width={18}
+            height={18}
+            className="rounded-full w-3 h-3 sm:w-6 sm:h-6"
           />
           <span>AI Maven</span>
         </Link>
@@ -59,7 +59,7 @@ export default async function Navbar() {
           <nav className="flex flex-nowrap overflow-x-auto gap-3 sm:gap-5 md:gap-6 whitespace-nowrap">
             <Link
               href="/overview"
-              className="flex-shrink-0 text-sm sm:text-base font-bold hover:text-primary transition-colors"
+              className="flex-shrink-0 text-sm sm:text-base font-semibold hover:text-primary transition-colors"
             >
               Home
             </Link>
@@ -67,7 +67,7 @@ export default async function Navbar() {
             {packsIsEnabled && (
               <Link
                 href="/overview/packs"
-                className="flex-shrink-0 text-sm sm:text-base font-bold hover:text-primary transition-colors"
+                className="flex-shrink-0 text-sm sm:text-base font-semibold hover:text-primary transition-colors"
               >
                 Packs
               </Link>
@@ -76,7 +76,7 @@ export default async function Navbar() {
             {stripeIsConfigured && (
               <Link
                 href="/get-credits"
-                className="flex-shrink-0 text-sm sm:text-base font-bold hover:text-primary transition-colors"
+                className="flex-shrink-0 text-sm sm:text-base font-semibold hover:text-primary transition-colors"
               >
                 Get Credits
               </Link>
