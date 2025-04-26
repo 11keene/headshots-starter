@@ -14,9 +14,14 @@ import {
 import { FaArrowLeft } from "react-icons/fa";
 import TrainModelZone from "@/components/TrainModelZone";
 import IntakeForm from "@/components/IntakeForm";
-
+import StripeCheckoutButton from "@/components/StripeCheckoutButton";
 const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
-
+const PRICE_IDS: Record<string,string> = {
+    starter: "price_1RHmnVCs03tLUXoK4iTvnduW",
+    standard: "price_1RHmnnCs03tLUXoKLXWGbUqt",
+    pro:      "price_1RHmo9Cs03tLUXoKiIai8D2O",
+    studio:   "price_1RHmoNCs03tLUXoKRpzgeqUu",
+  };
 export default function TrainModelFlow({
   packSlug,
 }: {
@@ -48,18 +53,26 @@ export default function TrainModelFlow({
               : "First, tell us how you want your headshots to look."}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          {!showUpload ? (
-            // Step 1: Intake form
-            <IntakeForm
-              pack={packSlug}
-              onComplete={() => setShowUpload(true)}
-            />
-          ) : (
-            // Step 2: Your existing upload component
-            <TrainModelZone packSlug={packSlug} />
-          )}
-        </CardContent>
+        <CardContent className="grid gap-6">
+  {!showUpload ? (
+    /* step 1: questionnaire */
+    <IntakeForm
+      pack={packSlug}
+      onComplete={() => setShowUpload(true)}
+    />
+  ) : (
+    /* step 2: uploads + checkout */
+    <div className="flex flex-col gap-6">
+      {/* your existing upload zone */}
+      <TrainModelZone packSlug={packSlug} />
+
+      {/* stripe checkout button */}
+      <div className="mt-4 text-center">
+        <StripeCheckoutButton priceId={PRICE_IDS[packSlug]} />
+      </div>
+    </div>
+  )}
+</CardContent>
       </Card>
     </div>
   );
