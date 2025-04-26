@@ -49,7 +49,6 @@ export async function POST(req: Request) {
     // Create Stripe session
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      payment_method_types: ['card', 'link'],  // You can add 'apple_pay' here too
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${YOUR_DOMAIN}/success`,
       cancel_url: `${YOUR_DOMAIN}/cancel`,
