@@ -24,6 +24,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useCallback, useState, useEffect } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+);
 import { useDropzone } from "react-dropzone";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { FaFemale, FaImages, FaMale, FaRainbow } from "react-icons/fa";
@@ -344,7 +348,7 @@ export default function TrainModelZone({ packSlug }: { packSlug: string }) {
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             Train Model{" "}
-            {stripeIsConfigured && <span className="ml-1">(25 Credits)</span>}
+            {stripeIsConfigured && <span className="ml-1">(25 Credit)</span>}
           </Button>
         </form>
       </Form>
