@@ -12,9 +12,9 @@ if (!stripeSecretKey) throw new Error('Missing STRIPE_SECRET_KEY')
 console.error("STRIPE_SECRET_KEY is missing!");
 
 // Create Stripe instance with error handling
-const stripe = new Stripe(stripeSecretKey || "", {
-  apiVersion: '2025-03-31.basil',
-});
+const stripe = new Stripe(stripeSecretKey, {
+    apiVersion: '2025-03-31.basil',
+  })
 
 export async function POST(req: Request) {
   // Wrap everything in try-catch to ensure we always return valid JSON
