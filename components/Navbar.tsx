@@ -42,14 +42,14 @@ export default async function Navbar() {
         {/* Logo + Site Name */}
         <Link
           href="/"
-          className="flex-shrink-0 flex items-center gap-2 font-semibold whitespace-nowrap text-xl sm:text-2xl"
+          className="flex-shrink-0 flex items-center gap-1 sm:gap-2 font-semibold whitespace-nowrap text-lg sm:text-xl"
         >
           <Image
             src="/logo.png"
             alt="AI Maven Logo"
             width={24}
             height={24}
-            className="rounded-full"
+            className="rounded-full w-5 h-5 sm:w-6 sm:h-6"
           />
           <span>AI Maven</span>
         </Link>
