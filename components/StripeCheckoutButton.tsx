@@ -1,26 +1,39 @@
 // components/StripeCheckoutButton.tsx
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
+
+console.log('🔑 Loaded publishable key:', process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 )
 
 export default function StripeCheckoutButton({ priceId }: { priceId: string }) {
+  useEffect(() => {
+    stripePromise.then(stripe => {
+      console.log('🧩 stripePromise resolved to:', stripe)
+    })
+  }, [])
   const [loading, setLoading] = useState(false)
 
   const handleClick = async () => {
+    console.log('🚀 Starting checkout for priceId:', priceId)
     setLoading(true)
     const res = await fetch('/api/stripe/checkout/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ priceId }),
     })
-    const { url } = await res.json()
+    const { id } = await res.json()
+    console.log('✅ Received session id:', id)
     const stripe = await stripePromise
-    if (stripe && url) stripe.redirectToCheckout({ sessionId: new URL(url).searchParams.get('session_id')! })
+    if (stripe && id) {
+      console.log('🔄 Redirecting to checkout.sessionId =', id)
+      await stripe.redirectToCheckout({ sessionId: id })
+    }
     setLoading(false)
   }
 

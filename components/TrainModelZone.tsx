@@ -344,7 +344,7 @@ export default function TrainModelZone({ packSlug }: { packSlug: string }) {
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             Train Model{" "}
-            {stripeIsConfigured && <span className="ml-1">(1 Credit)</span>}
+            {stripeIsConfigured && <span className="ml-1">(25 Credits)</span>}
           </Button>
         </form>
       </Form>
