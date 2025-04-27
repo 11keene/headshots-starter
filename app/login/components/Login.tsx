@@ -118,9 +118,13 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
         {isSubmitted && errors.email && (
           <span className="text-xs text-red-400">{errors.email.message}</span>
         )}
-        <Button type="submit" isLoading={isSubmitting} className="w-full">
-          Continue with Email
-        </Button>
+      <Button
+  type="submit"
+  isLoading={isSubmitting}
+  className="w-full bg-white text-black border border-gray-300 rounded hover:bg-gray-100"
+>
+  Continue with Email
+</Button>
       </form>
 
       {/* Terms & guarantees */}
