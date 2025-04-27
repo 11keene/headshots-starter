@@ -90,7 +90,7 @@ export default async function Navbar() {
 
           {!user && (
             <>
-          
+              
               <Link href="/login">
                 <Button size="sm">Login</Button>
               </Link>
