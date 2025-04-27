@@ -68,7 +68,13 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
 
   // OAuth handler for Google/Facebook
   const socialSignIn = (provider: "google" | "facebook" | "apple") =>
-      supabase.auth.signInWithOAuth({ provider });
+    supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        // point at your new callback route:
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
 
   if (isMagicLinkSent) {
     return <WaitingForMagicLink toggleState={() => setIsMagicLinkSent(false)} />;
