@@ -8,8 +8,8 @@ import { usePathname } from "next/navigation";
 export default function Footer() {
   const pathname = usePathname();
 
-  // Don’t render the footer on Overview or Login pages
-  if (pathname === "/overview" || pathname === "/login") {
+    // Only render the footer on the homepage ("/")
+    if (pathname !== "/") {
     return null;
   }
 
