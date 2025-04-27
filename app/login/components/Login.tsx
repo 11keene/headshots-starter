@@ -1,7 +1,7 @@
-// app/login/components/Login.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
@@ -11,22 +11,45 @@ import { FaFacebookF, FaLock } from "react-icons/fa";
 import { HiShieldCheck } from "react-icons/hi";
 import { MdEmail } from "react-icons/md";
 import OR from "@/components/OR";
-import WaitingForMagicLink from "./WaitingForMagicLink";  // <-- default import now
+import WaitingForMagicLink from "./WaitingForMagicLink";
 import { useToast } from "@/components/ui/use-toast";
 
 type Inputs = { email: string };
 
 export default function Login({ redirectTo }: { redirectTo: string }) {
+  const router = useRouter();
   const supabase = createClientComponentClient();
+
+  // Removed invalid supabase.auth.update call
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
   const { toast } = useToast();
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitted },
   } = useForm<Inputs>();
 
+  // — as soon as this component mounts, if there's already a session, send them to /overview
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace("/overview");
+    });
+
+    // — listen for any new sign-in and redirect right away
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        router.replace("/overview");
+      }
+    });
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [supabase, router]);
+
+  // magic-link handler
   const onSubmit: SubmitHandler<Inputs> = async ({ email }) => {
     setIsSubmitting(true);
     const { error } = await supabase.auth.signInWithOtp({
@@ -42,9 +65,9 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     }
   };
 
+  // OAuth handler for Google/Facebook
   const socialSignIn = (provider: "google" | "facebook") =>
-    supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
-
+    supabase.auth.signInWithOAuth({ provider });
 
   if (isMagicLinkSent) {
     return <WaitingForMagicLink toggleState={() => setIsMagicLinkSent(false)} />;
