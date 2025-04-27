@@ -44,17 +44,7 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
 
   const socialSignIn = (provider: "google" | "facebook") =>
     supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
-  (async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: "https://aimavenstudio.com/auth/v1/callback"
-      }
-    });
-    if (error) {
-      console.error("OAuth sign-in error:", error.message);
-    }
-  })();
+
 
   if (isMagicLinkSent) {
     return <WaitingForMagicLink toggleState={() => setIsMagicLinkSent(false)} />;
