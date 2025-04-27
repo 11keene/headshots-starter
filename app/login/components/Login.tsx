@@ -1,9 +1,10 @@
 // app/login/components/Login.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FcGoogle } from "react-icons/fc";
@@ -11,13 +12,14 @@ import { FaFacebookF, FaLock } from "react-icons/fa";
 import { HiShieldCheck } from "react-icons/hi";
 import { MdEmail } from "react-icons/md";
 import OR from "@/components/OR";
-import WaitingForMagicLink from "./WaitingForMagicLink";  // <-- default import now
+import WaitingForMagicLink from "./WaitingForMagicLink";
 import { useToast } from "@/components/ui/use-toast";
 
 type Inputs = { email: string };
 
 export default function Login({ redirectTo }: { redirectTo: string }) {
   const supabase = createClientComponentClient();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
   const { toast } = useToast();
@@ -26,6 +28,20 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     handleSubmit,
     formState: { errors, isSubmitted },
   } = useForm<Inputs>();
+
+  // ✨ Add Auth Listener Here
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        console.log("User signed in! Redirecting to dashboard...");
+        router.push("/dashboard"); // ✅ Send them to the client portal
+      }
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [supabase, router]);
 
   const onSubmit: SubmitHandler<Inputs> = async ({ email }) => {
     setIsSubmitting(true);
@@ -43,7 +59,10 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
   };
 
   const socialSignIn = (provider: "google" | "facebook") =>
-    supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
+    supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo },
+    });
 
   if (isMagicLinkSent) {
     return <WaitingForMagicLink toggleState={() => setIsMagicLinkSent(false)} />;
@@ -118,3 +137,4 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     </div>
   );
 }
+
