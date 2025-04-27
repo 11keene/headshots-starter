@@ -17,5 +17,5 @@ export async function GET(request: Request) {
   }
 
   // send the user on to your client portal
-  return NextResponse.redirect(`${url.origin}${nextPath}`);
+  return NextResponse.redirect(`${url.origin}/overview`);
 }
