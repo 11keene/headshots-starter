@@ -1,5 +1,5 @@
 // components/Navbar.tsx
-
+import { usePathname } from "next/navigation";
 import { AvatarIcon } from "@radix-ui/react-icons";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -25,6 +25,7 @@ const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
 export const revalidate = 0;
 
 export default async function Navbar() {
+  const pathname = usePathname();
   const supabase = createServerComponentClient<Database>({ cookies });
   const {
     data: { user },
@@ -88,14 +89,11 @@ export default async function Navbar() {
         <div className="flex items-center gap-4">
           <ThemeToggle />
 
-          {!user && (
-            <>
-              
-              <Link href="/login">
-                <Button size="sm">Login</Button>
-              </Link>
-            </>
-          )}
+{!user && pathname !== "/login" && (
+  <Link href="/login">
+    <Button size="sm">Login</Button>
+  </Link>
+)}
 
           {user && (
             <div className="flex items-center gap-4">
