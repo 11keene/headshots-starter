@@ -89,12 +89,12 @@ export default async function Navbar() {
           <ThemeToggle />
 
           {!user && (
-            <>
+        
               
               <Link href="/login">
                 <Button size="sm">Login</Button>
               </Link>
-            </>
+        
           )}
 
           {user && (
