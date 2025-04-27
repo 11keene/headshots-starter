@@ -1,3 +1,5 @@
+// app/auth/callback/route.ts (or wherever your file is)
+
 import { Database } from "@/types/supabase";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { isAuthApiError } from "@supabase/supabase-js";
@@ -8,7 +10,7 @@ export async function GET(req: NextRequest) {
   const requestUrl = new URL(req.url);
   const code = requestUrl.searchParams.get("code");
   const error = requestUrl.searchParams.get("error");
-  const next = requestUrl.searchParams.get("next") || "/";
+  const next = requestUrl.searchParams.get("next") || "/overview"; // ✅ CHANGED fallback to /overview
   const error_description = requestUrl.searchParams.get("error_description");
 
   if (error) {
@@ -24,8 +26,6 @@ export async function GET(req: NextRequest) {
 
     try {
       await supabase.auth.exchangeCodeForSession(code);
-
-      // ater exchanging the code, we should check if the user has a feature-flag row and a credits now, if not, we should create one
 
       const { data: user, error: userError } = await supabase.auth.getUser();
 
@@ -56,5 +56,5 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(new URL(next, req.url));
+  return NextResponse.redirect(new URL(next, requestUrl.origin)); // ✅ FIX: next based on origin
 }
