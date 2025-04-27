@@ -90,12 +90,7 @@ export default async function Navbar() {
 
           {!user && (
             <>
-              <Link
-                href="/login"
-                className="hidden sm:block text-sm sm:text-base font-semibold hover:text-primary transition-colors whitespace-nowrap"
-              >
-                Login
-              </Link>
+              
               <Link href="/login">
                 <Button size="sm">Login</Button>
               </Link>
