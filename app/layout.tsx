@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
+import dynamic from "next/dynamic";
+const Navbar = dynamic(() => import("@/components/Navbar"), { ssr: false });
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { Suspense } from "react";
