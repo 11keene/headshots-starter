@@ -6,6 +6,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FaApple } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF, FaLock } from "react-icons/fa";
 import { HiShieldCheck } from "react-icons/hi";
@@ -66,8 +67,8 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
   };
 
   // OAuth handler for Google/Facebook
-  const socialSignIn = (provider: "google" | "facebook") =>
-    supabase.auth.signInWithOAuth({ provider });
+  const socialSignIn = (provider: "google" | "facebook" | "apple") =>
+      supabase.auth.signInWithOAuth({ provider });
 
   if (isMagicLinkSent) {
     return <WaitingForMagicLink toggleState={() => setIsMagicLinkSent(false)} />;
@@ -80,7 +81,14 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
         <img src="/logo.png" alt="AI Maven Logo" className="w-8 h-8 rounded-full" />
         <span className="text-xl font-bold">AI Maven</span>
       </div>
-
+{/* Apple OAuth button */}
+<Button
+  onClick={() => socialSignIn("apple")}
+  className="w-full flex items-center justify-center gap-2 rounded-md bg-black hover:opacity-90 text-white py-4 font-semibold transition"
+>
+  <FaApple size={20} />
+  Continue with Apple
+</Button>
       {/* Google */}
       <Button
         onClick={() => socialSignIn("google")}
@@ -121,7 +129,7 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
       <Button
   type="submit"
   isLoading={isSubmitting}
-  className="w-full bg-white text-black border border-gray-300 rounded hover:bg-gray-100"
+   className="w-full bg-white text-black font-semibold border border-gray-300 rounded px-4 py-2 hover:bg-gray-100"
 >
   Continue with Email
 </Button>
