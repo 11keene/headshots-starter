@@ -25,7 +25,6 @@ const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
 export const revalidate = 0;
 
 export default async function Navbar() {
-  const pathname = usePathname();
   const supabase = createServerComponentClient<Database>({ cookies });
   const {
     data: { user },
@@ -89,11 +88,19 @@ export default async function Navbar() {
         <div className="flex items-center gap-4">
           <ThemeToggle />
 
-{!user && pathname !== "/login" && (
-  <Link href="/login">
-    <Button size="sm">Login</Button>
-  </Link>
-)}
+          {!user && (
+            <>
+              <Link
+                href="/login"
+                className="hidden sm:block text-sm sm:text-base font-semibold hover:text-primary transition-colors whitespace-nowrap"
+              >
+                Login
+              </Link>
+              <Link href="/login">
+                <Button size="sm">Login</Button>
+              </Link>
+            </>
+          )}
 
           {user && (
             <div className="flex items-center gap-4">
