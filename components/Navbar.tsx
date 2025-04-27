@@ -97,7 +97,7 @@ export default async function Navbar() {
                 Login
               </Link>
               <Link href="/login">
-                <Button size="sm">Create headshots</Button>
+                <Button size="sm">Login</Button>
               </Link>
             </>
           )}
