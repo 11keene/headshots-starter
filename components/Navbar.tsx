@@ -1,5 +1,5 @@
 // components/Navbar.tsx
-import { usePathname } from "next/navigation";
+
 import { AvatarIcon } from "@radix-ui/react-icons";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
