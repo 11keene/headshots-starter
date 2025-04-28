@@ -15,7 +15,7 @@ export default function OverviewClient({ serverModels }: { serverModels: any[] }
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-8">
+    <div className="flex flex-col items-center w-full px-4">
       {/* Tabs */}
       <div className="flex gap-6 mt-8 mb-8">
         <button
