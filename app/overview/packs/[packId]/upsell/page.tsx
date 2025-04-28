@@ -1,59 +1,84 @@
+// app/overview/packs/[packId]/upsell/page.tsx
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-// absolute import of our typed data
-import type { Pack } from "data/packs";
-import { packs } from "data/packs";
+import { useParams, useRouter } from "next/navigation";
+import { packs } from "../../../../../data/packs"; // adjust if your data folder is elsewhere
 
 export default function HeadshotUpsell() {
   const { packId } = useParams();
-  const [showAll, setShowAll] = useState(false);
-  const VISIBLE = 3;
-  const visiblePacks: Pack[] = showAll ? packs : packs.slice(0, VISIBLE);
+  const router = useRouter();
+
+  // track which packs the user has clicked
+  const [selected, setSelected] = useState<string[]>([]);
+
+  const togglePack = (id: string) => {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const goCustom = () => {
+    router.push("/custom-intake");
+  };
+
+  const goContinue = () => {
+    // pass the extra packs as a query param to the upload step
+    const extra = selected.join(",");
+    router.push(`/overview/packs/${packId}/next?extraPacks=${extra}`);
+  };
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-2">Add a Custom Photoshoot?</h1>
-      <p className="mb-4">Upsell extra creative packs to your headshot order.</p>
+      <h1 className="text-2xl font-bold mb-4">Select Additional Packs</h1>
+      <p className="text-muted-foreground mb-6">
+        Click on any packs below to add them to your headshot order.
+      </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
-      {visiblePacks.map((pack: Pack) => (
-          <div key={pack.id} className="border rounded-lg overflow-hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {packs.map((pack) => (
+          <div
+            key={pack.id}
+            onClick={() => togglePack(pack.id)}
+            className={`
+              cursor-pointer 
+              border rounded-lg overflow-hidden 
+              transition-shadow
+              ${selected.includes(pack.id) 
+                ? "ring-4 ring-blue-500 shadow-lg" 
+                : "hover:shadow-md"
+              }
+            `}
+          >
             <img
               src={pack.exampleImg}
               alt={pack.name}
               className="w-full h-40 object-cover"
             />
-            <div className="p-2 text-center">
-              <p className="font-semibold">{pack.name}</p>
-              <Link
-                href={`/overview/packs/${packId}/intake?addPack=${pack.id}`}
-                className="mt-2 inline-block px-4 py-1 bg-blue-600 text-white rounded"
-              >
-                Add Pack
-              </Link>
-            </div>
+            <div className="p-2 text-center font-semibold">{pack.name}</div>
           </div>
         ))}
       </div>
 
-      {!showAll && packs.length > VISIBLE && (
+      <div className="mt-8 flex flex-col gap-4">
         <button
-          onClick={() => setShowAll(true)}
-          className="mb-4 text-blue-600 hover:underline"
+          onClick={goCustom}
+          className="w-full px-6 py-2 bg-purple-600 text-white rounded-md"
         >
-          See More…
+          Add a Custom Photoshoot
         </button>
-      )}
-
-      <Link
-        href={`/overview/packs/${packId}/next`}
-        className="block text-center px-6 py-2 bg-green-600 text-white font-medium rounded"
-      >
-        Continue
-      </Link>
+        <button
+          onClick={goContinue}
+          disabled={selected.length === 0}
+          className="w-full px-6 py-2 bg-green-600 text-white rounded-md disabled:opacity-50"
+        >
+          Continue
+        </button>
+        <p className="text-center text-sm text-muted-foreground">
+          Or choose another pack
+        </p>
+      </div>
     </div>
-  );
+);
 }
+
