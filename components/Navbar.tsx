@@ -66,7 +66,7 @@ export default async function Navbar() {
 
             {packsIsEnabled && (
               <Link
-                href="/overview/packs"
+                 href="/overview/packs"
                 className="flex-shrink-0 text-sm sm:text-base font-semibold hover:text-primary transition-colors"
               >
                 Packs
@@ -76,8 +76,7 @@ export default async function Navbar() {
             {stripeIsConfigured && (
               <Link
                 href="/get-credits"
-                className="flex-shrink-0 text-sm sm:text-base font-semibold hover:text-primary transition-colors"
-              >
+                className="flex-shrink-0 text-sm sm:text-base font-semibold hover:text-primary transition-colors"              >
                 Get Credits
               </Link>
             )}
