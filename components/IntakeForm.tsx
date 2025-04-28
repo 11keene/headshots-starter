@@ -1,3 +1,4 @@
+// components/IntakeForm.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -57,12 +58,12 @@ const QUESTIONS: Question[] = [
   },
 ];
 
-type IntakeFormProps = { 
-   pack: string;
-   onComplete?: () => void;  
+type IntakeFormProps = {
+  pack: string;
+  onComplete?: () => void;
 };
 
-export default function IntakeForm({ pack,}: IntakeFormProps) {
+export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -70,7 +71,9 @@ export default function IntakeForm({ pack,}: IntakeFormProps) {
   // Load saved answers if user reloads
   useEffect(() => {
     const saved = localStorage.getItem(`intake-${pack}`);
-    if (saved) setAnswers(JSON.parse(saved));
+    if (saved) {
+      setAnswers(JSON.parse(saved));
+    }
   }, [pack]);
 
   // Save answers on every change
@@ -96,12 +99,11 @@ export default function IntakeForm({ pack,}: IntakeFormProps) {
     if (step < QUESTIONS.length - 1) {
       setStep(step + 1);
     } else {
-      // always send to the upsell page for this pack
       if (onComplete) {
-        onComplete();   // let parent handle it (e.g. TrainModelFlow)
+        onComplete();
       } else {
-         // fallback for flows that don’t supply onComplete
-         router.push(`/overview/packs/${pack}/upsell`);
+        router.push(`/overview/packs/${pack}/upsell`);
+      }
     }
   }
 
