@@ -1,10 +1,9 @@
- // components/IntakeForm.tsx
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-// --------------- 1) Define your questions ----------------
 type Option = { label: string; value: string; img?: string };
 type Question = {
   key: string;
@@ -56,17 +55,15 @@ const QUESTIONS: Question[] = [
       { label: "Social Media", value: "social" },
     ],
   },
-  // add more questions if you like…
 ];
 
-// --------------- 2) Component ----------------
-export default function IntakeForm({
-  pack,
-  onComplete,
-}: {
+type IntakeFormProps = {
   pack: string;
-  onComplete: () => void;
-}) {
+  onComplete?: () => void;
+};
+
+export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
 
@@ -83,12 +80,10 @@ export default function IntakeForm({
 
   const question = QUESTIONS[step];
 
-  // Single‐choice selection
   function choose(val: any) {
     setAnswers((a) => ({ ...a, [question.key]: val }));
   }
 
-  // Multi‐choice toggling
   function toggle(val: any) {
     const cur: any[] = answers[question.key] || [];
     const next = cur.includes(val)
@@ -97,23 +92,24 @@ export default function IntakeForm({
     setAnswers((a) => ({ ...a, [question.key]: next }));
   }
 
-  // Next button handler
   function next() {
     if (step < QUESTIONS.length - 1) {
       setStep(step + 1);
     } else {
-      onComplete(); // tell parent we’re done
+      if (onComplete) {
+        onComplete();
+      } else {
+        router.push("/custom-intake/upsell");
+      }
     }
   }
 
-  // Back button
   function back() {
     if (step > 0) setStep(step - 1);
   }
 
   return (
     <div>
-      {/* Progress bar */}
       <progress
         className="w-full mb-4"
         value={step + 1}
@@ -121,7 +117,6 @@ export default function IntakeForm({
       />
       <h2 className="text-lg font-semibold mb-2">{question.title}</h2>
 
-      {/* Question UI */}
       <div className="mb-6">
         {question.type === "images" && (
           <div className="grid grid-cols-2 gap-4">
@@ -177,7 +172,6 @@ export default function IntakeForm({
         )}
       </div>
 
-      {/* Navigation buttons */}
       <div className="flex justify-between">
         <Button onClick={back} disabled={step === 0} variant="outline">
           Back
