@@ -59,10 +59,9 @@ const QUESTIONS: Question[] = [
 
 type IntakeFormProps = {
   pack: string;
-  onComplete?: () => void;
 };
 
-export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
+export default function IntakeForm({ pack,}: IntakeFormProps) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -96,11 +95,8 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
     if (step < QUESTIONS.length - 1) {
       setStep(step + 1);
     } else {
-      if (onComplete) {
-        onComplete();
-      } else {
-        router.push("/custom-intake/upsell");
-      }
+      // always send to the upsell page for this pack
+      router.push(`/overview/packs/${pack}/upsell`);
     }
   }
 
