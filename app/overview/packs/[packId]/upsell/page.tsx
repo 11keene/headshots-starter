@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+// ▼ Replace the alias import with a relative path:
 import { packs } from "../../../../../data/packs";
 
 export default function HeadshotUpsell() {
@@ -55,4 +56,3 @@ export default function HeadshotUpsell() {
     </div>
   );
 }
-
