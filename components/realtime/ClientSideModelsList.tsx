@@ -62,11 +62,7 @@ export default function ClientSideModelsList({
         <div className="flex flex-col gap-4">
           <div className="flex flex-row gap-4 w-full justify-between items-center text-center">
             <h1>Your models</h1>
-            <Link href={packsIsEnabled ? "/overview/packs" : "/overview/models/train/raw-tune"} className="w-fit">
-              <Button size={"sm"}>
-                Train model
-              </Button>
-            </Link>
+            
           </div>
           <ModelsTable models={models} />
         </div>
