@@ -51,16 +51,24 @@ export default function OverviewClient({ serverModels }: { serverModels: any[] }
       </div>
 
       {/* Custom Photoshoot */}
-      <div ref={customRef} className="flex flex-col items-center w-full max-w-md mb-20">
-        <h2 className="text-2xl font-bold mb-2 text-center">Choose Your Custom Style</h2>
-        <p className="text-muted-foreground mb-8 text-center">
-          Generate more complex and customizable images.
-        </p>
-        <Link href="/custom-intake" className="w-full">
-          {/* Add content here if needed */}
-        </Link>
-
-      </div>
+      <div
+  ref={customRef}
+  className="flex flex-col items-center w-full max-w-sm md:max-w-md lg:max-w-lg mb-20"
+>
+  <h2 className="text-2xl font-bold mb-2 text-center">
+    Choose Your Custom Style
+  </h2>
+  <p className="text-muted-foreground mb-8 text-center">
+    Generate more complex and customizable images.
+  </p>
+  <Link href="/custom-intake" className="w-full">
+    <img
+      src="/your-custom-example.jpg"
+      alt="Custom Photoshoot"
+      className="rounded-lg transition-transform duration-300 hover:scale-105 hover:shadow-xl w-full"
+    />
+  </Link>
+</div>
 
       {/* Models List */}
       <div className="w-full max-w-6xl">
