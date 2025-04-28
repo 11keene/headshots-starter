@@ -1,4 +1,3 @@
-cat > app/overview/packs/\[packId\]/next/page.tsx <<'EOF'
 "use client";
 
 import React, { useState } from "react";
@@ -6,7 +5,7 @@ import { useParams } from "next/navigation";
 
 export default function HeadshotNext() {
   const { packId } = useParams();
-  const [gender, setGender] = useState<"female"|"male"|"other">("other");
+  const [gender, setGender] = useState<"female" | "male" | "other">("other");
 
   return (
     <div className="p-8 max-w-xl mx-auto">
@@ -32,4 +31,3 @@ export default function HeadshotNext() {
     </div>
   );
 }
-EOF
