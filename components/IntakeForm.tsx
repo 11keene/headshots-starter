@@ -57,8 +57,9 @@ const QUESTIONS: Question[] = [
   },
 ];
 
-type IntakeFormProps = {
-  pack: string;
+type IntakeFormProps = { 
+   pack: string;
+   onComplete?: () => void;  
 };
 
 export default function IntakeForm({ pack,}: IntakeFormProps) {
@@ -96,7 +97,11 @@ export default function IntakeForm({ pack,}: IntakeFormProps) {
       setStep(step + 1);
     } else {
       // always send to the upsell page for this pack
-      router.push(`/overview/packs/${pack}/upsell`);
+      if (onComplete) {
+        onComplete();   // let parent handle it (e.g. TrainModelFlow)
+      } else {
+         // fallback for flows that don’t supply onComplete
+         router.push(`/overview/packs/${pack}/upsell`);
     }
   }
 
