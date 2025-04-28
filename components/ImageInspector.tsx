@@ -1,3 +1,6 @@
+"use client";
+
+
 import { useEffect, useState } from 'react';
 import { ImageInspectionResult, inspectImage } from '@/lib/imageInspection';
 import { Loader2 } from 'lucide-react';
