@@ -15,7 +15,7 @@ export default function OverviewClient({ serverModels }: { serverModels: any[] }
   };
 
   return (
-    <div className="flex flex-col items-center w-full px-4">
+    <div className="flex flex-col md:flex-row gap-8">
       {/* Tabs */}
       <div className="flex gap-6 mt-8 mb-8">
         <button
@@ -56,13 +56,10 @@ export default function OverviewClient({ serverModels }: { serverModels: any[] }
         <p className="text-muted-foreground mb-8 text-center">
           Generate more complex and customizable images.
         </p>
-        <Link href="/train" className="w-full">
-          <img
-            src="/your-custom-example.jpg"
-            alt="Custom Photoshoot"
-            className="rounded-lg transition-transform duration-300 hover:scale-105 hover:shadow-xl w-full"
-          />
+        <Link href="/custom-intake" className="w-full">
+          {/* Add content here if needed */}
         </Link>
+
       </div>
 
       {/* Models List */}
