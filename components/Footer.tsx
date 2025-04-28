@@ -14,8 +14,8 @@ export default function Footer() {
   }
 
   return (
-    <footer className="border-t py-12 md:py-16">
-      <div className="container px-4 md:px-6">
+<footer className="bg-black text-white border-t py-12 md:py-16">
+<div className="container px-4 md:px-6">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2 font-bold text-xl">
