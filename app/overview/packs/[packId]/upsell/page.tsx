@@ -3,14 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-// ▼ Replace the alias import with a relative path:
-import { packs } from "@/data/packs";
+// absolute import of our typed data
+import type { Pack } from "data/packs";
+import { packs } from "data/packs";
 
 export default function HeadshotUpsell() {
   const { packId } = useParams();
   const [showAll, setShowAll] = useState(false);
   const VISIBLE = 3;
-  const visiblePacks = showAll ? packs : packs.slice(0, VISIBLE);
+  const visiblePacks: Pack[] = showAll ? packs : packs.slice(0, VISIBLE);
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -18,17 +19,17 @@ export default function HeadshotUpsell() {
       <p className="mb-4">Upsell extra creative packs to your headshot order.</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
-        {visiblePacks.map((p) => (
-          <div key={p.id} className="border rounded-lg overflow-hidden">
+      {visiblePacks.map((pack: Pack) => (
+          <div key={pack.id} className="border rounded-lg overflow-hidden">
             <img
-              src={p.exampleImg}
-              alt={p.name}
+              src={pack.exampleImg}
+              alt={pack.name}
               className="w-full h-40 object-cover"
             />
             <div className="p-2 text-center">
-              <p className="font-semibold">{p.name}</p>
+              <p className="font-semibold">{pack.name}</p>
               <Link
-                href={`/overview/packs/${packId}/intake?addPack=${p.id}`}
+                href={`/overview/packs/${packId}/intake?addPack=${pack.id}`}
                 className="mt-2 inline-block px-4 py-1 bg-blue-600 text-white rounded"
               >
                 Add Pack
