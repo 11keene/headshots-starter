@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { packs } from "@/data/packs";
 import { useParams } from "next/navigation";
+import { packs } from "../../../../../data/packs";
 
 export default function HeadshotUpsell() {
   const { packId } = useParams();
@@ -55,3 +55,4 @@ export default function HeadshotUpsell() {
     </div>
   );
 }
+
