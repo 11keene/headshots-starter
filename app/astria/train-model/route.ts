@@ -1,3 +1,4 @@
+// app/astria/train-model/route.ts
 import { Database } from "@/types/supabase";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import axios from "axios";
@@ -6,184 +7,163 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const astriaApiKey = process.env.ASTRIA_API_KEY;
-const astriaTestModeIsOn = process.env.ASTRIA_TEST_MODE === "true";
-const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
-const appWebhookSecret = process.env.APP_WEBHOOK_SECRET;
-const stripeIsConfigured = process.env.NEXT_PUBLIC_STRIPE_IS_ENABLED === "true";
+const ASTRIA_API_KEY = process.env.ASTRIA_API_KEY!;
+const TEST_MODE = process.env.ASTRIA_TEST_MODE === "true";
+const PACKS_ENABLED = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
+const WEBHOOK_SECRET = process.env.APP_WEBHOOK_SECRET!;
+const STRIPE = process.env.NEXT_PUBLIC_STRIPE_IS_ENABLED === "true";
 
-if (!appWebhookSecret) {
-  throw new Error("MISSING APP_WEBHOOK_SECRET!");
+// guard against missing secrets
+if (!WEBHOOK_SECRET) {
+  throw new Error("Missing APP_WEBHOOK_SECRET env var");
+}
+if (!ASTRIA_API_KEY) {
+  throw new Error("Missing ASTRIA_API_KEY env var");
 }
 
 export async function POST(request: Request) {
-  const payload = await request.json();
-  const images = payload.urls;
-  const type = payload.type;
-  const pack = payload.pack;
-  const name = payload.name;
-  const characteristics = payload.characteristics;
+  // 1) parse the incoming JSON
+  const { urls: images, type, pack, name, characteristics } =
+    await request.json();
 
+  // 2) verify user via Supabase
   const supabase = createRouteHandlerClient<Database>({ cookies });
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!user)
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
 
-  if (!astriaApiKey) {
+  // 3) basic validations
+  if (!Array.isArray(images) || images.length < 4) {
     return NextResponse.json(
-      { message: "Missing API Key: Add your Astria API Key to generate headshots" },
-      { status: 500 }
+      { message: "Please upload at least 4 sample images." },
+      { status: 400 }
     );
   }
 
-  if (images?.length < 4) {
-    return NextResponse.json({ message: "Upload at least 4 sample images" }, { status: 500 });
-  }
-
-  let creditRow = null;
-
-  if (stripeIsConfigured) {
-    const { error, data } = await supabase
+  // 4) (optional) check & deduct a credit
+  let creditRow: { credits: number } | null = null;
+  if (STRIPE) {
+    const { data, error } = await supabase
       .from("credits")
       .select("credits")
       .eq("user_id", user.id)
       .single();
-
-    if (error) {
-      console.error("Error checking credits:", error);
-      return NextResponse.json({ message: "Could not check credits." }, { status: 500 });
-    }
-
-    if (!data || data.credits < 1) {
+    if (error || !data) {
       return NextResponse.json(
-        { message: "Not enough credits. Please purchase credits and try again." },
-        { status: 400 }
+        { message: "Unable to verify credits." },
+        { status: 500 }
       );
     }
-
+    if (data.credits < 1) {
+      return NextResponse.json(
+        { message: "Not enough credits. Please purchase more." },
+        { status: 402 }
+      );
+    }
     creditRow = data;
   }
 
-  const { error: modelError, data: modelData } = await supabase
+  // 5) create a new model record in your DB
+  const { data: modelData, error: modelErr } = await supabase
     .from("models")
     .insert({ user_id: user.id, name, type })
     .select("id")
     .single();
-
-  if (modelError) {
-    console.error("modelError:", modelError);
-    return NextResponse.json({ message: "Something went wrong!" }, { status: 500 });
+  if (modelErr || !modelData) {
+    return NextResponse.json(
+      { message: "Failed to create model record." },
+      { status: 500 }
+    );
   }
-
-  const modelId = modelData?.id;
+  const modelId = modelData.id;
 
   try {
-    const deploymentUrl = process.env.DEPLOYMENT_URL || '';
-    const baseUrl = deploymentUrl.startsWith('http') ? deploymentUrl : `https://${deploymentUrl}`;
+    // 6) build your Astria webhook URLs
+    const base = process.env.DEPLOYMENT_URL
+      ? `https://${process.env.DEPLOYMENT_URL.replace(/^https?:\/\//, "")}`
+      : "";
+    const trainCb = `${base}/astria/train-webhook?user_id=${user.id}&model_id=${modelId}&webhook_secret=${WEBHOOK_SECRET}`;
+    const promptCb = `${base}/astria/prompt-webhook?user_id=${user.id}&model_id=${modelId}&webhook_secret=${WEBHOOK_SECRET}`;
 
-    const trainWebhookWithParams = `${baseUrl}/astria/train-webhook?user_id=${user.id}&model_id=${modelId}&webhook_secret=${appWebhookSecret}`;
-    const promptWebhookWithParams = `${baseUrl}/astria/prompt-webhook?user_id=${user.id}&model_id=${modelId}&webhook_secret=${appWebhookSecret}`;
-
-    const DOMAIN = "https://api.astria.ai";
-    const API_KEY = astriaApiKey;
-
-    const tuneBody = {
-      tune: {
-        title: name,
-        base_tune_id: 690204,
-        name: type,
-        branch: astriaTestModeIsOn ? "fast" : "sd15",
-        token: "ohwx",
-        image_urls: images,
-        callback: trainWebhookWithParams,
-        characteristics,
-        prompts_attributes: [
-          {
-            text: `portrait of ohwx ${type} wearing a business suit, professional photo, white background, Amazing Details, Best Quality, Masterpiece, dramatic lighting highly detailed, analog photo, overglaze, 80mm Sigma f/1.4 or any ZEISS lens`,
-            callback: promptWebhookWithParams,
-            num_images: 8,
+    // 7) choose the right request body shape
+    const tunePayload = PACKS_ENABLED
+      ? {
+          tune: {
+            title: name,
+            name: type,
+            image_urls: images,
+            callback: trainCb,
+            characteristics,
+            prompt_attributes: { callback: promptCb },
           },
-          {
-            text: `8k close up linkedin profile picture of ohwx ${type}, professional jack suite, professional headshots, photo-realistic, 4k, high-resolution image, workplace settings, upper body, modern outfit, professional suit, business, blurred background, glass building, office window`,
-            callback: promptWebhookWithParams,
-            num_images: 8,
+        }
+      : {
+          tune: {
+            title: name,
+            base_tune_id: 690204,
+            name: type,
+            branch: TEST_MODE ? "fast" : "sd15",
+            image_urls: images,
+            callback: trainCb,
+            characteristics,
+            prompts_attributes: [
+              {
+                text: `portrait of ohwx ${type} wearing a business suit…`,
+                callback: promptCb,
+                num_images: 8,
+              },
+              {
+                text: `8k close up linkedin profile picture of ohwx ${type}…`,
+                callback: promptCb,
+                num_images: 8,
+              },
+            ],
           },
-        ],
+        };
+
+    // 8) actually call Astria
+    const domain = "https://api.astria.ai";
+    const endpoint = PACKS_ENABLED ? `/p/${pack}/tunes` : "/tunes";
+    const res = await axios.post(domain + endpoint, tunePayload, {
+      headers: {
+        Authorization: `Bearer ${ASTRIA_API_KEY}`,
+        "Content-Type": "application/json",
       },
-    };
+    });
 
-    const packBody = {
-      tune: {
-        title: name,
-        name: type,
-        callback: trainWebhookWithParams,
-        characteristics,
-        prompt_attributes: {
-          callback: promptWebhookWithParams,
-        },
-        image_urls: images,
-      },
-    };
-
-    const response = await axios.post(
-      DOMAIN + (packsIsEnabled ? `/p/${pack}/tunes` : "/tunes"),
-      packsIsEnabled ? packBody : tuneBody,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${API_KEY}`,
-        },
-      }
-    );
-
-    if (response.status !== 201) {
-      console.error("Training error status:", response.status);
-      if (modelId) await supabase.from("models").delete().eq("id", modelId);
-
-      const message = response.status === 400
-        ? "webhookUrl must be a URL address"
-        : response.status === 402
-          ? "Training models is only available on paid plans."
-          : "Something went wrong during training.";
-
-      return NextResponse.json({ message }, { status: response.status });
+    if (res.status !== 201) {
+      // rollback on failure
+      await supabase.from("models").delete().eq("id", modelId);
+      return NextResponse.json(
+        { message: "Astria returned an error." },
+        { status: res.status }
+      );
     }
 
-    const { error: samplesError } = await supabase.from("samples").insert(
-      images.map((sample: string) => ({ modelId, uri: sample }))
-    );
+    // 9) store the sample URLs
+    await supabase
+      .from("samples")
+      .insert(images.map((uri: string) => ({ modelId, uri })));
 
-    if (samplesError) {
-      console.error("samplesError:", samplesError);
-      return NextResponse.json({ message: "Failed to save sample images." }, { status: 500 });
-    }
-
-    if (stripeIsConfigured && creditRow) {
-      const newCreditCount = creditRow.credits - 1;
-
-      const { error: updateError } = await supabase
+    // 10) deduct that credit
+    if (STRIPE && creditRow) {
+      await supabase
         .from("credits")
-        .update({ credits: newCreditCount })
+        .update({ credits: creditRow.credits - 1 })
         .eq("user_id", user.id);
-
-      if (updateError) {
-        console.error("Error updating credits:", updateError);
-        return NextResponse.json(
-          { message: "Failed to deduct credits" },
-          { status: 500 }
-        );
-      }
     }
   } catch (e) {
-    console.error("Unexpected training error:", e);
-    if (modelId) await supabase.from("models").delete().eq("id", modelId);
-    return NextResponse.json({ message: "Training failed." }, { status: 500 });
+    console.error("🛑 Astria training failed:", e);
+    // cleanup
+    await supabase.from("models").delete().eq("id", modelId);
+    return NextResponse.json(
+      { message: "Training request failed." },
+      { status: 500 }
+    );
   }
 
-  return NextResponse.json({ message: "success" }, { status: 200 });
+  // 11) success!
+  return NextResponse.json({ message: "Training started" }, { status: 200 });
 }

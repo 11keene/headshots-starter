@@ -1,33 +1,135 @@
+// app/overview/packs/[packId]/next/page.tsx
 "use client";
 
-import React, { useState } from "react";
-import { useParams } from "next/navigation";
+import { useState, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { FiUploadCloud, FiArrowLeft } from "react-icons/fi";
+import { Button } from "@/components/ui/button";
 
-export default function HeadshotNext() {
+export default function UploadPage() {
   const { packId } = useParams();
-  const [gender, setGender] = useState<"female" | "male" | "other">("other");
+  const router = useRouter();
+  const [files, setFiles] = useState<File[]>([]);
+
+  // handle file selection
+  const onFiles = useCallback((fList: FileList | null) => {
+    if (!fList) return;
+    const arr = Array.from(fList);
+    setFiles((prev) => [...prev, ...arr].slice(0, 10));
+  }, []);
+
+  // drag & drop
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    onFiles(e.dataTransfer.files);
+  }, [onFiles]);
 
   return (
-    <div className="p-8 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Finalize Your {packId} Pack</h1>
-
-      <label className="block mb-2">Select Your Gender:</label>
-      <select
-        value={gender}
-        onChange={(e) => setGender(e.target.value as any)}
-        className="mb-6 p-2 border rounded w-full"
+    <div className="p-6 sm:p-8 max-w-3xl mx-auto">
+      {/* back */}
+      <button
+        onClick={() => router.back()}
+        className="inline-flex items-center mb-6 text-gray-700 hover:text-black"
       >
-        <option value="female">Female</option>
-        <option value="male">Male</option>
-        <option value="other">Prefer Not to Say</option>
-      </select>
-
-      <label className="block mb-2">Upload Your Photos:</label>
-      <input type="file" accept="image/*" multiple className="block mb-6" />
-
-      <button className="px-6 py-2 bg-blue-600 text-white rounded">
-        Finish Order
+        <FiArrowLeft className="mr-2" /> Back
       </button>
+
+      <h1 className="text-2xl font-bold mb-2">Upload your photos</h1>
+      <p className="text-gray-600 mb-6">
+        Select at least <span className="font-semibold">6</span> photos (max 10). Mix close-ups, selfies, and mid-range shots to help the AI learn you best.
+      </p>
+
+      {/* drag & drop zone */}
+      <div
+        onDrop={onDrop}
+        onDragOver={(e) => e.preventDefault()}
+        className="relative border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-gray-400 transition cursor-pointer"
+      >
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          onChange={(e) => onFiles(e.target.files)}
+        />
+        <FiUploadCloud className="mx-auto mb-4 text-4xl text-orange-500" />
+        <Button variant="outline" onClick={() => { /* click triggers input */ }}>
+          Browse files
+        </Button>
+        <p className="mt-2 text-sm text-gray-500">
+          or drag & drop your photos here (PNG, JPG, WEBP up to 120 MB)
+        </p>
+      </div>
+
+      {/* preview strip */}
+      {files.length > 0 && (
+        <div className="mt-6 grid grid-cols-4 gap-4">
+          {files.map((f, i) => (
+            <img
+              key={i}
+              src={URL.createObjectURL(f)}
+              alt={f.name}
+              className="w-full h-24 object-cover rounded-lg"
+            />
+          ))}
+        </div>
+      )}
+
+      {/* guidance cards */}
+      <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {[
+          {
+            title: "Selfies",
+            desc: "Frontal, well-lit at eye-level",
+            img: "/placeholders/selfie.png",
+          },
+          {
+            title: "Variety",
+            desc: "Different outfits & backgrounds",
+            img: "/placeholders/variety.png",
+          },
+          {
+            title: "No Blurry",
+            desc: "Sharp, not too dark or bright",
+            img: "/placeholders/no-blurry.png",
+          },
+          {
+            title: "Natural",
+            desc: "Avoid heavy filters or edits",
+            img: "/placeholders/natural.png",
+          },
+        ].map((card) => (
+          <motion.div
+            key={card.title}
+            whileHover={{ scale: 1.03 }}
+            className="flex items-center gap-4 p-4 bg-white rounded-lg shadow hover:shadow-lg transition"
+          >
+            <img
+              src={card.img}
+              alt={card.title}
+              className="w-16 h-16 rounded-md object-cover"
+            />
+            <div>
+              <h3 className="font-semibold">{card.title}</h3>
+              <p className="text-sm text-gray-600">{card.desc}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* sticky continue bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-end">
+        <span className="self-center mr-auto text-sm text-gray-600">
+          {files.length} of 6 required
+        </span>
+        <Button
+          disabled={files.length < 6}
+          onClick={() => router.push(`/overview/packs/${packId}/generate?files=${files.length}`)}
+        >
+          Continue
+        </Button>
+      </div>
     </div>
   );
 }
