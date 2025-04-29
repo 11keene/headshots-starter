@@ -2,15 +2,17 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import type { Pack } from "../../../../../data/packs";
 import { packs } from "../../../../../data/packs";
 
 export default function HeadshotUpsell() {
   const { packId } = useParams();
   const router = useRouter();
+  const params = useSearchParams();    
+  const initialTab = params.get("tab") === "custom" ? "custom" : "headshot"; 
   const [selected, setSelected] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<"headshot" | "custom">("headshot");
+  const [activeTab, setActiveTab] = useState<"headshot" | "custom">(initialTab);
   const [customSelected, setCustomSelected] = useState(false);
 
   const togglePack = (id: string) => {
@@ -61,7 +63,7 @@ export default function HeadshotUpsell() {
             className={`px-4 py-2 ${
               activeTab === "headshot"
                 ? "bg-red-600 hover:bg-red-700"
-                : "bg-purple-600 hover:bg-purple-700"
+                : "bg-red-600 hover:bg-red-700"
             } text-white rounded-md text-sm sm:text-base transition`}
           >
             Continue

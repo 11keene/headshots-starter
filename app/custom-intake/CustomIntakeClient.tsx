@@ -8,8 +8,8 @@ export default function CustomIntakeClient({ packId }: { packId: string }) {
   const router = useRouter();
 
   const handleComplete = () => {
-    router.push(`/overview/packs/${packId}/next?extraPacks=custom`);
-  };
+    router.push(`/overview/packs/${packId}/upsell?tab=custom`);
+};
 
   return (
     <div className="flex justify-center items-center min-h-screen p-4">
