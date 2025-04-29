@@ -1,4 +1,3 @@
-// components/PricingClient.tsx
 "use client";
 
 import { useState } from "react";
@@ -6,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 type Tier = {
-  id: string;        // your Stripe Price ID
+  id: string;
   title: string;
-  subtitle: string;  // e.g. "40 pics · 120 mins · 1 attire · SD res"
+  subtitle: string;
   badge?: string;
 };
 
@@ -33,7 +32,7 @@ const TIERS: Tier[] = [
   {
     id: "price_1RHmoNCs03tLUXoKRpzgeqUu",
     title: "Studio",
-    subtitle: "100 pics · 60 mins · All attires · HD res",
+    subtitle: "500 pics · 120 mins · Unlimited attires · 4K",
     badge: "Best Value",
   },
 ];
@@ -53,22 +52,29 @@ export default function PricingClient({
     if (!selected) return;
     setLoading(true);
 
-    // call your checkout session route
-    const res = await fetch("/api/stripe/checkout/session", {
+    // build an array of all price IDs: main + any extras
+    const extras = extraPacks ? extraPacks.split(",") : [];
+    const priceIds = [selected, ...extras];
+
+    // call your new 'order' endpoint
+    const res = await fetch("/api/stripe/checkout/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priceId: selected, packId, extraPacks }),
+      body: JSON.stringify({
+        priceIds,
+        successUrl: `${window.location.origin}/overview?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${window.location.origin}/pricing?packId=${packId}&extraPacks=${extraPacks}`,
+      }),
     });
 
     const json = await res.json();
     setLoading(false);
 
     if (json.url) {
-      // redirect browser into Stripe Checkout
       window.location.href = json.url;
     } else {
       console.error("Checkout session creation failed:", json);
-      // optionally show a toast or alert here
+      // you could show a toast here
     }
   };
 
