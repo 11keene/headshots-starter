@@ -41,11 +41,29 @@ export default function PricingClient({
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const onContinue = () => {
+  const onContinue = async () => {
     if (!selected) return;
-    const qs = new URLSearchParams({ priceId: selected, packId, extraPacks });
-    router.push(`/api/checkout?${qs.toString()}`);
+    setLoading(true);
+
+    // call your checkout session route
+    const res = await fetch("/api/stripe/checkout/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ priceId: selected, packId, extraPacks }),
+    });
+
+    const json = await res.json();
+    setLoading(false);
+
+    if (json.url) {
+      // redirect browser into Stripe Checkout
+      window.location.href = json.url;
+    } else {
+      console.error("Checkout session creation failed:", json);
+      // optionally show a toast or alert here
+    }
   };
 
   return (
@@ -98,8 +116,9 @@ export default function PricingClient({
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-center">
         <Button
           className="w-full sm:w-auto bg-red-600 text-white"
-          disabled={!selected}
+          disabled={!selected || loading}
           onClick={onContinue}
+          isLoading={loading}
         >
           Continue
         </Button>
