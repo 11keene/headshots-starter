@@ -14,19 +14,25 @@ type Tier = {
 
 const TIERS: Tier[] = [
   {
-    id: "price_basic_123",
-    title: "Basic",
-    subtitle: "40 pics · 120 mins · 1 attire · SD res",
+    id: "price_1RHmnVCs03tLUXoK4iTvnduW",
+    title: "Starter",
+    subtitle: "12 pics · 120 mins · 1 attire · SD res",
   },
   {
-    id: "price_standard_456",
-    title: "Professional",
+    id: "price_1RHmnnCs03tLUXoKLXWGbUqt",
+    title: "Standard",
     subtitle: "60 pics · 60 mins · 2 attires · SD res",
     badge: "83% pick this",
   },
   {
-    id: "price_pro_789",
-    title: "Executive",
+    id: "price_1RHmo9Cs03tLUXoKiIai8D2O",
+    title: "Pro",
+    subtitle: "100 pics · 60 mins · All attires · HD res",
+    badge: "Best Value",
+  },
+  {
+    id: "price_1RHmoNCs03tLUXoKRpzgeqUu",
+    title: "Studio",
     subtitle: "100 pics · 60 mins · All attires · HD res",
     badge: "Best Value",
   },
