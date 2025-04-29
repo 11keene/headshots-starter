@@ -50,6 +50,7 @@ export default function PricingClient({
   const [loading, setLoading] = useState(false);
 
   const onContinue = async () => {
+    console.log("💡 onContinue fired with:", { selected, extraPacks });
     if (!selected) return;
     setLoading(true);
 
@@ -140,6 +141,7 @@ export default function PricingClient({
         <Button
           className="w-full sm:w-auto bg-red-600 text-white"
           disabled={!selected || loading}
+          
           onClick={onContinue}
           isLoading={loading}
         >
