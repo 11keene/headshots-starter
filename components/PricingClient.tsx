@@ -13,10 +13,10 @@ type Tier = {
 };
 
 const TIERS: Tier[] = [
-  { id: "price_1RHmnVCs03tLUXoK4iTvnduW", title: "Starter", subtitle: "12 pics · 120 mins · 1 attire · SD res" },
-  { id: "price_1RHmnnCs03tLUXoKLXWGbUqt", title: "Standard", subtitle: "60 pics · 60 mins · 2 attires · SD res", badge: "83% pick this" },
-  { id: "price_1RHmo9Cs03tLUXoKiIai8D2O", title: "Pro", subtitle: "100 pics · 60 mins · All attires · HD res", badge: "Best Value" },
-  { id: "price_1RHmoNCs03tLUXoKRpzgeqUu", title: "Studio", subtitle: "500 pics · 120 mins · Unlimited attires · 4K", badge: "Best Value" },
+  { id: "price_1RJLBd4RnIZz7j08beYwRGv1", title: "Starter", subtitle: "12 pics · 120 mins · 1 attire · SD res" },
+  { id: "price_1RJLCO4RnIZz7j08tJ3vN1or", title: "Standard", subtitle: "60 pics · 60 mins · 2 attires · SD res", badge: "83% pick this" },
+  { id: "price_1RJLDE4RnIZz7j08RlQUve2s", title: "Pro", subtitle: "100 pics · 60 mins · All attires · HD res", badge: "Best Value" },
+  { id: "price_1RJLDf4RnIZz7j08TLcrNcQ6", title: "Studio", subtitle: "500 pics · 120 mins · Unlimited attires · 4K", badge: "Best Value" },
 ];
 
 export default function PricingClient({
