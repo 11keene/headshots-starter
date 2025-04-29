@@ -11,6 +11,7 @@ export default function HeadshotUpsell() {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"headshot" | "custom">("headshot");
+  const [customSelected, setCustomSelected] = useState(false);
 
   const togglePack = (id: string) => {
     setSelected((prev) =>
@@ -24,8 +25,12 @@ export default function HeadshotUpsell() {
   };
 
   const goCustom = () => {
-    router.push(`/custom-intake?packId=${packId}`);
-};
+    router.push("/custom-intake");
+  };
+
+  // decide whether we're in "skip" (No Thanks) mode
+  const isSkip =
+    activeTab === "headshot" ? selected.length === 0 : !customSelected;
 
   return (
     <div className="p-6 sm:p-8 max-w-4xl mx-auto">
@@ -34,7 +39,7 @@ export default function HeadshotUpsell() {
         Would you like to add additional photos?
       </h1>
 
-      {/* 2. Top Controls: Back & [No Thanks or Continue] */}
+      {/* 2. Top Controls */}
       <div className="flex justify-between mb-4">
         <button
           onClick={() => router.back()}
@@ -43,7 +48,7 @@ export default function HeadshotUpsell() {
           Back
         </button>
 
-        {activeTab === "headshot" && selected.length === 0 ? (
+        {isSkip ? (
           <button
             onClick={goContinue}
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md text-sm sm:text-base hover:bg-gray-300 transition"
@@ -56,7 +61,7 @@ export default function HeadshotUpsell() {
             className={`px-4 py-2 ${
               activeTab === "headshot"
                 ? "bg-red-600 hover:bg-red-700"
-                : "bg-red-600 hover:bg-red-700"
+                : "bg-purple-600 hover:bg-purple-700"
             } text-white rounded-md text-sm sm:text-base transition`}
           >
             Continue
@@ -64,7 +69,7 @@ export default function HeadshotUpsell() {
         )}
       </div>
 
-      {/* 3. Tabs (overview styling) */}
+      {/* 3. Tabs */}
       <div className="flex justify-center gap-4 mb-6">
         <button
           onClick={() => setActiveTab("headshot")}
@@ -113,8 +118,10 @@ export default function HeadshotUpsell() {
       ) : (
         <div className="flex justify-center">
           <div
-            onClick={goCustom}
-            className="cursor-pointer border rounded-lg overflow-hidden shadow-md max-w-sm w-full"
+            onClick={() => setCustomSelected(true)}
+            className={`cursor-pointer border rounded-lg overflow-hidden shadow-md max-w-sm w-full ${
+              customSelected ? "ring-4 ring-purple-500" : ""
+            }`}
           >
             <img
               src="/your-custom-example.jpg"
