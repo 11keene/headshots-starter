@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 type Tier = {
-  id: string;        // your Stripe Price ID
+  id: string;
   title: string;
-  subtitle: string;  // e.g. "40 pics · 120 mins · 1 attire · SD res"
+  subtitle: string;
   badge?: string;
 };
 
@@ -53,7 +53,6 @@ export default function PricingClient({
     if (!selected) return;
     setLoading(true);
 
-    // Build an array of all price IDs: main + extras
     const extras = extraPacks ? extraPacks.split(",") : [];
     const priceIds = [selected, ...extras];
 
@@ -68,15 +67,24 @@ export default function PricingClient({
         }),
       });
 
-      const json = await res.json();
-      if (json.url) {
-        window.location.href = json.url;
+      const text = await res.text();
+      console.log("✅ /api/stripe/checkout/order response:", res.status, text);
+
+      if (!res.ok) {
+        console.error("🚨 bad response:", text);
+        setLoading(false);
+        return;
+      }
+
+      const { url } = JSON.parse(text);
+      if (url) {
+        window.location.href = url;
       } else {
-        console.error("Checkout session creation failed:", json);
+        console.error("🚨 missing url in response:", text);
         setLoading(false);
       }
     } catch (err) {
-      console.error("Error calling checkout/order:", err);
+      console.error("🚨 fetch failed:", err);
       setLoading(false);
     }
   };
