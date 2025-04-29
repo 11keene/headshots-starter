@@ -1,4 +1,3 @@
-// app/overview/packs/[packId]/upsell/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -9,40 +8,47 @@ import { packs } from "../../../../../data/packs";
 export default function HeadshotUpsell() {
   const { packId } = useParams();
   const router = useRouter();
-  const params = useSearchParams();    
-  const initialTab = params.get("tab") === "custom" ? "custom" : "headshot"; 
-  const [selected, setSelected] = useState<string[]>([]);
+  const params = useSearchParams();
+
+  // if someone links here with ?tab=custom, open custom tab; else headshot
+  const initialTab = params.get("tab") === "custom" ? "custom" : "headshot";
   const [activeTab, setActiveTab] = useState<"headshot" | "custom">(initialTab);
+
+  // headshot‐add selections
+  const [selected, setSelected] = useState<string[]>([]);
+  // custom‐add selected?
   const [customSelected, setCustomSelected] = useState(false);
 
-  const togglePack = (id: string) => {
+  const togglePack = (id: string) =>
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
-  };
 
+  // always push to the NEXT/upload step
   const goContinue = () => {
     const extra = selected.join(",");
     router.push(`/overview/packs/${packId}/next?extraPacks=${extra}`);
   };
 
+  // send into first intake form, telling it we came from HEADSHOT flow
   const goCustom = () => {
-    // include the current packId so the intake form knows which pack
-    router.push(`/custom-intake?packId=${packId}`);
+    router.push(
+      `/custom-intake?packId=${packId}&from=headshot`
+    );
   };
 
-  // decide whether we're in "skip" (No Thanks) mode
+  // show "No Thanks" if nothing picked
   const isSkip =
     activeTab === "headshot" ? selected.length === 0 : !customSelected;
 
   return (
     <div className="p-6 sm:p-8 max-w-4xl mx-auto">
-      {/* 1. Heading */}
+      {/* heading */}
       <h1 className="text-xl sm:text-2xl font-bold mb-6 text-center">
         Would you like to add additional photos?
       </h1>
 
-      {/* 2. Top Controls */}
+      {/* back + continue/no-thanks */}
       <div className="flex justify-between mb-4">
         <button
           onClick={() => router.back()}
@@ -60,19 +66,17 @@ export default function HeadshotUpsell() {
           </button>
         ) : (
           <button
-            onClick={activeTab === "headshot" ? goContinue : goCustom}
-            className={`px-4 py-2 ${
-              activeTab === "headshot"
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-red-600 hover:bg-red-700"
-            } text-white rounded-md text-sm sm:text-base transition`}
+            onClick={
+              activeTab === "headshot" ? goContinue : goCustom
+            }
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm sm:text-base transition"
           >
             Continue
           </button>
         )}
       </div>
 
-      {/* 3. Tabs */}
+      {/* tabs */}
       <div className="flex justify-center gap-4 mb-6">
         <button
           onClick={() => setActiveTab("headshot")}
@@ -96,7 +100,7 @@ export default function HeadshotUpsell() {
         </button>
       </div>
 
-      {/* 4. Content */}
+      {/* content */}
       {activeTab === "headshot" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {packs.map((p: Pack) => (

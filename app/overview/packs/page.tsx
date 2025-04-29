@@ -1,8 +1,6 @@
-// app/overview/packs/page.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
-import React from "react";
 import { packs } from "../../../data/packs";
 
 export default function PacksPage() {
@@ -10,7 +8,6 @@ export default function PacksPage() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
-      {/* Back to overview */}
       <div className="mb-4">
         <button
           onClick={() => router.push("/overview")}
@@ -21,13 +18,18 @@ export default function PacksPage() {
       </div>
 
       <h1 className="text-2xl font-bold mb-4">Choose Your Headshot Pack</h1>
-      <p className="text-muted-foreground mb-6">Click on a pack to continue.</p>
+      <p className="text-muted-foreground mb-6">
+        Click on a pack to continue.
+      </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {packs.map((pack) => (
           <div
             key={pack.id}
-            onClick={() => router.push(`/overview/packs/${pack.id}/upsell`)}
+            onClick={() =>
+              // link into upsell on the CUSTOM tab by default
+              router.push(`/overview/packs/${pack.id}/upsell?tab=custom`)
+            }
             className="cursor-pointer border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
           >
             <img
