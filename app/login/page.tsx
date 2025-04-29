@@ -1,25 +1,30 @@
 // app/login/page.tsx
-"use client";
+import { headers } from "next/headers";
+import Login from "./components/Login";
 
-import React from "react";
-import { Auth } from "@supabase/auth-ui-react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
+export const dynamic = "force-dynamic";
 
-export default function LoginPage() {
-  const supabase = createClientComponentClient();
+export default function Page() {
+  const host = headers().get("host") ?? "";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  
+  // Build correct redirectTo URL (MUST INCLUDE /auth/v1/callback)
+  const redirectTo = `${protocol}://${host}/auth/v1/callback`;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow">
-        <h1 className="text-2xl font-bold mb-4 text-center">Sign In</h1>
-        <Auth
-          supabaseClient={supabase}
-          providers={["google", "facebook", "apple"]}
-          socialLayout="horizontal"
-          appearance={{ theme: ThemeSupa }}
-          redirectTo="/overview"
-        />
+    <div className="flex min-h-screen">
+      {/* Left branding */}
+      <div className="hidden lg:flex w-1/2 bg-neutral-100 p-10 flex-col items-center justify-center">
+        <img src="/logo.png" alt="AI Maven Logo" className="w-20 h-20 mb-6 rounded-full" />
+        <h1 className="text-3xl font-bold mb-4">Welcome to AI Maven</h1>
+        <p className="text-center max-w-sm">
+          Elevate your brand with stunning AI-generated headshots. Trusted by professionals.
+        </p>
+      </div>
+
+      {/* Right login pane */}
+      <div className="flex w-full lg:w-1/2 items-center justify-center px-6 lg:px-12">
+        <Login redirectTo={redirectTo} /> {/* Pass redirectTo to the Login component */}
       </div>
     </div>
   );
