@@ -3,13 +3,12 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { packs } from "../../../../../data/packs"; // adjust if your data folder is elsewhere
+import type { Pack } from "../../../../../data/packs";
+import { packs } from "../../../../../data/packs";
 
 export default function HeadshotUpsell() {
   const { packId } = useParams();
   const router = useRouter();
-
-  // track which packs the user has clicked
   const [selected, setSelected] = useState<string[]>([]);
 
   const togglePack = (id: string) => {
@@ -18,36 +17,60 @@ export default function HeadshotUpsell() {
     );
   };
 
-  const goCustom = () => {
-    router.push("/custom-intake");
-  };
-
   const goContinue = () => {
-    // pass the extra packs as a query param to the upload step
     const extra = selected.join(",");
     router.push(`/overview/packs/${packId}/next?extraPacks=${extra}`);
   };
 
+  const goCustom = () => {
+    router.push("/custom-intake");
+  };
+
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Select Additional Packs</h1>
-      <p className="text-muted-foreground mb-6">
-        Click on any packs below to add them to your headshot order.
-      </p>
+      {/* Top Controls */}
+      <div className="flex items-center justify-between mb-6">
+        {/* 1. Back Button */}
+        <button
+          onClick={() => router.back()}
+          className="px-4 py-2 bg-gray-200 rounded-md"
+        >
+          Back
+        </button>
 
+        <div className="flex space-x-4">
+          {/* 2. Add a Custom Photoshoot */}
+          <button
+            onClick={goCustom}
+            className="px-6 py-2 bg-purple-600 text-white rounded-md"
+          >
+            Add a Custom Photoshoot
+          </button>
+
+          {/* 3. Continue */}
+          <button
+            onClick={goContinue}
+            disabled={selected.length === 0}
+            className="px-6 py-2 bg-green-600 text-white rounded-md disabled:opacity-50"
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+
+      {/* 4. Packs Grid (click to select multiple) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {packs.map((pack) => (
+        {packs.map((pack: Pack) => (
           <div
             key={pack.id}
             onClick={() => togglePack(pack.id)}
             className={`
-              cursor-pointer 
-              border rounded-lg overflow-hidden 
+              cursor-pointer
+              border rounded-lg overflow-hidden
               transition-shadow
-              ${selected.includes(pack.id) 
-                ? "ring-4 ring-blue-500 shadow-lg" 
-                : "hover:shadow-md"
-              }
+              ${selected.includes(pack.id)
+                ? "ring-4 ring-blue-500 shadow-lg"
+                : "hover:shadow-md"}
             `}
           >
             <img
@@ -59,26 +82,6 @@ export default function HeadshotUpsell() {
           </div>
         ))}
       </div>
-
-      <div className="mt-8 flex flex-col gap-4">
-        <button
-          onClick={goCustom}
-          className="w-full px-6 py-2 bg-purple-600 text-white rounded-md"
-        >
-          Add a Custom Photoshoot
-        </button>
-        <button
-          onClick={goContinue}
-          disabled={selected.length === 0}
-          className="w-full px-6 py-2 bg-green-600 text-white rounded-md disabled:opacity-50"
-        >
-          Continue
-        </button>
-        <p className="text-center text-sm text-muted-foreground">
-          Or choose another pack
-        </p>
-      </div>
     </div>
-);
+  );
 }
-
