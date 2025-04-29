@@ -40,7 +40,7 @@ export default function OverviewClient({ serverModels }: { serverModels: any[] }
         <div className="flex flex-col items-center w-full max-w-md mb-20">
           <h2 className="text-2xl font-bold mb-2 text-center">Choose Your Headshot</h2>
           <p className="text-muted-foreground mb-8 text-center">
-            Choose the type of headshot you would like to create.
+            Click to choose from our different pack styles.
           </p>
           <Link href="/overview/packs" className="w-full">
             <img
@@ -56,7 +56,7 @@ export default function OverviewClient({ serverModels }: { serverModels: any[] }
         <div className="flex flex-col items-center w-full max-w-md mb-20">
           <h2 className="text-2xl font-bold mb-2 text-center">Choose Your Custom Style</h2>
           <p className="text-muted-foreground mb-8 text-center">
-            Generate more complex and customizable images.
+            Generate more personalized and customizable images.
           </p>
           <Link href="/custom-intake" className="w-full">
             <img

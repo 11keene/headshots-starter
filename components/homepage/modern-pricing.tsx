@@ -1,12 +1,10 @@
-// components/ModernPricing.tsx
 "use client";
 
-import { useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
+import { useRouter } from "next/navigation";
 import type React from "react";
 import { Check } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 interface PricingTier {
@@ -20,8 +18,7 @@ interface PricingTier {
   bestValue?: boolean;
 }
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-
+// NOTE: these IDs should be set in your .env (e.g. NEXT_PUBLIC_PRICE_STARTER_ID)
 const tiers: PricingTier[] = [
   {
     title: "Starter",
@@ -60,24 +57,11 @@ const tiers: PricingTier[] = [
 ];
 
 export default function ModernPricing() {
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleCheckout = async (priceId: string) => {
-    setLoading(true);
-    const stripe = await stripePromise;
-    if (!stripe) {
-      console.error("Stripe failed to load.");
-      setLoading(false);
-      return;
-    }
-    const { error } = await stripe.redirectToCheckout({
-      mode: "payment",
-      lineItems: [{ price: priceId, quantity: 1 }],
-      successUrl: window.location.origin + "/overview",
-      cancelUrl: window.location.origin + "/pricing",
-    });
-    if (error) console.error(error);
-    setLoading(false);
+  // Redirect guest to login, carrying the chosen priceId
+  const handleSelect = (priceId: string) => {
+    router.push(`/login?priceId=${priceId}`);
   };
 
   return (
@@ -92,52 +76,43 @@ export default function ModernPricing() {
                 "relative flex flex-col p-4 bg-white border rounded-lg shadow-md transition-all ease-in-out hover:scale-105 hover:shadow-xl",
                 "w-[160px] h-[500px]",
                 "sm:w-full sm:h-[400px] md:h-[500px] md:w-[215px] lg:flex-grow",
-                "hover:bg-red-200",
                 tier.popular && "pricing-card-popular"
               )}
             >
               {tier.popular && <div className="pricing-badge">Most Popular</div>}
               {tier.bestValue && (
                 <div className="absolute -top-3 right-6 rounded-full bg-blue-600 px-3 py-1 text-xs font-medium text-white">
-                  <span className="flex items-center gap-1">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                    Best Value
-                  </span>
+                  Best Value
                 </div>
               )}
+
               <h3 className="text-xl font-bold">{tier.title}</h3>
               <div className="mt-4 flex items-baseline">
-                <span className="text-3xl md:text-5xl font-extrabold">{tier.price}</span>
+                <span className="text-3xl md:text-5xl font-extrabold">
+                  {tier.price}
+                </span>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">{tier.description}</p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                {tier.description}
+              </p>
               <ul className="my-6 space-y-4">
                 {tier.features.map((feat, i) => (
                   <li key={i} className="flex items-center gap-2">
                     <Check className="h-4 w-3 text-primary" />
-                    <span className="text-sm md:text-base leading-snug">{feat}</span>
+                    <span className="text-sm md:text-base leading-snug">
+                      {feat}
+                    </span>
                   </li>
                 ))}
               </ul>
+
               <div className="mt-auto">
                 <Button
-                  onClick={() => handleCheckout(tier.stripePriceId)}
+                  onClick={() => handleSelect(tier.stripePriceId)}
                   className="w-full text-white bg-red-600 hover:bg-red-700"
-                  disabled={loading}
                   aria-label={`Select ${tier.title} plan`}
                 >
-                  {loading ? "Loading..." : tier.buttonText}
+                  {tier.buttonText}
                 </Button>
               </div>
             </div>

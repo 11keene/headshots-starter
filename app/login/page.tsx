@@ -1,31 +1,37 @@
-// app/login/page.tsx
-import { headers } from "next/headers";
-import Login from "./components/Login";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { loadStripe } from "@stripe/stripe-js";
+import React from "react";
 
-export default function Page() {
-  const host = headers().get("host") ?? "";
-  const protocol = host.includes("localhost") ? "http" : "https";
-  
-  // Build correct redirectTo URL (MUST INCLUDE /auth/v1/callback)
-  const redirectTo = `${protocol}://${host}/auth/v1/callback`;
+export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const priceId = searchParams.get("priceId");
+
+  useEffect(() => {
+    async function maybeCheckout() {
+      if (!priceId) return;
+      const stripe = await loadStripe(
+        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+      );
+      if (stripe) {
+        await stripe.redirectToCheckout({
+          mode: "payment",
+          lineItems: [{ price: priceId, quantity: 1 }],
+          successUrl: window.location.origin + "/overview",
+          cancelUrl: window.location.origin + "/pricing",
+        });
+      }
+    }
+    maybeCheckout();
+  }, [priceId]);
 
   return (
-    <div className="flex min-h-screen">
-      {/* Left branding */}
-      <div className="hidden lg:flex w-1/2 bg-neutral-100 p-10 flex-col items-center justify-center">
-        <img src="/logo.png" alt="AI Maven Logo" className="w-20 h-20 mb-6 rounded-full" />
-        <h1 className="text-3xl font-bold mb-4">Welcome to AI Maven</h1>
-        <p className="text-center max-w-sm">
-          Elevate your brand with stunning AI-generated headshots. Trusted by professionals.
-        </p>
-      </div>
-
-      {/* Right login pane */}
-      <div className="flex w-full lg:w-1/2 items-center justify-center px-6 lg:px-12">
-        <Login redirectTo={redirectTo} /> {/* Pass redirectTo to the Login component */}
-      </div>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      {/* ——— Your existing login form markup goes here ——— */}
+      {/* e.g.: <LoginForm /> or your custom JSX */}
     </div>
   );
 }
