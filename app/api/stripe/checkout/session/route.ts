@@ -1,5 +1,3 @@
-// app/api/stripe/checkout/session/route.ts
-
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
@@ -11,17 +9,16 @@ if (process.env.NODE_ENV === 'development') {
 // Safe environment variable access
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 if (!stripeSecretKey) {
-  throw new Error("Missing STRIPE_SECRET_KEY");
 }
 
-// Create Stripe instance
-const stripe = new Stripe(stripeSecretKey, {
+// Create Stripe instance with error handling
+const stripe = new Stripe(stripeSecretKey || "", {
   apiVersion: '2025-03-31.basil',
 });
 
 export async function POST(req: Request) {
+  // Wrap everything in try-catch to ensure we always return valid JSON
   try {
-    // Parse JSON body
     let body: any;
     try {
       body = await req.json();
@@ -29,33 +26,51 @@ export async function POST(req: Request) {
       console.error("Failed to parse request body:", e);
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
-
     const { priceId } = body;
+
     if (!priceId) {
       return NextResponse.json({ error: 'Missing priceId' }, { status: 400 });
     }
 
-    // Create a Checkout Session
+
+
+
+    
+    // Extract domain from request
+    const YOUR_DOMAIN = req.headers.get("origin") || 
+                         req.headers.get("referer")?.replace(/\/[^\/]*$/, '') || 
+                         "https://www.aimavenstudio.com";
+
+    console.log("Creating checkout session with:", {
+      priceId,
+      domain: YOUR_DOMAIN
+    });
+    
+    // Create Stripe session
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      // On success, bring them back to your dashboard with the session ID
-      success_url: `${req.headers.get('origin')}/overview?session_id={CHECKOUT_SESSION_ID}`,
-      // On cancel, send them back to pack selection
-      cancel_url: `${req.headers.get('origin')}/overview/packs`,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${YOUR_DOMAIN}/get-credits?status=success`,
+      cancel_url: `${YOUR_DOMAIN}/get-credits?status=canceled`,
     });
-
-    return NextResponse.json({ url: session.url });
-  } catch (err: any) {
-    console.error("Stripe checkout session error:", err);
+    
+    console.log("Session created:", session.id);
+    return NextResponse.json({ sessionId: session.id });    
+  } catch (error: any) {
+    // Log the full error for debugging
+    console.error("Stripe checkout error details:", error);
+    
+    // Extract useful information for the response
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const additionalInfo = error?.type || error?.code || "";
+    
+    // Always return a valid JSON response with helpful error details
     return NextResponse.json(
-      { error: 'Unable to create checkout session' },
+      { 
+        error: errorMessage,
+        details: additionalInfo,
+        message: "Payment processing failed. Please try again." 
+      },
       { status: 500 }
     );
   }
