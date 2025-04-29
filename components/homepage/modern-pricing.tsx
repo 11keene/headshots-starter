@@ -118,7 +118,8 @@ export default function ModernPricing() {
 
               <div className="mt-auto">
                 <Link
-                  href="/login"
+              
+                  href={`/login?redirect=${encodeURIComponent("/get-credits")}`}
                   className="block w-full"
                   aria-label={`Select ${tier.title} plan`}
                 >
