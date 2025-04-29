@@ -1,36 +1,26 @@
+// app/login/page.tsx
 "use client";
-import { useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { loadStripe } from "@stripe/stripe-js";
+
 import React from "react";
+import { Auth } from "@supabase/auth-ui-react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const priceId = searchParams.get("priceId");
-
-  useEffect(() => {
-    async function maybeCheckout() {
-      if (!priceId) return;
-      const stripe = await loadStripe(
-        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-      );
-      if (stripe) {
-        await stripe.redirectToCheckout({
-          mode: "payment",
-          lineItems: [{ price: priceId, quantity: 1 }],
-          successUrl: window.location.origin + "/overview",
-          cancelUrl: window.location.origin + "/pricing",
-        });
-      }
-    }
-    maybeCheckout();
-  }, [priceId]);
+  const supabase = createClientComponentClient();
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      {/* ——— Your existing login form markup goes here ——— */}
-      {/* e.g.: <LoginForm /> or your custom JSX */}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md bg-white p-6 rounded-lg shadow">
+        <h1 className="text-2xl font-bold mb-4 text-center">Sign In</h1>
+        <Auth
+          supabaseClient={supabase}
+          providers={["google", "facebook", "apple"]}
+          socialLayout="horizontal"
+          appearance={{ theme: ThemeSupa }}
+          redirectTo="/overview"
+        />
+      </div>
     </div>
   );
 }
