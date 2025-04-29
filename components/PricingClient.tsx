@@ -56,6 +56,7 @@ export default function PricingClient({
     const extras = extraPacks ? extraPacks.split(",") : [];
     const priceIds = [selected, ...extras];
 
+    // call your new 'order' endpoint
     const res = await fetch("/api/stripe/checkout/order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -73,6 +74,7 @@ export default function PricingClient({
       window.location.href = json.url;
     } else {
       console.error("Checkout session creation failed:", json);
+      // you could show a toast here
     }
   };
 
