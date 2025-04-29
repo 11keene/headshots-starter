@@ -1,3 +1,4 @@
+// components/IntakeForm.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -15,7 +16,47 @@ type Question = {
 };
 
 const QUESTIONS: Question[] = [
-  // …your same questions…
+  {
+    key: "attire",
+    type: "images",
+    title: "What will you wear?",
+    options: [
+      { label: "Casual",   value: "casual",   img: "https://via.placeholder.com/300x200?text=Casual" },
+      { label: "Business", value: "business", img: "https://via.placeholder.com/300x200?text=Business" },
+      { label: "Creative", value: "creative", img: "https://via.placeholder.com/300x200?text=Creative" },
+    ],
+  },
+  {
+    key: "setting",
+    type: "images",
+    title: "Choose a setting",
+    options: [
+      { label: "Studio",   value: "studio",   img: "https://via.placeholder.com/300x200?text=Studio" },
+      { label: "Outdoor",  value: "outdoor",  img: "https://via.placeholder.com/300x200?text=Outdoor" },
+      { label: "Workspace",value: "workspace",img: "https://via.placeholder.com/300x200?text=Workspace" },
+    ],
+  },
+  {
+    key: "mood",
+    type: "multi",
+    title: "Select your mood",
+    optional: true,
+    options: [
+      { label: "Friendly", value: "friendly", img: "https://via.placeholder.com/100?text=😊" },
+      { label: "Serious",  value: "serious",  img: "https://via.placeholder.com/100?text=😐" },
+      { label: "Playful",  value: "playful",  img: "https://via.placeholder.com/100?text=😜" },
+    ],
+  },
+  {
+    key: "useCase",
+    type: "select",
+    title: "What will you use these for?",
+    options: [
+      { label: "LinkedIn",    value: "linkedin",    img: "" },
+      { label: "Website",     value: "website",     img: "" },
+      { label: "Social Media",value: "social",      img: "" },
+    ],
+  },
 ];
 
 type IntakeFormProps = {
@@ -23,19 +64,18 @@ type IntakeFormProps = {
   onComplete?: () => void;
 };
 
-export default function IntakeForm({
-  pack,
-  onComplete,
-}: IntakeFormProps) {
+export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
 
+  // load
   useEffect(() => {
     const saved = localStorage.getItem(`intake-${pack}`);
     if (saved) setAnswers(JSON.parse(saved));
   }, [pack]);
 
+  // save
   useEffect(() => {
     localStorage.setItem(`intake-${pack}`, JSON.stringify(answers));
   }, [answers, pack]);
@@ -44,6 +84,7 @@ export default function IntakeForm({
 
   const choose = (val: any) =>
     setAnswers((a) => ({ ...a, [question.key]: val }));
+
   const toggle = (val: any) => {
     const cur: any[] = answers[question.key] || [];
     const next = cur.includes(val)
@@ -54,14 +95,10 @@ export default function IntakeForm({
 
   const next = () => {
     if (step < QUESTIONS.length - 1) {
-      return setStep(step + 1);
-    }
-    // final:
-    if (onComplete) {
-      onComplete();
+      setStep(step + 1);
     } else {
-      // default: back to upsell on custom tab
-      router.push(`/overview/packs/${pack}/upsell?tab=custom`);
+      if (onComplete) onComplete();
+      else router.push(`/overview/packs/${pack}/upsell?tab=custom`);
     }
   };
 
@@ -71,31 +108,87 @@ export default function IntakeForm({
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 space-y-6">
-      {/* progress bar */}
+    <div className="max-w-lg mx-auto p-6 space-y-6">
+      {/* Progress bar */}
       <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
         <div
-          className="h-2 bg-gradient-to-r from-orange-500 to-red-600 transition-width"
+          className="h-2 bg-gradient-to-r from-orange-500 to-red-600 transition-all"
           style={{ width: `${((step + 1) / QUESTIONS.length) * 100}%` }}
         />
       </div>
 
-      {/* question */}
-      <h2 className="text-2xl font-bold text-center text-gray-800">
-        {question.title}
-      </h2>
+      {/* Question title */}
+      <h2 className="text-2xl font-bold text-center">{question.title}</h2>
 
-      {/* options… same as you had with framer-motion buttons */}
+      {/* Options */}
+      <div className="space-y-6">
+        {question.type === "images" && (
+          <div className="grid grid-cols-2 gap-4">
+            {question.options.map((o) => (
+              <motion.button
+                key={o.value}
+                onClick={() => choose(o.value)}
+                whileHover={{ scale: 1.02 }}
+                className={`border-2 rounded-lg overflow-hidden flex flex-col items-center transition-shadow
+                  ${
+                    answers[question.key] === o.value
+                      ? "border-red-600 shadow-lg"
+                      : "border-gray-300 hover:shadow-md"
+                  }`}
+              >
+                <img src={o.img} alt={o.label} className="w-full h-32 object-cover" />
+                <span className="p-2">{o.label}</span>
+              </motion.button>
+            ))}
+          </div>
+        )}
 
-      {/* nav */}
+        {question.type === "multi" && (
+          <div className="grid grid-cols-1 gap-3">
+            {question.options.map((o) => (
+              <motion.label
+                key={o.value}
+                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors
+                  ${
+                    (answers[question.key] || []).includes(o.value)
+                      ? "bg-red-50 border-red-400"
+                      : "border-gray-300 hover:bg-gray-50"
+                  }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={(answers[question.key] || []).includes(o.value)}
+                  readOnly
+                />
+                <img src={o.img} alt={o.label} className="w-10 h-10 rounded" />
+                <span>{o.label}</span>
+              </motion.label>
+            ))}
+          </div>
+        )}
+
+        {question.type === "select" && (
+          <select
+            className="w-full p-3 border rounded-lg focus:border-red-500"
+            value={answers[question.key] || ""}
+            onChange={(e) => choose(e.target.value)}
+          >
+            <option value="">Choose…</option>
+            {question.options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {/* Navigation */}
       <div className="flex justify-between">
-        <Button variant="outline" onClick={back}>
+        <Button variant="outline" onClick={back} disabled={step === 0}>
           Back
         </Button>
-        <Button
-          onClick={next}
-          disabled={!answers[question.key] && !question.optional}
-        >
+        <Button onClick={next} disabled={!answers[question.key] && !question.optional}>
           {step === QUESTIONS.length - 1 ? "Submit" : "Next"}
         </Button>
       </div>
