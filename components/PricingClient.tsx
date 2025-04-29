@@ -48,7 +48,10 @@ export default function PricingClient({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             priceIds,
-            successUrl: `${window.location.origin}/overview?session_id={CHECKOUT_SESSION_ID}`,
+            // to:
+            successUrl: `${window.location.origin}/overview/packs/${packId}/generate` +
+            `?session_id={CHECKOUT_SESSION_ID}` +
+            `&extraPacks=${encodeURIComponent(extraPacks)}`,
             cancelUrl: `${window.location.origin}/pricing?packId=${packId}&extraPacks=${extraPacks}`,
           }),
         }
