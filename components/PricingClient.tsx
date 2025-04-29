@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 type Tier = {
-  id: string;
+  id: string;        // your Stripe Price ID
   title: string;
-  subtitle: string;
+  subtitle: string;  // e.g. "40 pics · 120 mins · SD res"
   badge?: string;
 };
 
@@ -52,7 +52,6 @@ export default function PricingClient({
     if (!selected) return;
     setLoading(true);
 
-    // build an array of all price IDs: main + any extras
     const extras = extraPacks ? extraPacks.split(",") : [];
     const priceIds = [selected, ...extras];
 
@@ -61,7 +60,8 @@ export default function PricingClient({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         priceIds,
-        successUrl: `${window.location.origin}/overview?session_id={CHECKOUT_SESSION_ID}`,
+        // ← Redirect *back* to the upload page on success, carrying the Stripe session_id
+        successUrl: `${window.location.origin}/overview/packs/${packId}/next?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${window.location.origin}/pricing?packId=${packId}&extraPacks=${extraPacks}`,
       }),
     });
