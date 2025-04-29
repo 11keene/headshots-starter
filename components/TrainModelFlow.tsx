@@ -16,10 +16,10 @@ import TrainModelZone from "@/components/TrainModelZone";
 import IntakeForm from "@/components/IntakeForm";
 const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
 const PRICE_IDS: Record<string,string> = {
-    starter: "price_1RHmnVCs03tLUXoK4iTvnduW",
-    standard: "price_1RHmnnCs03tLUXoKLXWGbUqt",
-    pro:      "price_1RHmo9Cs03tLUXoKiIai8D2O",
-    studio:   "price_1RHmoNCs03tLUXoKRpzgeqUu",
+    starter: "price_1RJLBd4RnIZz7j08beYwRGv1",
+    standard: "price_1RJLCO4RnIZz7j08tJ3vN1or",
+    pro:      "price_1RJLDE4RnIZz7j08RlQUve2s",
+    studio:   "price_1RJLDf4RnIZz7j08TLcrNcQ6",
   };
 export default function TrainModelFlow({
   packSlug,
