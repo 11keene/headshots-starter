@@ -30,24 +30,19 @@ export default function HeadshotUpsell() {
     <div className="p-8 max-w-4xl mx-auto">
       {/* Top Controls */}
       <div className="flex items-center justify-between mb-6">
-        {/* 1. Back Button */}
         <button
           onClick={() => router.back()}
           className="px-4 py-2 bg-gray-200 rounded-md"
         >
           Back
         </button>
-
         <div className="flex space-x-4">
-          {/* 2. Add a Custom Photoshoot */}
           <button
             onClick={goCustom}
             className="px-6 py-2 bg-purple-600 text-white rounded-md"
           >
             Add a Custom Photoshoot
           </button>
-
-          {/* 3. Continue */}
           <button
             onClick={goContinue}
             disabled={selected.length === 0}
@@ -58,20 +53,17 @@ export default function HeadshotUpsell() {
         </div>
       </div>
 
-      {/* 4. Packs Grid (click to select multiple) */}
+      {/* Packs Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {packs.map((pack: Pack) => (
           <div
             key={pack.id}
             onClick={() => togglePack(pack.id)}
-            className={`
-              cursor-pointer
-              border rounded-lg overflow-hidden
-              transition-shadow
-              ${selected.includes(pack.id)
+            className={`cursor-pointer border rounded-lg overflow-hidden transition-shadow ${
+              selected.includes(pack.id)
                 ? "ring-4 ring-blue-500 shadow-lg"
-                : "hover:shadow-md"}
-            `}
+                : "hover:shadow-md"
+            }`}
           >
             <img
               src={pack.exampleImg}
