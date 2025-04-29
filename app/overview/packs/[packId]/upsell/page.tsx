@@ -27,7 +27,8 @@ export default function HeadshotUpsell() {
   };
 
   const goCustom = () => {
-    router.push("/custom-intake");
+    // include the current packId so the intake form knows which pack
+    router.push(`/custom-intake?packId=${packId}`);
   };
 
   // decide whether we're in "skip" (No Thanks) mode

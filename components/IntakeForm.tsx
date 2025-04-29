@@ -102,7 +102,9 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
       if (onComplete) {
         onComplete();
       } else {
-        router.push(`/overview/packs/${pack}/upsell`);
+ // after a pure "Custom Photoshoot" flow (no onComplete passed),
+// send them into the headshot upsell, explicitly showing the headshot tab
+router.push(`/overview/packs/${pack}/upsell?tab=headshot`);
       }
     }
   }
