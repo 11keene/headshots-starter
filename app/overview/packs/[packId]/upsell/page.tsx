@@ -34,7 +34,7 @@ export default function HeadshotUpsell() {
         Would you like to add additional photos?
       </h1>
 
-      {/* 2. Top Controls: Back & Continue */}
+      {/* 2. Top Controls: Back & [No Thanks or Continue] */}
       <div className="flex justify-between mb-4">
         <button
           onClick={() => router.back()}
@@ -42,13 +42,26 @@ export default function HeadshotUpsell() {
         >
           Back
         </button>
-        <button
-          onClick={goContinue}
-          disabled={selected.length === 0}
-          className="px-4 py-2 bg-red-600 text-white rounded-md text-sm sm:text-base disabled:opacity-50"
-        >
-          Continue
-        </button>
+
+        {activeTab === "headshot" && selected.length === 0 ? (
+          <button
+            onClick={goContinue}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md text-sm sm:text-base hover:bg-gray-300 transition"
+          >
+            No Thanks
+          </button>
+        ) : (
+          <button
+            onClick={activeTab === "headshot" ? goContinue : goCustom}
+            className={`px-4 py-2 ${
+              activeTab === "headshot"
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-purple-600 hover:bg-purple-700"
+            } text-white rounded-md text-sm sm:text-base transition`}
+          >
+            Continue
+          </button>
+        )}
       </div>
 
       {/* 3. Tabs (overview styling) */}
@@ -61,7 +74,7 @@ export default function HeadshotUpsell() {
               : "text-muted-foreground hover:text-black"
           }`}
         >
-          Add Additional Headshot
+          Select Additional Headshots
         </button>
         <button
           onClick={() => setActiveTab("custom")}
@@ -71,7 +84,7 @@ export default function HeadshotUpsell() {
               : "text-muted-foreground hover:text-black"
           }`}
         >
-          Add Custom Photoshoot
+          Select Custom Photoshoot
         </button>
       </div>
 
