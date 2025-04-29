@@ -1,17 +1,17 @@
 // app/custom-intake/page.tsx
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useRouter, useSearchParams } from "next/navigation";
 import IntakeForm from "@/components/IntakeForm";
 
 export default function CustomIntakePage() {
   const router = useRouter();
   const params = useSearchParams();
-  const packId = params.get("packId") || "defaultPack";
+  const packId = params.get("packId") ?? "defaultPack";
 
-  // once intake is submitted, send straight to the final upload step
   const handleComplete = () => {
-    // no extra packs, just custom photos
     router.push(`/overview/packs/${packId}/next?extraPacks=custom`);
   };
 
@@ -21,9 +21,9 @@ export default function CustomIntakePage() {
         <h1 className="text-3xl font-bold text-center mb-8">
           Custom Photoshoot Intake Form
         </h1>
-        <IntakeForm 
-          pack={packId} 
-          onComplete={handleComplete} 
+        <IntakeForm
+          pack={packId}
+          onComplete={handleComplete}
         />
       </div>
     </div>
