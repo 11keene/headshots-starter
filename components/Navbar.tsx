@@ -9,6 +9,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuItem,
 } from "./ui/dropdown-menu";
 import Link from "next/link";
 import { Button } from "./ui/button";
@@ -66,7 +67,7 @@ export default async function Navbar() {
 
             {packsIsEnabled && (
               <Link
-                 href="/overview/packs"
+                href="/overview/packs"
                 className="flex-shrink-0 text-sm sm:text-base font-semibold hover:text-primary transition-colors"
               >
                 Packs
@@ -76,7 +77,8 @@ export default async function Navbar() {
             {stripeIsConfigured && (
               <Link
                 href="/get-credits"
-                className="flex-shrink-0 text-sm sm:text-base font-semibold hover:text-primary transition-colors"              >
+                className="flex-shrink-0 text-sm sm:text-base font-semibold hover:text-primary transition-colors"
+              >
                 Get Credits
               </Link>
             )}
@@ -88,12 +90,9 @@ export default async function Navbar() {
           <ThemeToggle />
 
           {!user && (
-        
-              
-              <Link href="/login">
-                <Button size="sm">Login</Button>
-              </Link>
-        
+            <Link href="/login">
+              <Button size="sm">Login</Button>
+            </Link>
           )}
 
           {user && (
@@ -111,6 +110,23 @@ export default async function Navbar() {
                   <DropdownMenuLabel className="text-primary text-center whitespace-nowrap">
                     {user.email}
                   </DropdownMenuLabel>
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="cursor-default flex justify-between px-4 py-2">
+                    <span>Your Credits</span>
+                    <span className="font-semibold">{credits?.credits ?? 0}</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/overview"
+                      className="w-full px-4 py-2 text-left"
+                    >
+                      Create Photos
+                    </Link>
+                  </DropdownMenuItem>
+
                   <DropdownMenuSeparator />
                   <form action="/auth/sign-out" method="post">
                     <Button
