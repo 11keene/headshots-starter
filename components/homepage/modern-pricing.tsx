@@ -59,7 +59,9 @@ export default function ModernPricing() {
             <div
               key={idx}
               className={cn(
-                "relative flex flex-col p-4 bg-white border rounded-lg shadow-md transition-all ease-in-out hover:scale-105 hover:shadow-xl",
+                "relative flex flex-col p-4 bg-white border rounded-lg shadow-md transition-all ease-in-out",
+                "hover:scale-105 hover:shadow-xl",
+                "hover:border-red-500 hover:bg-red-50",
                 "w-[160px] h-[500px]",
                 "sm:w-full sm:h-[400px] md:h-[500px] md:w-[215px] lg:flex-grow",
                 tier.popular && "pricing-card-popular"
