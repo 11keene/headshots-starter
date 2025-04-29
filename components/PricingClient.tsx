@@ -6,36 +6,17 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 type Tier = {
-  id: string;
+  id: string;        // your Stripe Price ID
   title: string;
-  subtitle: string;
+  subtitle: string;  // e.g. "40 pics · 120 mins · 1 attire · SD res"
   badge?: string;
 };
 
 const TIERS: Tier[] = [
-  {
-    id: "price_1RHmnVCs03tLUXoK4iTvnduW",
-    title: "Starter",
-    subtitle: "12 pics · 120 mins · 1 attire · SD res",
-  },
-  {
-    id: "price_1RHmnnCs03tLUXoKLXWGbUqt",
-    title: "Standard",
-    subtitle: "60 pics · 60 mins · 2 attires · SD res",
-    badge: "83% pick this",
-  },
-  {
-    id: "price_1RHmo9Cs03tLUXoKiIai8D2O",
-    title: "Pro",
-    subtitle: "100 pics · 60 mins · All attires · HD res",
-    badge: "Best Value",
-  },
-  {
-    id: "price_1RHmoNCs03tLUXoKRpzgeqUu",
-    title: "Studio",
-    subtitle: "500 pics · 120 mins · Unlimited attires · 4K",
-    badge: "Best Value",
-  },
+  { id: "price_1RHmnVCs03tLUXoK4iTvnduW", title: "Starter", subtitle: "12 pics · 120 mins · 1 attire · SD res" },
+  { id: "price_1RHmnnCs03tLUXoKLXWGbUqt", title: "Standard", subtitle: "60 pics · 60 mins · 2 attires · SD res", badge: "83% pick this" },
+  { id: "price_1RHmo9Cs03tLUXoKiIai8D2O", title: "Pro", subtitle: "100 pics · 60 mins · All attires · HD res", badge: "Best Value" },
+  { id: "price_1RHmoNCs03tLUXoKRpzgeqUu", title: "Studio", subtitle: "500 pics · 120 mins · Unlimited attires · 4K", badge: "Best Value" },
 ];
 
 export default function PricingClient({
@@ -50,42 +31,40 @@ export default function PricingClient({
   const [loading, setLoading] = useState(false);
 
   const onContinue = async () => {
-    console.log("💡 onContinue fired with:", { selected, extraPacks });
     if (!selected) return;
     setLoading(true);
 
+    // build full array of price IDs
     const extras = extraPacks ? extraPacks.split(",") : [];
     const priceIds = [selected, ...extras];
+    console.log("💡 onContinue fired with:", { selected, extraPacks, priceIds });
 
     try {
-      const res = await fetch("/api/stripe/checkout/order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          priceIds,
-          successUrl: `${window.location.origin}/overview?session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: `${window.location.origin}/pricing?packId=${packId}&extraPacks=${extraPacks}`,
-        }),
-      });
+      // note: absolute URL is safer to avoid any base-path issues
+      const res = await fetch(
+        `${window.location.origin}/api/stripe/checkout/order`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            priceIds,
+            successUrl: `${window.location.origin}/overview?session_id={CHECKOUT_SESSION_ID}`,
+            cancelUrl: `${window.location.origin}/pricing?packId=${packId}&extraPacks=${extraPacks}`,
+          }),
+        }
+      );
 
-      const text = await res.text();
-      console.log("✅ /api/stripe/checkout/order response:", res.status, text);
+      const json = await res.json();
+      console.log("💬 checkout/order response:", json);
 
-      if (!res.ok) {
-        console.error("🚨 bad response:", text);
-        setLoading(false);
-        return;
-      }
-
-      const { url } = JSON.parse(text);
-      if (url) {
-        window.location.href = url;
+      if (json.url) {
+        window.location.href = json.url;
       } else {
-        console.error("🚨 missing url in response:", text);
+        console.error("Checkout session creation failed:", json);
         setLoading(false);
       }
     } catch (err) {
-      console.error("🚨 fetch failed:", err);
+      console.error("Error calling checkout/order:", err);
       setLoading(false);
     }
   };
@@ -117,8 +96,8 @@ export default function PricingClient({
                 cursor-pointer rounded-lg border p-6 text-center transition-shadow
                 ${isActive
                   ? "border-red-600 shadow-lg"
-                  : "border-gray-200 hover:shadow-md"}
-              `}
+                  : "border-gray-200 hover:shadow-md"
+                }`}
             >
               {tier.badge && (
                 <span className="inline-block mb-2 rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold">
@@ -141,7 +120,6 @@ export default function PricingClient({
         <Button
           className="w-full sm:w-auto bg-red-600 text-white"
           disabled={!selected || loading}
-          
           onClick={onContinue}
           isLoading={loading}
         >
