@@ -4,6 +4,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";  // ← NEW
+
 
 type Tier = {
   id: string;        // your Stripe Price ID
@@ -49,9 +51,7 @@ export default function PricingClient({
           body: JSON.stringify({
             priceIds,
             // to:
-            successUrl: `${window.location.origin}/overview/packs/${packId}/generate` +
-            `?session_id={CHECKOUT_SESSION_ID}` +
-            `&extraPacks=${encodeURIComponent(extraPacks)}`,
+            successUrl: `${window.location.origin}/overview/packs/${packId}/generate?extraPacks=${extraPacks}&session_id={CHECKOUT_SESSION_ID}`, 
             cancelUrl: `${window.location.origin}/pricing?packId=${packId}&extraPacks=${extraPacks}`,
           }),
         }

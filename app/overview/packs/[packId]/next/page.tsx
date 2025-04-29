@@ -42,6 +42,7 @@ export default function UploadPage() {
     [onFiles]
   );
 
+  // when ready, go to pricing (you’ve already persisted the URLs)
   const goPricing = () => {
     router.push(`/pricing?packId=${packId}&extraPacks=${extraPacks}`);
   };
@@ -59,8 +60,7 @@ export default function UploadPage() {
       <h1 className="text-2xl font-bold mb-2">Upload your photos</h1>
       <p className="text-gray-600 mb-6">
         Select at least <span className="font-semibold">6</span> photos (max 10).
-        Mix close-ups, selfies &amp; mid-range shots to help the AI learn you
-        best.
+        Mix close-ups, selfies &amp; mid-range shots to help the AI learn you best.
       </p>
 
       {/* Drag & Drop Zone */}
@@ -77,7 +77,7 @@ export default function UploadPage() {
           onChange={(e) => onFiles(e.target.files)}
         />
         <FiUploadCloud className="mx-auto mb-4 text-4xl text-red-600" />
-        <Button variant="outline" onClick={() => {/* hidden input covers it */}}>
+        <Button variant="outline" onClick={() => {/* hidden input covers this */}}>
           Browse files
         </Button>
         <p className="mt-2 text-sm text-gray-500">
@@ -103,7 +103,7 @@ export default function UploadPage() {
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
         {[
           { title: "Selfies", desc: "Frontal, well-lit at eye-level", img: "/placeholders/selfie.png" },
-          { title: "Variety", desc: "Different outfits & backgrounds", img: "/placeholders/variety.png" },
+          { title: "Variety", desc: "Different outfits &amp; backgrounds", img: "/placeholders/variety.png" },
           { title: "No Blurry", desc: "Sharp, not too dark or bright", img: "/placeholders/no-blurry.png" },
           { title: "Natural", desc: "Avoid heavy filters or edits", img: "/placeholders/natural.png" },
         ].map((card) => (
