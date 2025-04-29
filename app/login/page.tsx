@@ -1,5 +1,6 @@
 "use client";
-
+// Mark this route as always dynamic (no static prerender)
+export const dynamic = "force-dynamic";
 import { useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
