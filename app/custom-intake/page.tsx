@@ -1,6 +1,5 @@
 // app/custom-intake/page.tsx
 "use client";
-
 export const dynamic = "force-dynamic";
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -21,11 +20,9 @@ export default function CustomIntakePage() {
         <h1 className="text-3xl font-bold text-center mb-8">
           Custom Photoshoot Intake Form
         </h1>
-        <IntakeForm
-          pack={packId}
-          onComplete={handleComplete}
-        />
+        <IntakeForm pack={packId} onComplete={handleComplete} />
       </div>
     </div>
   );
 }
+
