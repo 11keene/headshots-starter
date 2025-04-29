@@ -112,7 +112,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
       {/* Progress bar */}
       <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
         <div
-          className="h-2 bg-gradient-to-r from-orange-500 to-red-600 transition-all"
+          className="h-2 bg-gradient-to-r from-red-600 to-red-600 transition-all"
           style={{ width: `${((step + 1) / QUESTIONS.length) * 100}%` }}
         />
       </div>

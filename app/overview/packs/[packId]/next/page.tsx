@@ -1,4 +1,3 @@
-// app/overview/packs/[packId]/next/page.tsx
 "use client";
 
 import { useState, useCallback } from "react";
@@ -20,10 +19,13 @@ export default function UploadPage() {
   }, []);
 
   // drag & drop
-  const onDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    onFiles(e.dataTransfer.files);
-  }, [onFiles]);
+  const onDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      onFiles(e.dataTransfer.files);
+    },
+    [onFiles]
+  );
 
   return (
     <div className="p-6 sm:p-8 max-w-3xl mx-auto">
@@ -37,7 +39,7 @@ export default function UploadPage() {
 
       <h1 className="text-2xl font-bold mb-2">Upload your photos</h1>
       <p className="text-gray-600 mb-6">
-        Select at least <span className="font-semibold">6</span> photos (max 10). Mix close-ups, selfies, and mid-range shots to help the AI learn you best.
+        Select at least <span className="font-semibold">6</span> photos (max 10). Mix close-ups, selfies &amp; mid-range shots to help the AI learn you best.
       </p>
 
       {/* drag & drop zone */}
@@ -53,12 +55,12 @@ export default function UploadPage() {
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           onChange={(e) => onFiles(e.target.files)}
         />
-        <FiUploadCloud className="mx-auto mb-4 text-4xl text-orange-500" />
-        <Button variant="outline" onClick={() => { /* click triggers input */ }}>
+        <FiUploadCloud className="mx-auto mb-4 text-4xl text-red-600" />
+        <Button variant="outline" onClick={() => {/* hidden input covers it */}}>
           Browse files
         </Button>
         <p className="mt-2 text-sm text-gray-500">
-          or drag & drop your photos here (PNG, JPG, WEBP up to 120 MB)
+          or drag &amp; drop your photos here (PNG, JPG, WEBP up to 120 MB)
         </p>
       </div>
 
@@ -125,7 +127,7 @@ export default function UploadPage() {
         </span>
         <Button
           disabled={files.length < 6}
-          onClick={() => router.push(`/overview/packs/${packId}/generate?files=${files.length}`)}
+          onClick={() => router.push(`/pricing`)}
         >
           Continue
         </Button>
