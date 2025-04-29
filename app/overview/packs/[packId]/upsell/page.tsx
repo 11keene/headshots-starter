@@ -123,7 +123,7 @@ export default function HeadshotUpsell() {
           <div
             onClick={() => setCustomSelected(true)}
             className={`cursor-pointer border rounded-lg overflow-hidden shadow-md max-w-sm w-full ${
-              customSelected ? "ring-4 ring-purple-500" : ""
+              customSelected ? "ring-4 ring-red-500" : ""
             }`}
           >
             <img
