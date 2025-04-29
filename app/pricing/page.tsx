@@ -1,11 +1,11 @@
-"use client";
+// app/pricing/page.tsx
+import PricingClient from "../../components/PricingClient";
 
-import ModernPricing from "@/components/homepage/modern-pricing";
-
-export default function PricingPage() {
-  return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <ModernPricing />
-    </div>
-  );
+export default function PricingPage({
+  searchParams,
+}: {
+  searchParams: { packId?: string; extraPacks?: string };
+}) {
+  const { packId = "", extraPacks = "" } = searchParams;
+  return <PricingClient packId={packId} extraPacks={extraPacks} />;
 }
