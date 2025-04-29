@@ -17,11 +17,15 @@ import { useToast } from "@/components/ui/use-toast";
 
 type Inputs = { email: string };
 
-export default function Login({ redirectTo }: { redirectTo: string }) {
+// Add postRedirect prop to allow dynamic redirect after successful auth
+interface LoginProps {
+  redirectTo: string;
+  postRedirect?: string;
+}
+
+export default function Login({ redirectTo, postRedirect = "/overview" }: LoginProps) {
   const router = useRouter();
   const supabase = createClientComponentClient();
-
-  // Removed invalid supabase.auth.update call
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
@@ -33,22 +37,26 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     formState: { errors, isSubmitted },
   } = useForm<Inputs>();
 
-  // — as soon as this component mounts, if there's already a session, send them to /overview
+  // On mount and auth state change, redirect to postRedirect if user is signed in
   useEffect(() => {
+    // if already signed in, go to postRedirect
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace("/overview");
-    });
-
-    // — listen for any new sign-in and redirect right away
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        router.replace("/overview");
+      if (session) {
+        router.replace(postRedirect);
       }
     });
+
+    // subscribe to auth changes
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "USER_UPDATED") && session) {
+        router.replace(postRedirect);
+      }
+    });
+
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, [supabase, router]);
+  }, [supabase, router, postRedirect]);
 
   // magic-link handler
   const onSubmit: SubmitHandler<Inputs> = async ({ email }) => {
@@ -66,13 +74,12 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     }
   };
 
-  // OAuth handler for Google/Facebook
+  // OAuth handler
   const socialSignIn = (provider: "google" | "facebook" | "apple") =>
     supabase.auth.signInWithOAuth({
       provider,
       options: {
-        // point at your new callback route:
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: redirectTo,
       },
     });
 
@@ -82,20 +89,20 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-md">
-      {/* Logo */}
+      {/* Logo & Branding */}
       <div className="flex items-center gap-2 mb-4">
         <img src="/logo.png" alt="AI Maven Logo" className="w-8 h-8 rounded-full" />
         <span className="text-xl font-bold">AI Maven</span>
       </div>
-{/* Apple OAuth button */}
-<Button
-  onClick={() => socialSignIn("apple")}
-  className="w-full flex items-center justify-center gap-2 rounded-md bg-black hover:opacity-90 text-white py-4 font-semibold transition"
->
-  <FaApple size={20} />
-  Continue with Apple
-</Button>
-      {/* Google */}
+
+      {/* Social OAuth Buttons */}
+      <Button
+        onClick={() => socialSignIn("apple")}
+        className="w-full flex items-center justify-center gap-2 rounded-md bg-black hover:opacity-90 text-white py-4 font-semibold transition"
+      >
+        <FaApple size={20} />
+        Continue with Apple
+      </Button>
       <Button
         onClick={() => socialSignIn("google")}
         className="w-full flex items-center justify-center gap-2 rounded-md bg-red-600 hover:bg-red-700 text-white py-4 font-semibold transition"
@@ -105,8 +112,6 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
         </div>
         Continue with Google
       </Button>
-
-      {/* Facebook */}
       <Button
         onClick={() => socialSignIn("facebook")}
         className="w-full flex items-center justify-center gap-2 rounded-md bg-[#1877F2] hover:bg-blue-700 text-white py-4 font-semibold transition"
@@ -132,29 +137,25 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
         {isSubmitted && errors.email && (
           <span className="text-xs text-red-400">{errors.email.message}</span>
         )}
-      <Button
-  type="submit"
-  isLoading={isSubmitting}
-   className="w-full bg-white text-black font-semibold border border-gray-300 rounded px-4 py-2 hover:bg-gray-100"
->
-  Continue with Email
-</Button>
+        <Button
+          type="submit"
+          isLoading={isSubmitting}
+          className="w-full bg-white text-black font-semibold border border-gray-300 rounded px-4 py-2 hover:bg-gray-100"
+        >
+          Continue with Email
+        </Button>
       </form>
 
       {/* Terms & guarantees */}
       <div className="text-center text-sm text-muted-foreground space-y-2 mt-6 px-4">
         <p>
-          New accounts are subject to our{" "}
-          <span className="underline cursor-pointer">Terms</span> and{" "}
-          <span className="underline cursor-pointer">Privacy Policy</span>.
+          New accounts are subject to our <span className="underline cursor-pointer">Terms</span> and <span className="underline cursor-pointer">Privacy Policy</span>.
         </p>
         <p className="flex items-center justify-center font-semibold gap-2">
-          <FaLock className="text-green-600" />
-          Security built for Fortune 500 companies
+          <FaLock className="text-green-600" /> Security built for Fortune 500 companies
         </p>
         <p className="flex items-center justify-center font-semibold gap-2">
-          <HiShieldCheck className="text-green-600" />
-          100% Money Back Guarantee
+          <HiShieldCheck className="text-green-600" /> 100% Money Back Guarantee
         </p>
       </div>
     </div>
