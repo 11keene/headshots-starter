@@ -6,9 +6,8 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FaApple } from "react-icons/fa";
+import { FaApple, FaFacebookF, FaLock } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebookF, FaLock } from "react-icons/fa";
 import { HiShieldCheck } from "react-icons/hi";
 import { MdEmail } from "react-icons/md";
 import OR from "@/components/OR";
@@ -21,8 +20,6 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
   const router = useRouter();
   const supabase = createClientComponentClient();
 
-  // Removed invalid supabase.auth.update call
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
   const { toast } = useToast();
@@ -33,24 +30,32 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     formState: { errors, isSubmitted },
   } = useForm<Inputs>();
 
-  // — as soon as this component mounts, if there's already a session, send them to /overview
+  // ✅ FIXED useEffect to prevent hydration crash / infinite redirects
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace("/overview");
-    });
+    let isMounted = true;
 
-    // — listen for any new sign-in and redirect right away
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (isMounted && session) {
+        router.replace("/overview");
+      }
+    };
+
+    checkSession();
+
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
         router.replace("/overview");
       }
     });
+
     return () => {
+      isMounted = false;
       listener.subscription.unsubscribe();
     };
-  }, [supabase, router]);
+  }, []);
 
-  // magic-link handler
+  // Magic link handler
   const onSubmit: SubmitHandler<Inputs> = async ({ email }) => {
     setIsSubmitting(true);
     const { error } = await supabase.auth.signInWithOtp({
@@ -66,12 +71,11 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     }
   };
 
-  // OAuth handler for Google/Facebook
+  // OAuth handler
   const socialSignIn = (provider: "google" | "facebook" | "apple") =>
     supabase.auth.signInWithOAuth({
       provider,
       options: {
-        // point at your new callback route:
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
@@ -82,20 +86,19 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-md">
-      {/* Logo */}
       <div className="flex items-center gap-2 mb-4">
         <img src="/logo.png" alt="AI Maven Logo" className="w-8 h-8 rounded-full" />
         <span className="text-xl font-bold">AI Maven</span>
       </div>
-{/* Apple OAuth button */}
-<Button
-  onClick={() => socialSignIn("apple")}
-  className="w-full flex items-center justify-center gap-2 rounded-md bg-black hover:opacity-90 text-white py-4 font-semibold transition"
->
-  <FaApple size={20} />
-  Continue with Apple
-</Button>
-      {/* Google */}
+
+      <Button
+        onClick={() => socialSignIn("apple")}
+        className="w-full flex items-center justify-center gap-2 rounded-md bg-black hover:opacity-90 text-white py-4 font-semibold transition"
+      >
+        <FaApple size={20} />
+        Continue with Apple
+      </Button>
+
       <Button
         onClick={() => socialSignIn("google")}
         className="w-full flex items-center justify-center gap-2 rounded-md bg-red-600 hover:bg-red-700 text-white py-4 font-semibold transition"
@@ -106,7 +109,6 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
         Continue with Google
       </Button>
 
-      {/* Facebook */}
       <Button
         onClick={() => socialSignIn("facebook")}
         className="w-full flex items-center justify-center gap-2 rounded-md bg-[#1877F2] hover:bg-blue-700 text-white py-4 font-semibold transition"
@@ -115,10 +117,8 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
         Continue with Facebook
       </Button>
 
-      {/* Divider */}
       <OR />
 
-      {/* Magic link form */}
       <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4">
         <div className="relative">
           <Input
@@ -132,16 +132,15 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
         {isSubmitted && errors.email && (
           <span className="text-xs text-red-400">{errors.email.message}</span>
         )}
-      <Button
-  type="submit"
-  isLoading={isSubmitting}
-   className="w-full bg-white text-black font-semibold border border-gray-300 rounded px-4 py-2 hover:bg-gray-100"
->
-  Continue with Email
-</Button>
+        <Button
+          type="submit"
+          isLoading={isSubmitting}
+          className="w-full bg-white text-black font-semibold border border-gray-300 rounded px-4 py-2 hover:bg-gray-100"
+        >
+          Continue with Email
+        </Button>
       </form>
 
-      {/* Terms & guarantees */}
       <div className="text-center text-sm text-muted-foreground space-y-2 mt-6 px-4">
         <p>
           New accounts are subject to our{" "}
