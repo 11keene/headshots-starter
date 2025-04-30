@@ -1,6 +1,6 @@
 // app/custom-intake/page.tsx
 export const dynamic = "force-dynamic";  // always render on request
-export const runtime = "edge";           // use the Edge runtime
+export const runtime = "nodejs";          
 
 import CustomIntakeClient from "./CustomIntakeClient";
 
