@@ -1,6 +1,6 @@
-import Footer from "@/components/Footer";
+// File: app/layout.tsx
 import dynamic from "next/dynamic";
-const Navbar = dynamic(() => import("@/components/Navbar"), { ssr: false });
+import Footer from "@/components/Footer";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { Suspense } from "react";
@@ -15,7 +15,7 @@ import GlobalError from "./error";
 validateConfig();
 
 export const viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
   maximumScale: 1,
 };
@@ -25,17 +25,14 @@ export const metadata = {
   description: "Generate awesome headshots in minutes using AI",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// Dynamically load Navbar (SSR enabled by default)
+const Navbar = dynamic(() => import("@/components/Navbar"));
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.png" type="image/png" />
-        {/* You can use .ico instead if that's your file format */}
-        {/* <link rel="icon" href="/favicon.ico" type="image/x-icon" /> */}
       </head>
       <body className="min-h-screen flex flex-col bg-background">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -65,4 +62,3 @@ export default function RootLayout({
     </html>
   );
 }
-
