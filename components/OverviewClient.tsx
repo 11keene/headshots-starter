@@ -44,7 +44,7 @@ export default function OverviewClient({ serverModels }: { serverModels: any[] }
           </p>
           <Link href="/overview/packs" className="w-full">
             <img
-              src="/images/curly-copy.png"
+              src="/images/curly.png"
               alt="Choose a Headshot"
               className="rounded-lg transition-transform duration-300 hover:scale-105 hover:shadow-xl w-full"
             />

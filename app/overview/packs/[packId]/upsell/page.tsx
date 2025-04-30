@@ -131,7 +131,7 @@ export default function HeadshotUpsell() {
             }`}
           >
             <img
-              src="/your-custom-example.jpg"
+              src="/images/straight.png"
               alt="Custom Photoshoot"
               className="w-full h-64 object-cover"
             />
