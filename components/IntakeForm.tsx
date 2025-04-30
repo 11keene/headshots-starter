@@ -71,13 +71,13 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
 
   // load
   useEffect(() => {
-    const saved = localStorage.getItem(`intake-${pack}`);
+    const saved = localStorage.getItem(intake-${pack});
     if (saved) setAnswers(JSON.parse(saved));
   }, [pack]);
 
   // save
   useEffect(() => {
-    localStorage.setItem(`intake-${pack}`, JSON.stringify(answers));
+    localStorage.setItem(intake-${pack}, JSON.stringify(answers));
   }, [answers, pack]);
 
   const question = QUESTIONS[step];
@@ -98,7 +98,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
       setStep(step + 1);
     } else {
       if (onComplete) onComplete();
-      else router.push(`/overview/packs/${pack}/upsell?tab=custom`);
+      else router.push(/overview/packs/${pack}/upsell?tab=custom);
     }
   };
 
@@ -113,7 +113,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
       <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
         <div
           className="h-2 bg-gradient-to-r from-red-600 to-red-600 transition-all"
-          style={{ width: `${((step + 1) / QUESTIONS.length) * 100}%` }}
+          style={{ width: ${((step + 1) / QUESTIONS.length) * 100}% }}
         />
       </div>
 
@@ -129,12 +129,12 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
                 key={o.value}
                 onClick={() => choose(o.value)}
                 whileHover={{ scale: 1.02 }}
-                className={`border-2 rounded-lg overflow-hidden flex flex-col items-center transition-shadow
+                className={border-2 rounded-lg overflow-hidden flex flex-col items-center transition-shadow
                   ${
                     answers[question.key] === o.value
                       ? "border-red-600 shadow-lg"
                       : "border-gray-300 hover:shadow-md"
-                  }`}
+                  }}
               >
                 <img src={o.img} alt={o.label} className="w-full h-32 object-cover" />
                 <span className="p-2">{o.label}</span>
@@ -148,12 +148,12 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
             {question.options.map((o) => (
               <motion.label
                 key={o.value}
-                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors
+                className={flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors
                   ${
                     (answers[question.key] || []).includes(o.value)
                       ? "bg-red-50 border-red-400"
                       : "border-gray-300 hover:bg-gray-50"
-                  }`}
+                  }}
               >
                 <input
                   type="checkbox"
