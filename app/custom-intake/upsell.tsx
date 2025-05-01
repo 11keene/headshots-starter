@@ -22,42 +22,21 @@ export default function CustomUpsellPage() {
       <h1 className="text-2xl font-bold mb-4">Add More Packs?</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
         {visiblePacks.map((pack) => (
-          <div key={pack.id} className="relative border rounded-lg overflow-hidden">
-            {/* Image */}
+          <div key={pack.id} className="border rounded-lg overflow-hidden">
             <img
-              src={pack.exampleImg}
+              src="/images/wavy.png"
               alt={pack.name}
               className="w-full h-40 object-cover"
             />
-
-            {/* Black bottom overlay */}
-            <div className="
-              absolute 
-              bottom-0 
-              w-full 
-              bg-black bg-opacity-80 
-              flex items-center justify-center 
-              h-10
-              px-2
-            ">
-              <p className="text-white text-sm font-medium">
-                {pack.name}
-              </p>
+            <div className="p-2 text-center">
+              <p className="font-semibold">{pack.name}</p>
+              <Link
+                href={`/checkout/add-pack?packId=${pack.id}`}
+                className="mt-2 inline-block px-4 py-1 bg-blue-600 text-white rounded"
+              >
+                Add Pack
+              </Link>
             </div>
-
-            {/* Add Pack button */}
-            <Link
-              href={`/checkout/add-pack?packId=${pack.id}`}
-              className="
-                absolute 
-                top-2 right-2 
-                bg-blue-600 text-white 
-                text-xs font-medium 
-                px-2 py-1 rounded
-              "
-            >
-              Add Pack
-            </Link>
           </div>
         ))}
       </div>
