@@ -7,11 +7,11 @@ export interface Pack {
   }
   
   export const packs: Pack[] = [
-    { id: "j-crew",  name: "J. Crew",                         exampleImg: "/packs/j-crew.jpg" },
-    { id: "bold-colors", name: "Bold Colors",                exampleImg: "/packs/bold-colors.jpg" },
-    { id: "thumbnail",   name: "YouTube Thumbnail Reaction", exampleImg: "/packs/youtube-thumbnail-reaction.jpg" },
-    { id: "glamour",     name: "Glamour Shot",               exampleImg: "/packs/glamour-shot.jpg" },
-    { id: "vikings",     name: "Vikings",                    exampleImg: "/packs/vikings.jpg" },
-    { id: "dating",      name: "Dating",                     exampleImg: "/packs/dating.jpg" },
+    { id: "j-crew",  name: "J. Crew",                         exampleImg: "/images/bob.png" },
+    { id: "bold-colors", name: "Bold Colors",                exampleImg: "/images/bold-colors.jpg" },
+    { id: "thumbnail",   name: "YouTube Thumbnail Reaction", exampleImg: "/images/pixiecut.png" },
+    { id: "glamour",     name: "Glamour Shot",               exampleImg: "/images/straight.png" },
+    { id: "vikings",     name: "Vikings",                    exampleImg: "/images/pasthoulderlength.png" },
+    { id: "dating",      name: "Dating",                     exampleImg: "/images/straight.png" },
   ];
   
