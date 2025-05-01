@@ -18,7 +18,7 @@ const TIERS: Tier[] = [
   { id: "price_1RJLBd4RnIZz7j08beYwRGv1", title: "Starter", subtitle: "12 pics · 120 mins · 1 attire · SD res" },
   { id: "price_1RJLCO4RnIZz7j08tJ3vN1or", title: "Standard", subtitle: "60 pics · 60 mins · 2 attires · SD res", badge: "83% pick this" },
   { id: "price_1RJLDE4RnIZz7j08RlQUve2s", title: "Pro", subtitle: "100 pics · 60 mins · All attires · HD res", badge: "Best Value" },
-  { id: "price_1RJLDf4RnIZz7j08TLcrNcQ6", title: "Studio", subtitle: "500 pics · 120 mins · Unlimited attires · 4K", badge: "Best Value" },
+  { id: "price_1RJLDf4RnIZz7j08TLcrNcQ6", title: "Studio", subtitle: "500 pics · 120 mins · Unlimited attires · 4K", },
 ];
 
 export default function PricingClient({
@@ -88,7 +88,7 @@ export default function PricingClient({
         We offer a package for every budget. Pay once, no subscriptions or hidden fees.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">  
         {TIERS.map((tier) => {
           const isActive = tier.id === selected;
           return (
@@ -99,7 +99,7 @@ export default function PricingClient({
                 cursor-pointer rounded-lg border p-6 text-center transition-shadow
                 ${isActive
                   ? "border-red-600 shadow-lg"
-                  : "border-black-200 hover:shadow-md"
+                  : "border-black-500 hover:shadow-md"
                 }`}
             >
               {tier.badge && (

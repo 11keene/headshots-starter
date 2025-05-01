@@ -234,6 +234,8 @@ export default function HeroAnimation() {
         {transformations.map((_, index) => (
           <button
             key={index}
+            type="button"
+            title={`Go to transformation ${index + 1}`}
             className={`w-2 h-2 rounded-full transition-all ${
               index === activeIndex ? "bg-primary w-6" : "bg-primary/30"
             }`}

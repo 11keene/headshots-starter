@@ -107,7 +107,7 @@ export default function HeadshotUpsell() {
               onClick={() => togglePack(p.id)}
               className={`cursor-pointer border rounded-lg overflow-hidden transition-shadow ${
                 selected.includes(p.id)
-                  ? "ring-4 ring-blue-500 shadow-lg"
+                  ? "ring-4 ring-red-500 shadow-lg"
                   : "hover:shadow-md"
               }`}
             >
