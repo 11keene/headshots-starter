@@ -73,6 +73,7 @@ export default function UploadPage() {
           type="file"
           multiple
           accept="image/*"
+          title="Upload your photos"
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           onChange={(e) => onFiles(e.target.files)}
         />
