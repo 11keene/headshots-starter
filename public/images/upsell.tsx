@@ -23,11 +23,7 @@ export default function CustomUpsellPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
         {visiblePacks.map((pack) => (
           <div key={pack.id} className="border rounded-lg overflow-hidden">
-            <img
-  src={pack.exampleImg}
-  alt={pack.name}
-  className="w-full h-[300px] object-cover"
-/>
+            
 
             {/* ↓ thinner, fully centered caption bar */}
             <div className="
