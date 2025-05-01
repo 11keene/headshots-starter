@@ -1,3 +1,5 @@
+// components/Navbar.tsx
+
 import { AvatarIcon } from "@radix-ui/react-icons";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
@@ -53,7 +55,7 @@ export default async function Navbar() {
           <span>AI Maven</span>
         </Link>
 
-        {/* Nav Links */}
+        {/* Nav – scrollable on small, full gap on larger */}
         {user && (
           <nav className="flex flex-nowrap overflow-x-auto gap-3 sm:gap-5 md:gap-6 whitespace-nowrap">
             <Link
@@ -62,6 +64,7 @@ export default async function Navbar() {
             >
               Home
             </Link>
+
             {packsIsEnabled && (
               <Link
                 href="/overview/packs"
@@ -70,6 +73,7 @@ export default async function Navbar() {
                 Packs
               </Link>
             )}
+
             {stripeIsConfigured && (
               <Link
                 href="/get-credits"
@@ -83,58 +87,59 @@ export default async function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center">
-          {/* extra left margin on the toggle */}
-          <div className="ml-4">
-            <ThemeToggle />
-          </div>
-
-          {!user ? (
+        <div className="ml-4">
+          <ThemeToggle />
+</div>
+          {!user && (
             <Link href="/login">
               <Button size="sm">Login</Button>
             </Link>
-          ) : (
-            <div className="flex items-center">
+          )}
+
+          {user && (
+            <div className="flex items-center gap-4">
               {stripeIsConfigured && credits && (
                 <ClientSideCredits creditsRow={credits} />
               )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
+                    <AvatarIcon className="h-10 w-10 text-primary" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 z-50">
+                  <DropdownMenuLabel className="text-primary text-center whitespace-nowrap">
+                    {user.email}
+                  </DropdownMenuLabel>
 
-              {/* extra left margin on the avatar dropdown */}
-              <div className="ml-6">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
-                      <AvatarIcon className="h-10 w-10 text-primary" />
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="cursor-default flex justify-between px-4 py-2">
+                    <span>Your Credits</span>
+                    <span className="font-semibold">{credits?.credits ?? 0}</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/overview"
+                      className="w-full px-4 py-2 text-left"
+                    >
+                      Create Photos
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+                  <form action="/auth/sign-out" method="post">
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      className="w-full text-left whitespace-nowrap"
+                    >
+                      Log out
                     </Button>
-                  </DropdownMenuTrigger>
-
-                  <DropdownMenuContent className="w-56 z-50">
-                    <DropdownMenuLabel className="text-primary text-center whitespace-nowrap">
-                      {user.email}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-default flex justify-between px-4 py-2">
-                      <span>Your Credits</span>
-                      <span className="font-semibold">{credits?.credits ?? 0}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/overview" className="w-full px-4 py-2 text-left">
-                        Create Photos
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <form action="/auth/sign-out" method="post">
-                      <Button
-                        type="submit"
-                        variant="ghost"
-                        className="w-full text-left whitespace-nowrap"
-                      >
-                        Log out
-                      </Button>
-                    </form>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                  </form>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         </div>
