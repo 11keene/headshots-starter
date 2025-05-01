@@ -4,12 +4,12 @@ import Link from "next/link";
 
 // Your static packs array (or import it from data/packs.ts)
 const packs = [
-  { id: "j-crew", name: "J. Crew", exampleImg: "/images/j-crew.jpg" },
-  { id: "bold-colors", name: "Bold Colors", exampleImg: "/images/bold-colors.jpg" },
-  { id: "thumbnail", name: "YouTube Thumbnail Reaction", exampleImg: "/images/pixiecut.png" },
-  { id: "glamour", name: "Glamour Shot", exampleImg: "/images/midbacklength.png" },
-  { id: "vikings", name: "Vikings", exampleImg: "/images/long.png" },
-  { id: "dating", name: "Dating", exampleImg: "/images/wavy.png" },
+  { id: "j-crew", name: "J. Crew", exampleImg: "/images/valid-image.jpg" }, // Ensure this image exists in the /public/images folder
+  { id: "bold-colors", name: "Bold Colors", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
+  { id: "thumbnail", name: "YouTube Thumbnail Reaction", exampleImg: "/images/valid-image.png" }, // Ensure this image exists in the /public/images folder
+  { id: "glamour", name: "Glamour Shot", exampleImg: "/images/valid-image.jpg" }, // Ensure this image exists in the /public/images folder
+  { id: "vikings", name: "Vikings", exampleImg: "/images/valid-image.jpg" }, // Ensure this image exists in the /public/images folder
+  { id: "dating", name: "Dating", exampleImg: "/images/valid-image.jpg" }, // Ensure this image exists in the /public/images folder
 ];
 
 export default function CustomUpsellPage() {
@@ -23,7 +23,11 @@ export default function CustomUpsellPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
         {visiblePacks.map((pack) => (
           <div key={pack.id} className="border rounded-lg overflow-hidden">
-            
+            <img
+              src={pack.exampleImg}
+              alt={pack.name}
+              className="w-full h-48 object-cover"
+            />
 
             {/* ↓ thinner, fully centered caption bar */}
             <div className="
