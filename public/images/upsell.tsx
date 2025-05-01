@@ -4,12 +4,12 @@ import Link from "next/link";
 
 // Your static packs array (or import it from data/packs.ts)
 const packs = [
-  { id: "j-crew", name: "J. Crew", exampleImg: "/images/valid-image.jpg" }, // Ensure this image exists in the /public/images folder
+  { id: "j-crew", name: "J. Crew", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
   { id: "bold-colors", name: "Bold Colors", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
-  { id: "thumbnail", name: "YouTube Thumbnail Reaction", exampleImg: "/images/valid-image.png" }, // Ensure this image exists in the /public/images folder
-  { id: "glamour", name: "Glamour Shot", exampleImg: "/images/valid-image.jpg" }, // Ensure this image exists in the /public/images folder
-  { id: "vikings", name: "Vikings", exampleImg: "/images/valid-image.jpg" }, // Ensure this image exists in the /public/images folder
-  { id: "dating", name: "Dating", exampleImg: "/images/valid-image.jpg" }, // Ensure this image exists in the /public/images folder
+  { id: "thumbnail", name: "YouTube Thumbnail Reaction", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
+  { id: "glamour", name: "Glamour Shot", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
+  { id: "vikings", name: "Vikings", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
+  { id: "dating", name: "Dating", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
 ];
 
 export default function CustomUpsellPage() {
