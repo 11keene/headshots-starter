@@ -36,7 +36,7 @@ export default function PacksPage() {
             <img
               src={pack.exampleImg}
               alt={pack.name}
-              className="w-full h-56 object-cover"
+              className="w-full h-64 object-cover"
             />
 
             {/* ↓ thinner, fully centered caption bar */}

@@ -26,14 +26,24 @@ export default function CustomUpsellPage() {
             <img
               src={pack.exampleImg}
               alt={pack.name}
-              className="w-full h-40 object-cover"
+              className="w-full h-64 object-cover"
             />
-            {/* Black footer stripe with centered white text */}
-            <div className="bg-black bg-opacity-80 p-2 text-center">
-              <p className="text-white font-semibold mb-2">{pack.name}</p>
+
+            {/* ↓ thinner, fully centered caption bar */}
+            <div className="
+                bg-black
+                text-white
+                flex items-center justify-center
+                text-center font-semibold
+                py-2
+              ">
+              {pack.name}
+            </div>
+
+            <div className="p-2 text-center">
               <Link
                 href={`/checkout/add-pack?packId=${pack.id}`}
-                className="inline-block px-4 py-1 bg-blue-600 text-white rounded"
+                className="mt-2 inline-block px-4 py-1 bg-blue-600 text-white rounded"
               >
                 Add Pack
               </Link>
