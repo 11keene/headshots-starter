@@ -66,9 +66,7 @@ export default function HeadshotUpsell() {
           </button>
         ) : (
           <button
-            onClick={
-              activeTab === "headshot" ? goContinue : goCustom
-            }
+            onClick={ activeTab === "headshot" ? goContinue : goCustom }
             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm sm:text-base transition"
           >
             Continue
@@ -113,12 +111,24 @@ export default function HeadshotUpsell() {
                   : "hover:shadow-md"
               }`}
             >
-              <img
-                src={p.exampleImg}
-                alt={p.name}
-                className="w-full h-40 object-cover"
-              />
-              <div className="p-2 text-center font-semibold">{p.name}</div>
+              {/* ↑ wrapper for the image + caption bar */}
+              <div className="relative overflow-hidden">
+                <img
+                  src={p.exampleImg}
+                  alt={p.name}
+                  className="w-full h-100 sm:h-100 object-cover"
+                />
+                {/* ↓ black caption bar */}
+                <div className="
+                  absolute left-0 right-0 bottom-0
+                  bg-black text-white
+                  flex items-center justify-center
+                  text-center font-semibold
+                  py-2
+                ">
+                  {p.name}
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -130,13 +140,22 @@ export default function HeadshotUpsell() {
               customSelected ? "ring-4 ring-red-500" : ""
             }`}
           >
-            <img
-              src="/images/straight.png"
-              alt="Custom Photoshoot"
-              className="w-full h-100  sm:h-100 object-cover"
-            />
-            <div className="p-4 text-center font-semibold">
-              Custom Photoshoot
+            <div className="relative overflow-hidden">
+              <img
+                src="/images/straight.png"
+                alt="Custom Photoshoot"
+                className="w-full h-100 sm:h-100 object-cover"
+              />
+              {/* ↓ black caption bar */}
+              <div className="
+                absolute left-0 right-0 bottom-0
+                bg-black text-white
+                flex items-center justify-center
+                text-center font-semibold
+                py-2
+              ">
+                Custom Photoshoot
+              </div>
             </div>
           </div>
         </div>

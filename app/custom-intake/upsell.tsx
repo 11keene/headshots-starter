@@ -26,7 +26,7 @@ export default function CustomUpsellPage() {
             <img
               src={pack.exampleImg}
               alt={pack.name}
-              className="w-full h-64 object-cover"
+              className="w-full h-100 sm:h-100 object-cover"
             />
 
             {/* ↓ thinner, fully centered caption bar */}
