@@ -24,10 +24,10 @@ export default function CustomUpsellPage() {
         {visiblePacks.map((pack) => (
           <div key={pack.id} className="border rounded-lg overflow-hidden">
             <img
-              src={"images/long.png"}
-              alt={pack.name}
-              className="w-full h-100 sm:h-100 object-cover"
-            />
+  src={pack.exampleImg}
+  alt={pack.name}
+  className="w-full h-[300px] object-cover"
+/>
 
             {/* ↓ thinner, fully centered caption bar */}
             <div className="
