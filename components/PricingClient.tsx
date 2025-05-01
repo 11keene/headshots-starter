@@ -76,7 +76,7 @@ export default function PricingClient({
         ← Go Back
       </button>
 
-      <h1 className="text-3xl font-bold text-center mb-2">
+      <h1 className="text-3xl font-bold text-center mb-2 text-red-700">
         Amazing headshots are waiting for you!
       </h1>
       <p className="text-center text-gray-600 mb-8">

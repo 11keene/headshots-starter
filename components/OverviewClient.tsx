@@ -60,7 +60,7 @@ export default function OverviewClient({ serverModels }: { serverModels: any[] }
           </p>
           <Link href="/custom-intake" className="w-full">
             <img
-src="https://via.placeholder.com/400x300?text=Custom+Photoshoot"
+src="/images/wavy.png"
               alt="Custom Photoshoot"
               className="rounded-lg transition-transform duration-300 hover:scale-105 hover:shadow-xl w-full"
             />
