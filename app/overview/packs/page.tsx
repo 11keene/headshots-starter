@@ -27,16 +27,28 @@ export default function PacksPage() {
           <div
             key={pack.id}
             onClick={() =>
+              // link into upsell on the CUSTOM tab by default
               router.push(`/overview/packs/${pack.id}/upsell?tab=custom`)
             }
             className="cursor-pointer border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
           >
+            {/* ↑ bumped height from h-48 → h-56 */}
             <img
               src={pack.exampleImg}
               alt={pack.name}
-              className="w-full h-48 object-cover"
+              className="w-full h-56 object-cover"
             />
-            <div className="p-4 text-center font-semibold">{pack.name}</div>
+
+            {/* ↓ thinner, fully centered caption bar */}
+            <div className="
+                bg-black
+                text-white
+                flex items-center justify-center
+                text-center font-semibold
+                py-2
+              ">
+              {pack.name}
+            </div>
           </div>
         ))}
       </div>
