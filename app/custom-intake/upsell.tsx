@@ -24,15 +24,16 @@ export default function CustomUpsellPage() {
         {visiblePacks.map((pack) => (
           <div key={pack.id} className="border rounded-lg overflow-hidden">
             <img
-              src="/images/wavy.png"
+              src={pack.exampleImg}
               alt={pack.name}
               className="w-full h-40 object-cover"
             />
-            <div className="p-2 text-center">
-              <p className="font-semibold">{pack.name}</p>
+            {/* Black footer stripe with centered white text */}
+            <div className="bg-black bg-opacity-80 p-2 text-center">
+              <p className="text-white font-semibold mb-2">{pack.name}</p>
               <Link
                 href={`/checkout/add-pack?packId=${pack.id}`}
-                className="mt-2 inline-block px-4 py-1 bg-blue-600 text-white rounded"
+                className="inline-block px-4 py-1 bg-blue-600 text-white rounded"
               >
                 Add Pack
               </Link>
