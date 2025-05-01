@@ -2,14 +2,13 @@
 import { useState } from "react";
 import Link from "next/link";
 
-// Your static packs array (or import it from data/packs.ts)
 const packs = [
-  { id: "j-crew", name: "J. Crew", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
-  { id: "bold-colors", name: "Bold Colors", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
-  { id: "thumbnail", name: "YouTube Thumbnail Reaction", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
-  { id: "glamour", name: "Glamour Shot", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
-  { id: "vikings", name: "Vikings", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
-  { id: "dating", name: "Dating", exampleImg: "/images/bold-colors.jpg" }, // Ensure this image exists in the /public/images folder
+  { id: "j-crew", name: "J. Crew", exampleImg: "/images/bob.png" },
+  { id: "bold-colors", name: "Bold Colors", exampleImg: "/images/bold-colors.jpg" },
+  { id: "thumbnail", name: "YouTube Thumbnail Reaction", exampleImg: "/images/pixiecut.png" },
+  { id: "glamour", name: "Glamour Shot", exampleImg: "/images/straight.png" },
+  { id: "vikings", name: "Vikings", exampleImg: "/images/pasthoulderlength.png" },
+  { id: "dating", name: "Dating", exampleImg: "/images/straight.png" },
 ];
 
 export default function CustomUpsellPage() {
@@ -28,18 +27,9 @@ export default function CustomUpsellPage() {
               alt={pack.name}
               className="w-full h-48 object-cover"
             />
-
-            {/* ↓ thinner, fully centered caption bar */}
-            <div className="
-                bg-black
-                text-white
-                flex items-center justify-center
-                text-center font-semibold
-                py-2
-              ">
+            <div className="bg-black text-white flex items-center justify-center text-center font-semibold py-2">
               {pack.name}
             </div>
-
             <div className="p-2 text-center">
               <Link
                 href={`/checkout/add-pack?packId=${pack.id}`}
