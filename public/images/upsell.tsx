@@ -4,12 +4,12 @@ import Link from "next/link";
 
 // Your static packs array (or import it from data/packs.ts)
 const packs = [
-  { id: "j-crew", name: "J. Crew", src: "/images/bobcut.png" },
-  { id: "bold-colors", name: "Bold Colors", src: "/images/pastshoulderlength.png" },
-  { id: "thumbnail", name: "YouTube Thumbnail Reaction", src: "/images/pixiecut.png" },
-  { id: "glamour", name: "Glamour Shot", src: "/images/midbacklength.png" },
-  { id: "vikings", name: "Vikings", src: "/images/long.png" },
-  { id: "dating", name: "Dating", src: "/images/wavy.png" },
+  { id: "j-crew", name: "J. Crew", exampleImg: "/images/j-crew.jpg" },
+  { id: "bold-colors", name: "Bold Colors", exampleImg: "/images/bold-colors.jpg" },
+  { id: "thumbnail", name: "YouTube Thumbnail Reaction", exampleImg: "/images/pixiecut.png" },
+  { id: "glamour", name: "Glamour Shot", exampleImg: "/images/midbacklength.png" },
+  { id: "vikings", name: "Vikings", exampleImg: "/images/long.png" },
+  { id: "dating", name: "Dating", exampleImg: "/images/wavy.png" },
 ];
 
 export default function CustomUpsellPage() {
