@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";  // ← NEW
 
+
 type Tier = {
   id: string;        // your Stripe Price ID
   title: string;
@@ -34,10 +35,14 @@ export default function PricingClient({
   const onContinue = async () => {
     if (!selected) return;
     setLoading(true);
+
+    // build full array of price IDs
     const extras = extraPacks ? extraPacks.split(",") : [];
     const priceIds = [selected, ...extras];
+    console.log("💡 onContinue fired with:", { selected, extraPacks, priceIds });
 
     try {
+      // note: absolute URL is safer to avoid any base-path issues
       const res = await fetch(
         `${window.location.origin}/api/stripe/checkout/order`,
         {
@@ -45,15 +50,24 @@ export default function PricingClient({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             priceIds,
+            // to:
             successUrl: `${window.location.origin}/overview/packs/${packId}/generate?extraPacks=${extraPacks}&session_id={CHECKOUT_SESSION_ID}`, 
             cancelUrl: `${window.location.origin}/pricing?packId=${packId}&extraPacks=${extraPacks}`,
           }),
         }
       );
+
       const json = await res.json();
-      if (json.url) window.location.href = json.url;
-      else setLoading(false);
-    } catch {
+      console.log("💬 checkout/order response:", json);
+
+      if (json.url) {
+        window.location.href = json.url;
+      } else {
+        console.error("Checkout session creation failed:", json);
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error("Error calling checkout/order:", err);
       setLoading(false);
     }
   };
@@ -82,30 +96,21 @@ export default function PricingClient({
               key={tier.id}
               onClick={() => setSelected(tier.id)}
               className={`
-                cursor-pointer
-                rounded-lg
-                h-64                          /* fixed height */
-                flex flex-col                /* allow vertical layout */
-                border-2 border-black        /* thin black border */
-                p-6 text-center
-                transition-shadow
+                cursor-pointer rounded-lg border p-6 text-center transition-shadow
                 ${isActive
-                  ? "outline outline-2 outline-red-600 shadow-lg"   /* red outline & shadow */
-                  : "hover:shadow-md"
-                }
-              `}
+                  ? "border-red-600 shadow-lg"
+                  : "border-black-200 hover:shadow-md"
+                }`}
             >
               {tier.badge && (
-                <span className="inline-block mb-2 rounded-full bg-yellow-100 px-3 py-1 text-xs font-semibold">
+                <span className="inline-block mb-2 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold">
                   {tier.badge}
                 </span>
               )}
-              <h2 className="text-xl font-semibold mb-1 text-red-600">
-                {tier.title}
-              </h2>
+              <h2 className="text-xl font-semibold mb-1">{tier.title}</h2>
               <p className="text-gray-500 mb-4">{tier.subtitle}</p>
               {isActive && (
-                <div className="mt-auto text-sm text-red-600 font-medium">
+                <div className="mt-2 text-sm text-red-600 font-medium">
                   Selected
                 </div>
               )}
