@@ -1,11 +1,9 @@
-// components/PricingClient.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";  // ← NEW
-
 
 type Tier = {
   id: string;        // your Stripe Price ID
@@ -18,7 +16,7 @@ const TIERS: Tier[] = [
   { id: "price_1RJLBd4RnIZz7j08beYwRGv1", title: "Starter", subtitle: "12 pics · 120 mins · 1 attire · SD res" },
   { id: "price_1RJLCO4RnIZz7j08tJ3vN1or", title: "Standard", subtitle: "60 pics · 60 mins · 2 attires · SD res", badge: "83% pick this" },
   { id: "price_1RJLDE4RnIZz7j08RlQUve2s", title: "Pro", subtitle: "100 pics · 60 mins · All attires · HD res", badge: "Best Value" },
-  { id: "price_1RJLDf4RnIZz7j08TLcrNcQ6", title: "Studio", subtitle: "500 pics · 120 mins · Unlimited attires · 4K", },
+  { id: "price_1RJLDf4RnIZz7j08TLcrNcQ6", title: "Studio", subtitle: "500 pics · 120 mins · Unlimited attires · 4K" },
 ];
 
 export default function PricingClient({
@@ -36,13 +34,11 @@ export default function PricingClient({
     if (!selected) return;
     setLoading(true);
 
-    // build full array of price IDs
     const extras = extraPacks ? extraPacks.split(",") : [];
     const priceIds = [selected, ...extras];
     console.log("💡 onContinue fired with:", { selected, extraPacks, priceIds });
 
     try {
-      // note: absolute URL is safer to avoid any base-path issues
       const res = await fetch(
         `${window.location.origin}/api/stripe/checkout/order`,
         {
@@ -50,7 +46,6 @@ export default function PricingClient({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             priceIds,
-            // to:
             successUrl: `${window.location.origin}/overview/packs/${packId}/generate?extraPacks=${extraPacks}&session_id={CHECKOUT_SESSION_ID}`, 
             cancelUrl: `${window.location.origin}/pricing?packId=${packId}&extraPacks=${extraPacks}`,
           }),
@@ -88,7 +83,7 @@ export default function PricingClient({
         We offer a package for every budget. Pay once, no subscriptions or hidden fees.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">  
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
         {TIERS.map((tier) => {
           const isActive = tier.id === selected;
           return (
@@ -96,21 +91,31 @@ export default function PricingClient({
               key={tier.id}
               onClick={() => setSelected(tier.id)}
               className={`
+                h-[220px] flex flex-col justify-between
                 cursor-pointer rounded-lg border p-6 text-center transition-shadow
                 ${isActive
                   ? "border-red-600 shadow-lg"
                   : "border-black-500 hover:shadow-md"
                 }`}
             >
-              {tier.badge && (
-                <span className="inline-block mb-2 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold">
-                  {tier.badge}
-                </span>
-              )}
-              <h2 className="text-xl font-semibold mb-1">{tier.title}</h2>
+              {/* Fixed badge container height */}
+              <div className="h-[24px] mb-2">
+                {tier.badge && (
+                  <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold">
+                    {tier.badge}
+                  </span>
+                )}
+              </div>
+
+              {/* Title with updated color */}
+              <h2 className="text-xl font-semibold mb-1 text-red-700">
+                {tier.title}
+              </h2>
+
               <p className="text-gray-500 mb-4">{tier.subtitle}</p>
+
               {isActive && (
-                <div className="mt-2 text-sm text-red-600 font-medium">
+                <div className="text-sm text-red-600 font-medium">
                   Selected
                 </div>
               )}
