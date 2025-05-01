@@ -104,7 +104,7 @@ export default async function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
-                    <AvatarIcon className="h-10 w-10 text-primary" />
+                    <AvatarIcon className="h-20 w-20 text-primary" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56 z-50">

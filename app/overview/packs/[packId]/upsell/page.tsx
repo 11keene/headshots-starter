@@ -133,7 +133,7 @@ export default function HeadshotUpsell() {
             <img
               src="/images/straight.png"
               alt="Custom Photoshoot"
-              className="w-full h-80  sm:h-80 object-cover"
+              className="w-full h-100  sm:h-100 object-cover"
             />
             <div className="p-4 text-center font-semibold">
               Custom Photoshoot

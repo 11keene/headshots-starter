@@ -36,7 +36,7 @@ export default function PacksPage() {
             <img
               src={pack.exampleImg}
               alt={pack.name}
-              className="w-full h-100 sm:h-100 object-cover"
+              className="w-full h-90 sm:h-90 object-cover" // adjusted height of example photos
             />
 
             {/* ↓ thinner, fully centered caption bar */}
