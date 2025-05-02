@@ -42,22 +42,28 @@ export default function TestPromptPage() {
         {loading ? "Generating..." : "Test Generate Prompts"}
       </button>
 
-      {data && (
-        <div className="mt-6">
-          <h2 className="font-bold text-lg mb-2">Generated Prompts:</h2>
-          <ul className="text-sm whitespace-pre-wrap bg-gray-100 p-4 rounded space-y-2">
-            {data.prompts.map((prompt: string, i: number) => (
-              <li key={i}>
-                <strong>{i + 1}.</strong> {prompt}
-              </li>
-            ))}
-          </ul>
+      {data?.prompts && (
+  <>
+    <h2 className="font-bold text-lg mb-2">Generated Prompts:</h2>
+    <ul className="text-sm whitespace-pre-wrap bg-gray-100 p-4 rounded space-y-2">
+      {data.prompts.map((prompt: string, i: number) => (
+        <li key={i}>
+          <strong>{i + 1}.</strong> {prompt}
+        </li>
+      ))}
+    </ul>
+    <p className="mt-4 text-xs text-gray-500">
+      Fine-tuned Face ID: <span className="font-mono">{data.fineTunedFaceId}</span>
+    </p>
+  </>
+)}
 
-          <p className="mt-4 text-xs text-gray-500">
-            Fine-tuned Face ID: <span className="font-mono">{data.fineTunedFaceId}</span>
-          </p>
-        </div>
-      )}
+{data?.test && (
+  <p className="mt-6 text-green-600 font-semibold">
+    ✅ {data.test}
+  </p>
+)}
+
     </div>
   );
 }

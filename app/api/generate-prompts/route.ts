@@ -1,4 +1,3 @@
-// app/api/generate-prompts/route.ts
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
@@ -11,36 +10,50 @@ const supabase = createClient(
 );
 
 export async function POST(req: Request) {
-  const { pack, answers } = await req.json();
+  try {
+    const { pack, answers } = await req.json();
 
-  const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-    { role: "system", content: "You generate 16 headshot prompts." },
-    {
-      role: "user",
-      content: `Pack: ${pack}\nAnswers:\n${JSON.stringify(answers, null, 2)}\nReply with a numbered list of 16 prompts.`,
-    },
-  ];
+    const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
+      { role: "system", content: "You generate 16 headshot prompts." },
+      {
+        role: "user",
+        content: `Pack: ${pack}\nAnswers:\n${JSON.stringify(
+          answers,
+          null,
+          2
+        )}\nReply with a numbered list of 16 prompts.`,
+      },
+    ];
 
-  const res = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages,
-  });
+    const res = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages,
+    });
 
-  const text = res.choices[0].message?.content || "";
-  const prompts = text
-    .split(/\n\d+\.\s*/)
-    .map((p) => p.trim())
-    .filter((p) => p);
+    const text = res.choices[0].message?.content || "";
+    const prompts = text
+      .split(/\n\d+\.\s*/)
+      .map((p) => p.trim())
+      .filter((p) => p);
 
-  const fineTunedFaceId = `ft-${Date.now()}`;
+    const fineTunedFaceId = `ft-${Date.now()}`;
 
-  // ✅ INSERT INTO SUPABASE
-  await supabase.from("headshots").insert({
-    face_id: fineTunedFaceId,
-    prompts,
-    images: [], // empty for now — fill after image generation
-    created_at: new Date().toISOString()
-  });
+    const { error } = await supabase.from("headshots").insert({
+      face_id: fineTunedFaceId,
+      prompts,
+      images: [],
+      created_at: new Date().toISOString(),
+    });
 
-  return NextResponse.json({ prompts, fineTunedFaceId });
+    if (error) {
+      console.error("❌ Supabase insert error:", error);
+      return NextResponse.json({ error: "Supabase error" }, { status: 500 });
+    }
+
+    return NextResponse.json({ prompts, fineTunedFaceId });
+
+  } catch (err) {
+    console.error("❌ Unexpected error:", err);
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+  }
 }
