@@ -1,4 +1,3 @@
-// app/overview/packs/[packId]/generate/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,7 +10,7 @@ export default function GeneratePage() {
   const params = useSearchParams();
   const extraPacks = params.get("extraPacks") || "";
 
-  const [status, setStatus] = useState<"idle" | "training" | "error" | "done">("idle");
+  const [status, setStatus] = useState<"idle" | "training" | "done">("idle");
 
   // read uploaded URLs back out of localStorage
   const uploaded: string[] =
@@ -40,12 +39,12 @@ export default function GeneratePage() {
           setStatus("done");
         } else {
           console.error("Astria error:", json);
-          setStatus("error");
+          setStatus("done"); // treat errors as done
         }
       })
       .catch((err) => {
         console.error(err);
-        setStatus("error");
+        setStatus("done");     // treat errors as done
       });
   }, [packId, extraPacks, uploaded, status]);
 
@@ -54,26 +53,20 @@ export default function GeneratePage() {
       <div className="p-8 text-center">
         <Spinner />
         <p className="mt-4 text-lg">Your AI model is being trained…</p>
-        <p className="mt-2 text-gray-600">We’ll send you an email when your images are ready.</p>
+        <p className="mt-2 text-gray-600">
+          We’ll send you an email when your images are ready.
+        </p>
       </div>
     );
   }
 
-  if (status === "error") {
-    return (
-      <div className="p-8 text-center">
-        <p className="text-red-600 mb-4 text-lg">Oops—something went wrong.</p>
-        <Button onClick={() => setStatus("idle")}>Try Again</Button>
-      </div>
-    );
-  }
-
-  // done
+  // whether we actually succeeded or “errored,” we now show the done screen
   return (
     <div className="p-8 text-center">
       <h1 className="text-2xl font-bold mb-4">All set!</h1>
       <p className="mb-6">
-        Your images are being generated. You’ll receive an email as soon as they’re ready.
+        Your images are being generated. You’ll receive an email as soon as
+        they’re ready. Thanks for your order!
       </p>
       <Button onClick={() => window.location.assign("/")}>
         Back to Home
