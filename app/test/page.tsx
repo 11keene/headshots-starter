@@ -8,25 +8,25 @@ export default function TestPromptPage() {
   async function generatePrompts() {
     setLoading(true);
     const res = await fetch("/api/generate-prompts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        pack: "Professional Headshots",
-        answers: {
-          gender: "female",
-          hair: { length: "shoulder", texture: "wavy" },
-          bodyType: "curvy",
-          attireStyles: ["business professional", "smart casual"],
-          settings: ["studio", "office"],
-          moods: ["confident", "approachable"],
-          brandColors: ["beige", "blush pink"],
-          industry: "marketing",
-          photoUsage: ["LinkedIn", "website"],
-          creativeFlair: true,
-          avoidances: ["city", "bold lighting"]
-        }
-      })
-    });
+        method: "POST",
+        body: JSON.stringify({
+          pack: "Professional Headshots",
+          user_id: "00000000-0000-0000-0000-000000000000", // Use a dummy UUID for testing
+          answers: {
+            gender: "female",
+            hair: { length: "shoulder", texture: "wavy" },
+            bodyType: "curvy",
+            attireStyles: ["business professional", "smart casual"],
+            settings: ["studio", "office"],
+            moods: ["confident", "approachable"],
+            brandColors: ["beige", "blush pink"],
+            industry: "marketing",
+            photoUsage: ["LinkedIn", "website"],
+            creativeFlair: true,
+            avoidances: ["city", "bold lighting"]
+          }
+        }),
+      });
 
     const json = await res.json();
     setData(json);
