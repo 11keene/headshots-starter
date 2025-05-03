@@ -34,6 +34,7 @@ export default function PricingClient({
   const [loading, setLoading] = useState(false);
 
   const onContinue = async () => {
+    alert("Continue button clicked!");
     if (!selected) {
       console.warn("⚠️ No plan selected");
       return;
