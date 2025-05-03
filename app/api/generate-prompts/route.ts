@@ -10,7 +10,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
   try {
-    const { pack, answers, user_id } = await req.json();
+    const { pack, answers, user_id } = await req.json() as { pack: string; answers: any; user_id: string };
 
     // 1️⃣ Fetch user to see if they have a custom tune
     const { data: user, error: userError } = await supabaseAdmin

@@ -1,16 +1,25 @@
+/// <reference lib="dom" />
+
 "use client";
+
 import React, { useState } from "react";
 
 export default function CustomNext() {
-  const [gender, setGender] = useState<"male"|"female"|"other">("other");
+  const [gender, setGender] = useState<"male" | "female" | "other">("other");
 
   return (
     <div className="p-8 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Almost Done!</h1>
-      <label className="block mb-2">Select Your Gender:</label>
+
+      <label htmlFor="gender" className="block mb-2">
+        Select Your Gender:
+      </label>
       <select
+        id="gender"
         value={gender}
-        onChange={(e) => setGender(e.target.value as any)}
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+          setGender(e.currentTarget.value as "male" | "female" | "other")
+        }
         className="mb-6 p-2 border rounded w-full"
       >
         <option value="female">Female</option>
@@ -18,8 +27,11 @@ export default function CustomNext() {
         <option value="other">Prefer Not to Say</option>
       </select>
 
-      <label className="block mb-2">Upload Your Photos:</label>
+      <label htmlFor="photos" className="block mb-2">
+        Upload Your Photos:
+      </label>
       <input
+        id="photos"
         type="file"
         accept="image/*"
         multiple

@@ -13,7 +13,7 @@ if (!stripeSecretKey) {
 
 // Create Stripe instance with error handling
 const stripe = new Stripe(stripeSecretKey || "", {
-  apiVersion: '2025-03-31.basil',
+  apiVersion: '2025-04-30.basil',
 });
 
 export async function POST(req: Request) {
