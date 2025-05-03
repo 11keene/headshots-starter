@@ -1,11 +1,24 @@
 // File: app/astria/train-model/route.ts
 
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseClient";
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { Database } from "@/types/supabase";
 
 export async function POST(request: Request) {
   try {
-    // 1) Parse and type the incoming JSON body
+    // 1) Verify the user via Supabase session
+    const supabase = createRouteHandlerClient<Database>({ cookies });
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.error("Supabase user verification failed:", authError);
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // 2) Parse and type the incoming JSON body
     const {
       urls: images,
       type,
@@ -20,24 +33,14 @@ export async function POST(request: Request) {
       characteristics: string;
     };
 
-    // 2) Verify the user via Supabase JWT passed in Authorization header
-    const authHeader = request.headers.get("Authorization") || "";
-    const jwt = authHeader.split(" ")[1] || "";
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAdmin.auth.getUser(jwt);
-
-    if (authError || !user) {
-      console.error("Supabase user verification failed:", authError);
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     // 3) Ensure the Astria API key is set
     const apiKey = process.env.ASTRIA_API_KEY;
     if (!apiKey) {
       console.error("Missing ASTRIA_API_KEY");
-      return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
     }
 
     // 4) Call Astria’s Train endpoint directly
@@ -60,7 +63,10 @@ export async function POST(request: Request) {
     if (!resp.ok) {
       const text = await resp.text();
       console.error("Astria training failed:", text);
-      return NextResponse.json({ error: "Astria training failed" }, { status: 502 });
+      return NextResponse.json(
+        { error: "Astria training failed" },
+        { status: 502 }
+      );
     }
 
     // 5) Return the new modelId
@@ -68,6 +74,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ modelId });
   } catch (err) {
     console.error("Error in train-model route:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
