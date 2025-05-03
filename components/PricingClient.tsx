@@ -1,3 +1,5 @@
+// File: app/[your-folder]/PricingClient.tsx
+
 "use client";
 
 import { useState } from "react";
@@ -5,8 +7,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
+// Define your package tiers
 type Tier = {
-  id: string;        // your Stripe Price ID
+  id: string;        // Stripe Price ID
   title: string;
   subtitle: string;  // e.g. "40 pics · 120 mins · 1 attire · SD res"
   badge?: string;
@@ -15,7 +18,7 @@ type Tier = {
 const TIERS: Tier[] = [
   { id: "price_1RJLBd4RnIZz7j08beYwRGv1", title: "Starter",   subtitle: "12 pics · 120 mins · 1 attire · SD res" },
   { id: "price_1RJLCO4RnIZz7j08tJ3vN1or", title: "Standard",  subtitle: "60 pics · 60 mins · 2 attires · SD res", badge: "83% pick this" },
-  { id: "price_1RJLDE4RnIZz7j08RlQUve2s", title: "Pro",       subtitle: "100 pics · 60 mins · All attires · HD res", badge: "Best Value" },
+  { id: "price_1RJLDE4RnIZz7j08RlQUve2s", title: "Pro",       subtitle: "100 pics · 60 mins · All attires · HD res",      badge: "Best Value" },
   { id: "price_1RJLDf4RnIZz7j08TLcrNcQ6", title: "Studio",    subtitle: "500 pics · 120 mins · Unlimited attires · 4K" },
 ];
 
@@ -31,37 +34,34 @@ export default function PricingClient({
   const [loading, setLoading] = useState(false);
 
   const onContinue = async () => {
-    if (!selected) return;
+    if (!selected) {
+      console.warn("⚠️ No plan selected");
+      return;
+    }
     setLoading(true);
 
-    // Optional extras logic preserved
     const extras = extraPacks ? extraPacks.split(",") : [];
     console.log("💡 onContinue fired with:", { selected, extras });
 
-    // Retrieve user ID from your auth/session context
-    const userId = "example-user-id"; // Replace this with actual logic to retrieve the logged-in user's ID
+    // TODO: replace this with your actual user ID retrieval logic
+    const userId = ""; 
+    console.log("🔑 current userId:", userId);
 
     try {
-      const res = await fetch(
-        `${window.location.origin}/api/create-checkout-session`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            pack: selected,
-            user_id: userId,
-            extras,
-          }),
-        }
-      );
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pack: selected, user_id: userId, extras }),
+      });
 
       const json = await res.json();
       console.log("💬 create-checkout-session response:", json);
 
       if (json.url) {
+        console.log("➡️ redirecting to Stripe checkout:", json.url);
         window.location.href = json.url;
       } else {
-        console.error("Session creation failed:", json);
+        console.error("❌ no URL returned:", json);
         setLoading(false);
       }
     } catch (err) {
@@ -93,15 +93,13 @@ export default function PricingClient({
             <div
               key={tier.id}
               onClick={() => setSelected(tier.id)}
-              className={
-                `
+              className={`
                 h-[220px] flex flex-col justify-between
                 cursor-pointer rounded-lg border p-6 text-center transition-shadow
                 ${isActive
                   ? "border-red-600 shadow-lg"
                   : "border-black-500 hover:shadow-md"
-                }`
-              }
+                }`}
             >
               <div className="h-[24px] mb-2">
                 {tier.badge && (
