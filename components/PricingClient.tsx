@@ -1,14 +1,18 @@
+// File: components/PricingClient.tsx
+
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-// Define your package tiers
+// ① Supabase hook to get the current user
+import { useSession } from "@supabase/auth-helpers-react";
+
 type Tier = {
-  id: string;        // Stripe Price ID
+  id: string;
   title: string;
-  subtitle: string;  // e.g. "40 pics · 120 mins · 1 attire · SD res"
+  subtitle: string;
   badge?: string;
 };
 
@@ -30,19 +34,24 @@ export default function PricingClient({
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // ② Grab the logged-in user’s session
+  const session = useSession();
+  const userId = session?.user.id ?? "";
+
   const onContinue = async () => {
-    alert("Continue button clicked!");
     if (!selected) {
       console.warn("⚠️ No plan selected");
       return;
     }
+    if (!userId) {
+      console.warn("⚠️ No user logged in");
+      return;
+    }
+
     setLoading(true);
 
     const extras = extraPacks ? extraPacks.split(",") : [];
-    console.log("💡 onContinue fired with:", { selected, extras });
-
-    const userId = ""; // TODO: replace with real user ID
-    console.log("🔑 current userId:", userId);
+    console.log("💡 onContinue fired with:", { selected, extras, userId });
 
     try {
       const res = await fetch("/api/create-checkout-session", {
@@ -50,10 +59,11 @@ export default function PricingClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pack: selected, user_id: userId, extras }),
       });
+
       const json = await res.json();
       console.log("💬 create-checkout-session response:", json);
+
       if (json.url) {
-        console.log("➡️ redirecting to Stripe checkout:", json.url);
         window.location.href = json.url;
       } else {
         console.error("❌ no URL returned:", json);

@@ -1,31 +1,28 @@
 // File: app/layout.tsx
 
-import dynamic from 'next/dynamic';
-import Footer from '@/components/Footer';
-import { Toaster } from '@/components/ui/toaster';
-import './globals.css';
-import { Suspense } from 'react';
-import AnnouncementBar from '@/components/homepage/announcement-bar';
-import { Analytics } from '@vercel/analytics/react';
-import { ThemeProvider } from '@/components/homepage/theme-provider';
-import { validateConfig } from '@/lib/config';
+import dynamic from "next/dynamic";
+import Footer from "@/components/Footer";
+import { Toaster } from "@/components/ui/toaster";
+import "./globals.css";
+import { Suspense } from "react";
+import AnnouncementBar from "@/components/homepage/announcement-bar";
+import { Analytics } from "@vercel/analytics/react";
+import { ThemeProvider } from "@/components/homepage/theme-provider";
+import { validateConfig } from "@/lib/config";
+import Navbar from "@/components/Navbar";
 
-// Validate configuration at app initialization
+// Dynamically load the client‐only SupabaseProvider (no SSR)
+const SupabaseProvider = dynamic(
+  () => import("@/components/SupabaseProvider"),
+  { ssr: false }
+);
+
 validateConfig();
 
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-};
-
 export const metadata = {
-  title: 'AI Maven',
-  description: 'Generate awesome headshots in minutes using AI',
+  title: "AI Maven",
+  description: "Generate awesome headshots in minutes using AI",
 };
-
-// Dynamically load Navbar only on the client
-const Navbar = dynamic(() => import('@/components/Navbar'), { ssr: false });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -34,22 +31,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/favicon.png" type="image/png" />
       </head>
       <body className="min-h-screen flex flex-col bg-background">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AnnouncementBar />
-          <Suspense
-            fallback={
-              <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="container h-16" />
-              </div>
-            }
-          >
-            <Navbar />
-          </Suspense>
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <Toaster />
-          <Analytics />
-        </ThemeProvider>
+        <SupabaseProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <AnnouncementBar />
+            <Suspense
+              fallback={
+                <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
+                  <div className="container h-16" />
+                </div>
+              }
+            >
+              <Navbar />
+            </Suspense>
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <Toaster />
+            <Analytics />
+          </ThemeProvider>
+        </SupabaseProvider>
       </body>
     </html>
   );
