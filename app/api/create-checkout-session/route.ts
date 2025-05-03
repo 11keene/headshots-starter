@@ -3,14 +3,22 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { headers } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 
+// — Initialize Stripe —
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil",
 });
 
+// — Initialize Supabase Admin (service role) —
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
 export async function POST(req: Request) {
   try {
-    // 1) Parse and log the incoming JSON body
+    // 1) Read & log what the client sent
     const body = await req.json();
     console.log("✅ create-checkout-session body:", body);
 
@@ -20,7 +28,7 @@ export async function POST(req: Request) {
       extras?: string[];
     };
 
-    // 2) Validate required fields
+    // 2) Make sure we have pack & user_id
     if (!pack || !user_id) {
       console.error("❌ Missing pack or user_id");
       return NextResponse.json(
@@ -29,7 +37,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3) Build Stripe line items
+    // 3) Build line items for Stripe
     const lineItems = [
       { price: pack, quantity: 1 },
       ...(Array.isArray(extras)
@@ -38,10 +46,10 @@ export async function POST(req: Request) {
     ];
     console.log("🛒 Stripe line items:", lineItems);
 
-    // 4) Determine origin for redirect URLs
-    const origin = headers().get("origin") ?? "";
+    // 4) Get our site’s origin for the redirect URLs
+    const origin = headers().get("origin") ?? process.env.NEXT_PUBLIC_APP_URL!;
 
-    // 5) Create a Checkout Session
+    // 5) Create the Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
@@ -52,10 +60,22 @@ export async function POST(req: Request) {
     });
     console.log("✅ Stripe session URL:", session.url);
 
-    // 6) Return the session URL to the client
+    // 6) Insert a row into Supabase “orders”
+    const { error: orderErr } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        user_id,
+        pack,
+        session_id: session.id,
+        created_at: new Date().toISOString(),
+      });
+    if (orderErr) {
+      console.error("❌ Failed to insert order:", orderErr);
+    }
+
+    // 7) Send the session URL back to the client
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
-    // 7) Catch and log any errors
     console.error("🔥 create-checkout-session error:", err);
     return NextResponse.json(
       { error: err.message || "Internal error" },
