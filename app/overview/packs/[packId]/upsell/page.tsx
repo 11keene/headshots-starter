@@ -10,45 +10,40 @@ export default function HeadshotUpsell() {
   const router = useRouter();
   const params = useSearchParams();
 
-  // if someone links here with ?tab=custom, open custom tab; else headshot
+  // start on whichever tab
   const initialTab = params.get("tab") === "custom" ? "custom" : "headshot";
   const [activeTab, setActiveTab] = useState<"headshot" | "custom">(initialTab);
 
-  // headshot‐add selections
+  // headshot extra‐packs (multi‐select)
   const [selected, setSelected] = useState<string[]>([]);
-  // custom‐add selected?
-  const [customSelected, setCustomSelected] = useState(false);
-
   const togglePack = (id: string) =>
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
 
-  // always push to the NEXT/upload step
+  // custom photoshoot select/deselect
+  const [customSelected, setCustomSelected] = useState(false);
+  const toggleCustom = () => setCustomSelected((prev) => !prev);
+
+  // navigation handlers
   const goContinue = () => {
-    const extra = selected.join(",");
-    router.push(`/overview/packs/${packId}/next?extraPacks=${extra}`);
+    const extras = selected.join(",");
+    router.push(`/overview/packs/${packId}/next?extraPacks=${extras}`);
   };
-
-  // send into first intake form, telling it we came from HEADSHOT flow
   const goCustom = () => {
-    router.push(
-      `/custom-intake?packId=${packId}&from=headshot`
-    );
+    router.push(`/custom-intake?packId=${packId}&from=headshot`);
   };
 
-  // show "No Thanks" if nothing picked
+  // if nothing chosen, show “No Thanks”
   const isSkip =
     activeTab === "headshot" ? selected.length === 0 : !customSelected;
 
   return (
     <div className="p-6 sm:p-8 max-w-4xl mx-auto">
-      {/* heading */}
       <h1 className="text-xl sm:text-2xl font-bold mb-6 text-center">
         Would you like to add additional photos?
       </h1>
 
-      {/* back + continue/no-thanks */}
       <div className="flex justify-between mb-4">
         <button
           onClick={() => router.back()}
@@ -66,7 +61,7 @@ export default function HeadshotUpsell() {
           </button>
         ) : (
           <button
-            onClick={ activeTab === "headshot" ? goContinue : goCustom }
+            onClick={activeTab === "headshot" ? goContinue : goCustom}
             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm sm:text-base transition"
           >
             Continue
@@ -74,13 +69,13 @@ export default function HeadshotUpsell() {
         )}
       </div>
 
-      {/* tabs */}
+      {/* Tabs */}
       <div className="flex justify-center gap-4 mb-6">
         <button
           onClick={() => setActiveTab("headshot")}
-          className={`text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
+          className={`px-4 py-2 font-semibold rounded-md transition ${
             activeTab === "headshot"
-              ? "text-black translate-y-[-2px] border-b-4 border-red-500"
+              ? "text-black border-b-4 border-red-500"
               : "text-muted-foreground hover:text-black"
           }`}
         >
@@ -88,9 +83,9 @@ export default function HeadshotUpsell() {
         </button>
         <button
           onClick={() => setActiveTab("custom")}
-          className={`text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
+          className={`px-4 py-2 font-semibold rounded-md transition ${
             activeTab === "custom"
-              ? "text-black translate-y-[-2px] border-b-4 border-red-500"
+              ? "text-black border-b-4 border-red-500"
               : "text-muted-foreground hover:text-black"
           }`}
         >
@@ -98,7 +93,7 @@ export default function HeadshotUpsell() {
         </button>
       </div>
 
-      {/* content */}
+      {/* Content */}
       {activeTab === "headshot" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {packs.map((p: Pack) => (
@@ -111,23 +106,13 @@ export default function HeadshotUpsell() {
                   : "hover:shadow-md"
               }`}
             >
-              {/* ↑ wrapper for the image + caption bar */}
-              <div className="relative overflow-hidden">
-                <img
-                  src={p.exampleImg}
-                  alt={p.name}
-                  className="w-full h-100 sm:h-100 object-cover"
-                />
-                {/* ↓ black caption bar */}
-                <div className="
-                  absolute left-0 right-0 bottom-0
-                  bg-black text-white
-                  flex items-center justify-center
-                  text-center font-semibold
-                  py-2
-                ">
-                  {p.name}
-                </div>
+              <img
+                src={p.exampleImg}
+                alt={p.name}
+                className="w-full h-100 object-cover"
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-black text-white text-center font-semibold py-2">
+                {p.name}
               </div>
             </div>
           ))}
@@ -135,27 +120,18 @@ export default function HeadshotUpsell() {
       ) : (
         <div className="flex justify-center">
           <div
-            onClick={() => setCustomSelected(true)}
+            onClick={toggleCustom}
             className={`cursor-pointer border rounded-lg overflow-hidden shadow-md max-w-sm w-full ${
               customSelected ? "ring-4 ring-red-500" : ""
             }`}
           >
-            <div className="relative overflow-hidden">
-              <img
-                src="/images/straight.png"
-                alt="Custom Photoshoot"
-                className="w-full h-100 sm:h-100 object-cover"
-              />
-              {/* ↓ black caption bar */}
-              <div className="
-                absolute left-0 right-0 bottom-0
-                bg-black text-white
-                flex items-center justify-center
-                text-center font-semibold
-                py-2
-              ">
-                Custom Photoshoot
-              </div>
+            <img
+              src="/images/straight.png"
+              alt="Custom Photoshoot"
+              className="w-full h-100 object-cover"
+            />
+            <div className="absolute inset-x-0 bottom-0 bg-black text-white text-center font-semibold py-2">
+              Custom Photoshoot
             </div>
           </div>
         </div>

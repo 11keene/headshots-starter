@@ -1,106 +1,75 @@
-// File: app/api/stripe/webhooks/checkout.ts
-
+// File: app/api/stripe/webhooks/checkout/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { buffer } from "micro";
 import { createClient } from "@supabase/supabase-js";
 
-// ① Stripe init
+export const runtime = "edge"; // run on the edge for fastest webhook‐response
+
+// — Initialize Stripe —
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil",
 });
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
-// ② Supabase Admin
+// — Initialize Supabase Admin (service role) —
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Disable Next.js body parsing so we can verify the raw payload
-export const config = { api: { bodyParser: false } };
+export async function POST(request: Request) {
+  // 1) Read the raw body & signature
+  const buf = Buffer.from(await request.arrayBuffer());
+  const sig = request.headers.get("stripe-signature")!;
 
-export default async function handler(req: Request) {
-  if (req.method !== "POST") {
-    return NextResponse.json({}, { status: 405 });
-  }
-
-  // 1) Grab the raw body & verify
-  const sig = req.headers.get("stripe-signature")!;
-  const buf = await buffer(req as any);
+  // 2) Verify & parse the Stripe event
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(
-      buf,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
+    event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
   } catch (err: any) {
-    console.error("❌ Webhook signature failed:", err.message);
+    console.error("❌ Stripe webhook signature mismatch:", err.message);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  console.log("🔔 Webhook received:", event.type);
-
+  // 3) Only handle checkout.session.completed
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const user_id = session.metadata?.user_id;
-    const pack    = session.metadata?.pack;
-
-    console.log("➡️ session.metadata:", session.metadata);
+    const user_id = session.metadata?.user_id as string;
+    const pack     = session.metadata?.pack as string;
 
     if (user_id && pack) {
-      // 2) Mark the order paid
-      const { error: orderErr } = await supabaseAdmin
+      // 4) Mark the Supabase order as paid
+      await supabaseAdmin
         .from("orders")
         .update({ status: "paid" })
         .eq("session_id", session.id);
 
-      if (orderErr) {
-        console.error("❌ Failed to update order status:", orderErr);
-      } else {
-        console.log("✅ Order marked as paid:", session.id);
-      }
-
-      // 3) Calculate credits
+      // 5) Map your Price IDs → credit amounts
       const CREDIT_MAP: Record<string, number> = {
-        price_1RJLBd4RnIZz7j08beYwRGv1:      25,
-        price_1RJLCO4RnIZz7j08tJ3vN1or:      75,
-        price_1RJLDE4RnIZz7j08RlQUve2s:     200,
-        price_1RJLDf4RnIZz7j08TLcrNcQ6:     500,
+        price_1RJLBd4RnIZz7j08beYwRGv1:  25,
+        price_1RJLCO4RnIZz7j08tJ3vN1or:  75,
+        price_1RJLDE4RnIZz7j08RlQUve2s: 200,
+        price_1RJLDf4RnIZz7j08TLcrNcQ6: 500,
       };
-      const add = CREDIT_MAP[pack] || 0;
-      console.log(`💳 Awarding ${add} credits to user ${user_id}`);
+      const toAdd = CREDIT_MAP[pack] || 0;
 
-      // 4) Fetch current credits
-      const { data: userRec, error: fetchErr } = await supabaseAdmin
-        .from("users")
-        .select("credits")
-        .eq("id", user_id)
-        .single();
+      if (toAdd > 0) {
+        // 6) Increment the user's total credits
+        await supabaseAdmin
+          .from("users")
+          .update({ credits: { increment: toAdd } })
+          .eq("id", user_id);
 
-      if (fetchErr) {
-        console.error("❌ Failed to fetch user credits:", fetchErr);
+        // 7) Log the credit‐grant in your credits history table
+        await supabaseAdmin
+          .from("credits")
+          .insert({ user_id, credits: toAdd });
+
+        console.log(`✅ Credited ${toAdd} to user ${user_id}`);
       }
-
-      const current = userRec?.credits ?? 0;
-      console.log(`🔢 Current credits: ${current}, new total: ${current + add}`);
-
-      // 5) Update credits
-      const { data: updatedUser, error: updateErr } = await supabaseAdmin
-        .from("users")
-        .update({ credits: current + add })
-        .eq("id", user_id)
-        .select("credits");
-
-      if (updateErr) {
-        console.error("❌ Failed to update user credits:", updateErr);
-      } else {
-        console.log("✅ User credits updated:", updatedUser);
-      }
-    } else {
-      console.warn("⚠️  Missing metadata.user_id or pack—skipping credits");
     }
   }
 
+  // 8) Acknowledge receipt
   return NextResponse.json({ received: true });
 }
