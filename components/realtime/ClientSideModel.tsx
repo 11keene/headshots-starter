@@ -1,40 +1,63 @@
+// File: components/realtime/ClientSideModel.tsx
 "use client";
 
-import { Icons } from "@/components/icons";
-import { Database } from "@/types/supabase";
-import { imageRow, modelRow, sampleRow } from "@/types/utils";
-import { createClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import { AspectRatio } from "../ui/aspect-ratio";
-import { Badge } from "../ui/badge";
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
+import type { Database } from "@/types/supabase";
 
-export const revalidate = 0;
+interface ModelRow {
+  id: number;
+  user_id: string | null;
+  name: string;               // ← made non-nullable to match ModelsTable
+  // (we dropped `pack`/`characteristics` here since this component only
+  // cares about the single-model view)
+  fine_tuned_face_id: string;
+  trained_at: string;
+  created_at: string;
+  status: string;
+}
 
-type ClientSideModelProps = {
-  serverModel: modelRow;
-  serverImages: imageRow[];
-  samples: sampleRow[];
-};
-
-export default function ClientSideModel({
-  serverModel,
-  serverImages,
-  samples,
-}: ClientSideModelProps) {
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  );
-  const [model, setModel] = useState<modelRow>(serverModel);
+export default function ClientSideModel({ modelId }: { modelId: number }) {
+  const [model, setModel] = useState<ModelRow | null>(null);
+  const supabase = createPagesBrowserClient<Database>();
 
   useEffect(() => {
+    // 1) initial fetch, now including `status`
+    supabase
+      .from("models")
+      .select(
+        [
+          "id",
+          "user_id",
+          "name",               // ← name must be string
+          "fine_tuned_face_id",
+          "trained_at",
+          "created_at",
+          "status",
+        ].join(",")
+      )
+      .eq("id", modelId)
+      .single<{ [key: string]: any }>()
+      .then(({ data, error }) => {
+        if (!error && data) {
+          // cast to our ModelRow (we assume name is not null)
+          setModel(data as ModelRow);
+        }
+      });
+
+    // 2) subscribe to updates on this row
     const channel = supabase
-      .channel("realtime-model")
+      .channel(`public:models:id=eq.${modelId}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "models" },
-        (payload: { new: modelRow }) => {
-          setModel(payload.new);
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "models",
+          filter: `id=eq.${modelId}`,
+        },
+        (payload) => {
+          setModel(payload.new as ModelRow);
         }
       )
       .subscribe();
@@ -42,45 +65,18 @@ export default function ClientSideModel({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, model, setModel]);
+  }, [modelId, supabase]);
 
-  return (
-    <div id="train-model-container" className="w-full h-full">
-      <div className="flex flex-col w-full mt-4 gap-8">
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-0">
-          {samples && (
-            <div className="flex w-full lg:w-1/2 flex-col gap-2">
-              <h2 className="text-xl">Training Data</h2>
-              <div className="flex flex-row gap-4 flex-wrap">
-                {samples.map((sample) => (
-                  <img
-                    key={sample.id}
-                    src={sample.uri}
-                    className="rounded-md w-60 h-60 object-cover"
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="flex flex-col w-full lg:w-1/2 rounded-md">
-            {model.status === "finished" && (
-              <div className="flex flex-1 flex-col gap-2">
-                <h1 className="text-xl">Results</h1>
-                <div className="flex flex-row flex-wrap gap-4">
-                  {serverImages?.map((image) => (
-                    <div key={image.id}>
-                      <img
-                        src={image.uri}
-                        className="rounded-md w-60 object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+  if (!model) return null;
+
+  return model.status === "finished" ? (
+    <div className="flex flex-col w-full lg:w-1/2 rounded-md">
+      <h1 className="text-xl">Results</h1>
+      <div className="flex flex-row flex-wrap gap-4">
+        {/* … your finished-model UI … */}
       </div>
     </div>
+  ) : (
+    <div>Training…</div>
   );
 }
