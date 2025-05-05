@@ -1,10 +1,15 @@
 // components/Navbar.tsx
 "use client";
 
+import { useState, useEffect } from "react";
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { AvatarIcon } from "@radix-ui/react-icons";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import LogoOrCredits from "./LogoOrCredits";
+
+import ClientSideCredits from "./realtime/ClientSideCredits";
+import { ThemeToggle } from "./homepage/theme-toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,111 +18,111 @@ import {
   DropdownMenuTrigger,
   DropdownMenuItem,
 } from "./ui/dropdown-menu";
-import Link from "next/link";
 import { Button } from "./ui/button";
-import React from "react";
-import { Database } from "@/types/supabase";
-import { ThemeToggle } from "./homepage/theme-toggle";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export default function Navbar() {
+  const supabase = createPagesBrowserClient();
+  const pathname = usePathname();
+  const router = useRouter();
 
-const stripeIsConfigured = process.env.NEXT_PUBLIC_STRIPE_IS_ENABLED === "true";
-const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [credits, setCredits] = useState<number>(0);
 
-export default async function Navbar() {
-  const supabase = createServerComponentClient<Database>({ cookies });
+  // 1) On mount, load the user & their credits
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      setUserEmail(user.email ?? null);
+      supabase
+        .from("users")
+        .select("credits")
+        .eq("id", user.id)
+        .single<{ credits: number }>()
+        .then(({ data }) => {
+          if (data) setCredits(data.credits);
+        });
+    });
+  }, [supabase]);
 
-  // 1) get the logged-in user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // 2) fetch their "credits" column from the users table
-  const { data: profile } = await supabase
-    .from("users")
-    .select("credits")
-    .eq("id", user?.id || "")      // id is a UUID string
-    .single<{ credits: number }>();
-
-  const credits = profile?.credits ?? 0;
+  // 2) Decide if we’re on a “backend” page
+  const isBackend = pathname?.startsWith("/overview");
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* ← logo on /, credits on every other page */}
-        <LogoOrCredits />
+        {/* Left: logo on home, credits on backend */}
+        <div className="flex items-center">
+          {isBackend && userEmail ? (
+            <ClientSideCredits creditsRow={{ credits }} />
+          ) : (
+            <Link href="/" className="flex items-center gap-2">
+              <Image
+                src="/logo.png"
+                alt="AI Maven Logo"
+                width={24}
+                height={24}
+                className="rounded-full"
+              />
+              <span className="font-semibold">AI Maven</span>
+            </Link>
+          )}
+        </div>
 
-        {/* center nav links */}
-        {user && (
-          <nav className="flex flex-nowrap overflow-x-auto gap-3 sm:gap-5 md:gap-6 whitespace-nowrap">
-            <Link
-              href="/overview"
-              className="flex-shrink-0 text-sm sm:text-base font-semibold hover:text-primary transition-colors"
-            >
+        {/* Center nav */}
+        {userEmail && (
+          <nav className="flex gap-4">
+            <Link href="/overview" className="hover:text-primary">
               Home
             </Link>
-
-            {packsIsEnabled && (
-              <Link
-                href="/overview/packs"
-                className="flex-shrink-0 text-sm sm:text-base font-semibold hover:text-primary transition-colors"
-              >
+            {process.env.NEXT_PUBLIC_TUNE_TYPE === "packs" && (
+              <Link href="/overview/packs" className="hover:text-primary">
                 Packs
               </Link>
             )}
-
-            {stripeIsConfigured && (
-              <Link
-                href="/get-credits"
-                className="flex-shrink-0 text-sm sm:text-base font-semibold hover:text-primary transition-colors"
-              >
+            {process.env.NEXT_PUBLIC_STRIPE_IS_ENABLED === "true" && (
+              <Link href="/get-credits" className="hover:text-primary">
                 Get Credits
               </Link>
             )}
           </nav>
         )}
 
-        {/* right side: theme toggle + login/avatar */}
+        {/* Right side */}
         <div className="flex items-center gap-4">
           <ThemeToggle />
 
-          {!user ? (
-            <Link href="/login">
-              <Button size="sm">Login</Button>
-            </Link>
+          {!userEmail ? (
+            <Button
+              size="sm"
+              onClick={() => router.push("/login")}
+            >
+              Login
+            </Button>
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
-                  <AvatarIcon className="h-10 w-10 text-primary" />
+                  <AvatarIcon className="h-6 w-6" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 z-50">
-                <DropdownMenuLabel className="text-primary text-center whitespace-nowrap">
-                  {user.email}
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuLabel className="text-center">
+                  {userEmail}
                 </DropdownMenuLabel>
-
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-default flex justify-between px-4 py-2">
+                <DropdownMenuItem className="flex justify-between">
                   <span>Your Credits</span>
                   <span className="font-semibold">{credits}</span>
                 </DropdownMenuItem>
-
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/overview" className="w-full px-4 py-2 text-left">
+                  <Link href="/overview" className="w-full text-left">
                     Create Photos
                   </Link>
                 </DropdownMenuItem>
-
                 <DropdownMenuSeparator />
                 <form action="/auth/sign-out" method="post">
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    className="w-full text-left whitespace-nowrap"
-                  >
+                  <Button type="submit" variant="ghost" className="w-full text-left">
                     Log out
                   </Button>
                 </form>
