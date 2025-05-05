@@ -9,47 +9,24 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      /**
-       * Users table: stores each user's ID, credit balance, and timestamp
-       */
-      users: {
-        Row: {
-          id: string;           // UUID primary key
-          credits: number;      // current credit balance
-          created_at: string;   // timestamp of row creation
-        };
-        Insert: {
-          id: string;
-          credits?: number;
-          created_at?: string;
-        };
-        Update: {
-          credits?: number;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-
-      /**
-       * Credits log table (optional history of credit changes)
-       */
       credits: {
         Row: {
+          created_at: string;
+          credits: number;
           id: number;
           user_id: string;
-          credits: number;
-          created_at: string;
         };
         Insert: {
+          created_at?: string;
+          credits?: number;
           id?: number;
           user_id: string;
-          credits?: number;
-          created_at?: string;
         };
         Update: {
-          user_id?: string;
-          credits?: number;
           created_at?: string;
+          credits?: number;
+          id?: number;
+          user_id?: string;
         };
         Relationships: [
           {
@@ -60,56 +37,24 @@ export interface Database {
           }
         ];
       };
-
-      /**
-       * Orders table: tracks Stripe sessions and payment status
-       */
-      orders: {
-        Row: {
-          id: number;
-          user_id: string;
-          pack: string;
-          session_id: string;
-          status: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: number;
-          user_id: string;
-          pack: string;
-          session_id: string;
-          status?: string;
-          created_at?: string;
-        };
-        Update: {
-          pack?: string;
-          session_id?: string;
-          status?: string;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-
-      /**
-       * Images table: stores generated image URIs for each model
-       */
       images: {
         Row: {
+          created_at: string;
           id: number;
           modelId: number;
           uri: string;
-          created_at: string;
         };
         Insert: {
+          created_at?: string;
           id?: number;
           modelId: number;
           uri: string;
-          created_at?: string;
         };
         Update: {
+          created_at?: string;
+          id?: number;
           modelId?: number;
           uri?: string;
-          created_at?: string;
         };
         Relationships: [
           {
@@ -120,39 +65,33 @@ export interface Database {
           }
         ];
       };
-
-      /**
-       * Models table: stores fine-tuned model metadata
-       */
       models: {
         Row: {
-          id: number;
-          user_id: string | null;
-          name: string | null;
-          pack: string | null;
-          characteristics: string | null;
-          fine_tuned_face_id: string;
-          trained_at: string;
           created_at: string;
+          id: number;
+          modelId: string | null;
+          name: string | null;
+          status: string;  // newly added
+          type: string | null;
+          user_id: string | null;
         };
         Insert: {
-          id?: number;
-          user_id?: string | null;
-          name?: string | null;
-          pack?: string | null;
-          characteristics?: string | null;
-          fine_tuned_face_id: string;
-          trained_at?: string;
           created_at?: string;
+          id?: number;
+          modelId?: string | null;
+          name?: string | null;
+          status?: string; // optional, defaults to 'pending'
+          type?: string | null;
+          user_id?: string | null;
         };
         Update: {
-          user_id?: string | null;
-          name?: string | null;
-          pack?: string | null;
-          characteristics?: string | null;
-          fine_tuned_face_id?: string;
-          trained_at?: string;
           created_at?: string;
+          id?: number;
+          modelId?: string | null;
+          name?: string | null;
+          status?: string;
+          type?: string | null;
+          user_id?: string | null;
         };
         Relationships: [
           {
@@ -163,27 +102,24 @@ export interface Database {
           }
         ];
       };
-
-      /**
-       * Samples table: stores example images per model
-       */
       samples: {
         Row: {
+          created_at: string;
           id: number;
           modelId: number;
           uri: string;
-          created_at: string;
         };
         Insert: {
+          created_at?: string;
           id?: number;
           modelId: number;
           uri: string;
-          created_at?: string;
         };
         Update: {
+          created_at?: string;
+          id?: number;
           modelId?: number;
           uri?: string;
-          created_at?: string;
         };
         Relationships: [
           {
