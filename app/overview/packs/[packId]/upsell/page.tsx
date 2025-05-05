@@ -6,12 +6,15 @@ import type { Pack } from "../../../../../data/packs";
 import { packs } from "../../../../../data/packs";
 
 export default function HeadshotUpsell() {
-  const { packId } = useParams();
+  const paramsObj = useParams();
+  const packId = Array.isArray(paramsObj?.packId)
+  ? paramsObj.packId[0]
+  : paramsObj?.packId || "";
   const router = useRouter();
   const params = useSearchParams();
 
   // start on whichever tab
-  const initialTab = params.get("tab") === "custom" ? "custom" : "headshot";
+  const initialTab = params?.get("tab") === "custom" ? "custom" : "headshot";
   const [activeTab, setActiveTab] = useState<"headshot" | "custom">(initialTab);
 
   // headshot extra‐packs (multi‐select)

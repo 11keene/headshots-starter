@@ -8,10 +8,13 @@ import { FiUploadCloud, FiArrowLeft } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 
 export default function UploadPage() {
-  const { packId } = useParams();            // ← grab packId first
-  const router = useRouter();
+  const paramsObj = useParams();
+  const packId = Array.isArray(paramsObj?.packId)
+  ? paramsObj.packId[0]
+  : paramsObj?.packId || "";
+    const router = useRouter();
   const params = useSearchParams();
-  const extraPacks = params.get("extraPacks") || "";
+  const extraPacks = params?.get("extraPacks") || "";
 
   const [files, setFiles] = useState<File[]>([]);
 

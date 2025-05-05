@@ -6,9 +6,11 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Spinner } from "@/components/ui/spinner";
 
 export default function GeneratePage() {
-  const { packId } = useParams();
-  const params = useSearchParams();
-  const extraPacks = params.get("extraPacks") || "";
+  const params = useParams();
+  const packId = Array.isArray(params?.packId)
+    ? params.packId[0]
+    : params?.packId || "";  const searchParams = useSearchParams();
+  const extraPacks = searchParams?.get("extraPacks") || "";
 
   useEffect(() => {
     // pull stored upload URLs

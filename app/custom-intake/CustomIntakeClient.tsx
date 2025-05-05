@@ -6,8 +6,7 @@ import IntakeForm from "@/components/IntakeForm";
 export default function CustomIntakeClient({ packId }: { packId: string }) {
   const router = useRouter();
   const params = useSearchParams();
-  const from = params.get("from"); // "headshot" or "custom"
-
+  const from = params?.get("from") ?? ""; // "headshot" or "custom", defaults to empt
   const handleComplete = () => {
     if (from === "headshot") {
       // user came from headshot upsell → go straight to upload
