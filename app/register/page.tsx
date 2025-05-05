@@ -19,7 +19,7 @@ export default function RegisterPage() {
     setLoading(true);
     setErrorMsg(null);
 
-    // 1️⃣ Create the Supabase user
+    // 1️⃣ Create the Supabase auth user
     const { data: signUpData, error: signUpError } =
       await supabase.auth.signUp({ email, password });
 
@@ -29,8 +29,20 @@ export default function RegisterPage() {
       return;
     }
 
-    // 2️⃣ If signup succeeded, sync to GHL
+    // 2️⃣ If signup succeeded, insert into our own "public.users" table
     if (signUpData?.user) {
+      const userId = signUpData.user.id;
+
+      const { error: insertError } = await supabase
+        .from("users")
+        .insert({ id: userId, credits: 0 });
+
+      if (insertError) {
+        console.error("❌ Failed to insert into users table:", insertError);
+        // (but we don't block navigation—still let them in)
+      }
+
+      // 3️⃣ Sync to GHL as you already do
       try {
         const res = await fetch("/api/ghlSync", {
           method: "POST",
@@ -38,7 +50,7 @@ export default function RegisterPage() {
           body: JSON.stringify({
             event: "user.created",
             user: {
-              id: signUpData.user.id,
+              id: userId,
               email: signUpData.user.email,
             },
           }),
@@ -75,9 +87,7 @@ export default function RegisterPage() {
             type="email"
             required
             value={email}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setEmail(e.target.value)
-            }
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full border rounded p-2 mt-1"
           />
         </div>
@@ -91,9 +101,7 @@ export default function RegisterPage() {
             required
             minLength={6}
             value={password}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setPassword(e.target.value)
-            }
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full border rounded p-2 mt-1"
           />
         </div>
