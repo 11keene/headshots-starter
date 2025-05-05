@@ -1,82 +1,109 @@
 // File: components/realtime/ClientSideModel.tsx
-"use client";
 
-import { useEffect, useState } from "react";
-import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
-import type { Database } from "@/types/supabase";
+'use client';
 
-interface ModelRow {
-  id: number;
-  user_id: string | null;
-  name: string;               // ← made non-nullable to match ModelsTable
-  // (we dropped `pack`/`characteristics` here since this component only
-  // cares about the single-model view)
-  fine_tuned_face_id: string;
-  trained_at: string;
-  created_at: string;
-  status: string;
+import { useEffect, useState } from 'react';
+import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs';
+import type { Database } from '@/types/supabase';
+
+// 1) Declare the prop interface
+interface ClientSideModelProps {
+  modelId: number;
 }
 
-export default function ClientSideModel({ modelId }: { modelId: number }) {
-  const [model, setModel] = useState<ModelRow | null>(null);
+// 2) Reuse your generated types for the rows
+type ModelRow = Database['public']['Tables']['models']['Row'];
+type SampleRow = Database['public']['Tables']['samples']['Row'];
+type ImageRow  = Database['public']['Tables']['images']['Row'];
+
+export default function ClientSideModel({ modelId }: ClientSideModelProps) {
   const supabase = createPagesBrowserClient<Database>();
+  const [model, setModel] = useState<ModelRow | null>(null);
+  const [samples, setSamples] = useState<SampleRow[]>([]);
+  const [images, setImages]   = useState<ImageRow[]>([]);
 
   useEffect(() => {
-    // 1) initial fetch, now including `status`
+    // load model
     supabase
-      .from("models")
-      .select(
-        [
-          "id",
-          "user_id",
-          "name",               // ← name must be string
-          "fine_tuned_face_id",
-          "trained_at",
-          "created_at",
-          "status",
-        ].join(",")
-      )
-      .eq("id", modelId)
-      .single<{ [key: string]: any }>()
+      .from('models')
+      .select('*')
+      .eq('id', modelId)
+      .single()
       .then(({ data, error }) => {
-        if (!error && data) {
-          // cast to our ModelRow (we assume name is not null)
-          setModel(data as ModelRow);
-        }
+        if (!error && data) setModel(data);
       });
 
-    // 2) subscribe to updates on this row
+    // load samples
+    supabase
+      .from('samples')
+      .select('*')
+      .eq('modelId', modelId)
+      .then(({ data, error }) => {
+        if (!error && data) setSamples(data);
+      });
+
+    // load images
+    supabase
+      .from('images')
+      .select('*')
+      .eq('modelId', modelId)
+      .then(({ data, error }) => {
+        if (!error && data) setImages(data);
+      });
+
+    // subscribe to updates on all three tables
     const channel = supabase
       .channel(`public:models:id=eq.${modelId}`)
       .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "models",
-          filter: `id=eq.${modelId}`,
-        },
-        (payload) => {
-          setModel(payload.new as ModelRow);
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'models', filter: `id=eq.${modelId}` },
+        (payload) => setModel(payload.new as ModelRow)
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'samples', filter: `modelId=eq.${modelId}` },
+        async () => {
+          const { data } = await supabase
+            .from('samples')
+            .select('*')
+            .eq('modelId', modelId);
+          if (data) setSamples(data);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'images', filter: `modelId=eq.${modelId}` },
+        async () => {
+          const { data } = await supabase
+            .from('images')
+            .select('*')
+            .eq('modelId', modelId);
+          if (data) setImages(data);
         }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => void supabase.removeChannel(channel);
   }, [modelId, supabase]);
 
-  if (!model) return null;
+  // Loading / status states
+  if (!model) return <div>Loading…</div>;
+  if (model.status !== 'finished') return <div>Training…</div>;
 
-  return model.status === "finished" ? (
-    <div className="flex flex-col w-full lg:w-1/2 rounded-md">
-      <h1 className="text-xl">Results</h1>
-      <div className="flex flex-row flex-wrap gap-4">
-        {/* … your finished-model UI … */}
+  // Finished: show images
+  return (
+    <div className="flex flex-col w-full lg:w-1/2 rounded-md p-4 bg-white shadow">
+      <h2 className="text-xl font-semibold mb-4">Results</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {images.map((img) => (
+          <img
+            key={img.id}
+            src={img.uri}
+            alt="generated"
+            className="rounded-md w-full h-auto object-cover"
+          />
+        ))}
       </div>
     </div>
-  ) : (
-    <div>Training…</div>
   );
 }
