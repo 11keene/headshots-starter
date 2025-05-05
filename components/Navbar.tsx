@@ -18,6 +18,8 @@ import { Database } from "@/types/supabase";
 import ClientSideCredits from "./realtime/ClientSideCredits";
 import { ThemeToggle } from "./homepage/theme-toggle";
 import Image from "next/image";
+import LogoOrCredits from "./LogoOrCredits";
+
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -37,7 +39,7 @@ export default async function Navbar() {
   const { data: profile, error } = await supabase
     .from("users")
     .select("credits")
-    .eq("id", user?.id ?? "")      // id is a UUID string
+    .eq("id", user?.id || "")      // id is a UUID string
     .single<{ credits: number }>();
 
   const credits = profile?.credits ?? 0;
@@ -45,20 +47,9 @@ export default async function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* Logo + Site Name */}
-        <Link
-          href="/"
-          className="flex-shrink-0 flex items-center gap-1 sm:gap-2 font-semibold whitespace-nowrap text-base sm:text-lg"
-        >
-          <Image
-            src="/logo.png"
-            alt="AI Maven Logo"
-            width={24}
-            height={24}
-            className="rounded-full w-5 h-5 sm:w-6 sm:h-6"
-          />
-          <span>AI Maven</span>
-        </Link>
+         {/* logo OR credits, depending on route */}
+         {/* Replace with a placeholder or define the LogoOrCredits component */}
+         <div>Logo or Credits Placeholder</div>
 
         {/* Main nav */}
         {user && (
