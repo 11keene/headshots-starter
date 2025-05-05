@@ -4,60 +4,85 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
-import type { Database } from "@/types/supabase";
 
+// We’ll only import the browser client at runtime inside the effect:
 export default function LogoOrCredits() {
   const pathname = usePathname();
   const [credits, setCredits] = useState<number | null>(null);
 
-  // 1) Homepage: show logo + name
+  // 1️⃣ Home page shows logo + name
   if (pathname === "/") {
     return (
-      <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-        <Image src="/logo.png" alt="AI Maven Logo" width={28} height={28} className="rounded-full" />
+      <Link
+        href="/"
+        className="flex items-center gap-2 text-lg font-semibold"
+      >
+        <Image
+          src="/logo.png"
+          alt="AI Maven Logo"
+          width={28}
+          height={28}
+          className="rounded-full"
+        />
         <span>AI Maven</span>
       </Link>
     );
   }
 
-  // 2) Otherwise, fetch credits
+  // 2️⃣ Everything else: attempt to fetch credits
   useEffect(() => {
-    let isMounted = true;
-
+    let mounted = true;
     (async () => {
+      // bail if we don’t have our PUBLIC keys
+      if (
+        !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      ) {
+        console.warn("Missing Supabase anon key or URL");
+        if (mounted) setCredits(0);
+        return;
+      }
+
+      let supabase;
       try {
-        const supabase = createPagesBrowserClient<Database>();
+        // dynamically import so we can catch if it fails
+        const { createPagesBrowserClient } = await import(
+          "@supabase/auth-helpers-nextjs"
+        );
+        supabase = createPagesBrowserClient();
+      } catch (e) {
+        console.error("Failed to init Supabase client:", e);
+        if (mounted) setCredits(0);
+        return;
+      }
+
+      try {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-
         if (!user) {
-          if (isMounted) setCredits(0);
+          if (mounted) setCredits(0);
           return;
         }
-
         const { data: profile } = await supabase
           .from("users")
           .select("credits")
           .eq("id", user.id)
           .single<{ credits: number }>();
-
-        if (isMounted) setCredits(profile?.credits ?? 0);
-      } catch (err) {
-        console.error("LogoOrCredits error:", err);
-        if (isMounted) setCredits(0);
+        if (mounted) setCredits(profile?.credits ?? 0);
+      } catch (e) {
+        console.error("Error fetching profile:", e);
+        if (mounted) setCredits(0);
       }
     })();
 
     return () => {
-      isMounted = false;
+      mounted = false;
     };
   }, [pathname]);
 
-  return (
-    <div className="text-sm font-semibold">
-      {credits === null ? "… Credits" : `${credits} Credits`}
-    </div>
-  );
+  // while loading
+  if (credits === null) return <div className="text-sm font-semibold">… Credits</div>;
+
+  return <div className="text-sm font-semibold">{credits} Credits</div>;
 }
