@@ -1,66 +1,62 @@
 // components/LogoOrCredits.tsx
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useEffect, useState } from "react";
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
 import type { Database } from "@/types/supabase";
 
 export default function LogoOrCredits() {
   const pathname = usePathname();
-  const supabase = createClientComponentClient<Database>();
+  const supabase = createPagesBrowserClient<Database>();
   const [credits, setCredits] = useState<number | null>(null);
 
-  useEffect(() => {
-    // only fetch if we’re on a “backend” route
-    if (
-      pathname.startsWith("/overview") ||
-      pathname.startsWith("/get-credits") ||
-      pathname.startsWith("/custom-intake")
-    ) {
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        if (user) {
-          supabase
-            .from("users")
-            .select("credits")
-            .eq("id", user.id)
-            .single()
-            .then(({ data, error }) => {
-              if (!error && data) setCredits(data.credits);
-            });
-        }
-      });
-    }
-  }, [pathname, supabase]);
-
-  const isBackend =
-    pathname.startsWith("/overview") ||
-    pathname.startsWith("/get-credits") ||
-    pathname.startsWith("/custom-intake");
-
-  if (isBackend) {
-    // show credits (or loading)
+  // 1) If we're on the homepage, render your logo + site name
+  if (pathname === "/") {
     return (
-      <div className="flex items-center space-x-1">
-        <span className="font-medium">{credits ?? "…"}</span>
-        <span>Credits</span>
-      </div>
+      <Link
+        href="/"
+        className="flex items-center gap-2 text-lg font-semibold"
+      >
+        <Image
+          src="/logo.png"
+          alt="AI Maven Logo"
+          width={28}
+          height={28}
+          className="rounded-full"
+        />
+        <span>AI Maven</span>
+      </Link>
     );
   }
 
-  // public — show logo + name
+  // 2) Otherwise, fetch the user's credits and display them
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setCredits(0);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("credits")
+        .eq("id", user.id)
+        .single<{ credits: number }>();
+
+      setCredits(profile?.credits ?? 0);
+    })();
+  }, [pathname, supabase]);
+
   return (
-    <Link href="/" className="flex items-center gap-1">
-      <Image
-        src="/logo.png"
-        alt="AI Maven Logo"
-        width={24}
-        height={24}
-        className="rounded-full"
-      />
-      <span className="font-semibold">AI Maven</span>
-    </Link>
+    <div className="text-sm font-semibold">
+      {credits === null ? "… Credits" : `${credits} Credits`}
+    </div>
   );
 }
