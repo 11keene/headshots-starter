@@ -3,11 +3,10 @@
 
 import { useState, useEffect } from "react";
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { AvatarIcon } from "@radix-ui/react-icons";
-
 import ClientSideCredits from "./realtime/ClientSideCredits";
 import { ThemeToggle } from "./homepage/theme-toggle";
 import {
@@ -23,16 +22,15 @@ import { Button } from "./ui/button";
 export default function Navbar() {
   const supabase = createPagesBrowserClient();
   const pathname = usePathname();
-  const router = useRouter();
 
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [credits, setCredits] = useState<number>(0);
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
+  const [credits, setCredits] = useState(0);
 
-  // 1) On mount, load the user & their credits
+  // On mount, fetch the current user + credits
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      setUserEmail(user.email ?? null);
+      setUser({ id: user.id, email: user.email ?? "" });
       supabase
         .from("users")
         .select("credits")
@@ -44,85 +42,97 @@ export default function Navbar() {
     });
   }, [supabase]);
 
-  // 2) Decide if we’re on a “backend” page
-  const isBackend = pathname?.startsWith("/overview");
+  // Define which routes count as “backend”
+  const isBackend =
+    pathname?.startsWith("/overview") ||
+    pathname?.startsWith("/get-credits");
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* Left: logo on home, credits on backend */}
+        {/** LEFT: Logo on public, Credits on backend **/}
         <div className="flex items-center">
-          {isBackend && userEmail ? (
-            <ClientSideCredits creditsRow={{ credits }} />
+          {isBackend && user ? (
+            <span className="text-sm font-medium">{credits} Credits</span>
           ) : (
             <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/logo.png"
                 alt="AI Maven Logo"
-                width={24}
-                height={24}
+                width={28}
+                height={28}
                 className="rounded-full"
               />
-              <span className="font-semibold">AI Maven</span>
+              <span className="text-lg font-semibold">AI Maven</span>
             </Link>
           )}
         </div>
 
-        {/* Center nav */}
-        {userEmail && (
-          <nav className="flex gap-4">
-            <Link href="/overview" className="hover:text-primary">
+        {/** CENTER: nav links only when logged in **/}
+        {user && (
+          <nav className="flex gap-6">
+            <Link
+              href="/overview"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Home
             </Link>
-            {process.env.NEXT_PUBLIC_TUNE_TYPE === "packs" && (
-              <Link href="/overview/packs" className="hover:text-primary">
-                Packs
-              </Link>
-            )}
-            {process.env.NEXT_PUBLIC_STRIPE_IS_ENABLED === "true" && (
-              <Link href="/get-credits" className="hover:text-primary">
-                Get Credits
-              </Link>
-            )}
+            <Link
+              href="/overview/packs"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
+              Packs
+            </Link>
+            <Link
+              href="/get-credits"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
+              Get Credits
+            </Link>
           </nav>
         )}
 
-        {/* Right side */}
+        {/** RIGHT: theme toggle + avatar/login **/}
         <div className="flex items-center gap-4">
           <ThemeToggle />
 
-          {!userEmail ? (
-            <Button
-              size="sm"
-              onClick={() => router.push("/login")}
-            >
-              Login
-            </Button>
+          {!user ? (
+            <Link href="/login">
+              <Button size="sm">Login</Button>
+            </Link>
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
-                  <AvatarIcon className="h-6 w-6" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 p-0 text-red-600"
+                >
+                  <AvatarIcon className="h-10 w-10" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
+              <DropdownMenuContent side="bottom" align="end" className="w-56">
                 <DropdownMenuLabel className="text-center">
-                  {userEmail}
+                  {user.email}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="flex justify-between">
+                <DropdownMenuItem className="flex justify-between px-4">
                   <span>Your Credits</span>
-                  <span className="font-semibold">{credits}</span>
+                  <span className="font-medium">{credits}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/overview" className="w-full text-left">
+                  <Link href="/overview" className="w-full px-4">
                     Create Photos
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <form action="/auth/sign-out" method="post">
-                  <Button type="submit" variant="ghost" className="w-full text-left">
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    className="w-full text-left"
+                  >
                     Log out
                   </Button>
                 </form>
