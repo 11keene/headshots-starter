@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Database } from "@/types/supabase";
-import { modelRowWithSamples } from "@/types/utils";
+import type { modelRowWithSamples as ModelRowWithSamples } from "@/types/utils"
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -13,7 +13,7 @@ const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
 export const revalidate = 0;
 
 type ClientSideModelsListProps = {
-  serverModels: modelRowWithSamples[] | [];
+  serverModels: ModelRowWithSamples[] | [];
 };
 
 export default function ClientSideModelsList({
@@ -23,7 +23,7 @@ export default function ClientSideModelsList({
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
   );
-  const [models, setModels] = useState<modelRowWithSamples[]>(serverModels);
+  const [models, setModels] = useState<ModelRowWithSamples[]>(serverModels);
 
   useEffect(() => {
     const channel = supabase
@@ -37,7 +37,7 @@ export default function ClientSideModelsList({
             .select("*")
             .eq("modelId", payload.new.id);
 
-          const newModel: modelRowWithSamples = {
+          const newModel: ModelRowWithSamples = {
             ...payload.new,
             samples: samples.data,
           };
@@ -64,8 +64,10 @@ export default function ClientSideModelsList({
             <h1>Your models</h1>
             
           </div>
-          <ModelsTable models={models} />
-        </div>
+          <ModelsTable
+            models={models.map((m) => ({ ...m, name: m.name ?? "", pack: m.pack ?? "" }))}
+            />
+          </div>
       )}
      
       
