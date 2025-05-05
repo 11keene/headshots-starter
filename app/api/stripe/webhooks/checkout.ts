@@ -41,7 +41,7 @@ export default async function handler(req: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const user_id = session.metadata?.user_id;
-    const pack = session.metadata?.pack;
+    const pack    = session.metadata?.pack;
 
     if (user_id && pack) {
       // 1) Mark order as paid
@@ -51,7 +51,6 @@ export default async function handler(req: Request) {
         .eq("session_id", session.id);
 
       // 2) Determine credits for this pack
-      //    (Customize: e.g. Starter=10, Standard=50, Pro=100, Studio=500)
       const CREDIT_MAP: Record<string, number> = {
         price_1RJLBd4RnIZz7j08beYwRGv1: 25,
         price_1RJLCO4RnIZz7j08tJ3vN1or: 75,
@@ -61,14 +60,13 @@ export default async function handler(req: Request) {
       const add = CREDIT_MAP[pack] || 0;
 
       // 3) Increment user’s credits
-      //    (Read current, then add)
       const { data: userRec } = await supabaseAdmin
         .from("users")
         .select("credits")
         .eq("id", user_id)
         .single();
-
       const current = userRec?.credits ?? 0;
+
       await supabaseAdmin
         .from("users")
         .update({ credits: current + add })

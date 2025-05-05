@@ -60,13 +60,15 @@ export async function POST(req: Request) {
     });
     console.log("✅ Stripe session URL:", session.url);
 
-    // 6) Insert a row into Supabase “orders”
+    // 6) Insert a “pending” order into Supabase
     const { error: orderErr } = await supabaseAdmin
       .from("orders")
       .insert({
         user_id,
         pack,
         session_id: session.id,
+        status: "pending",
+        amount: session.amount_total,             // total in cents
         created_at: new Date().toISOString(),
       });
     if (orderErr) {
