@@ -3,6 +3,7 @@
 import { AvatarIcon } from "@radix-ui/react-icons";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+import LogoOrCredits from "./LogoOrCredits";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,11 +16,7 @@ import Link from "next/link";
 import { Button } from "./ui/button";
 import React from "react";
 import { Database } from "@/types/supabase";
-import ClientSideCredits from "./realtime/ClientSideCredits";
 import { ThemeToggle } from "./homepage/theme-toggle";
-import Image from "next/image";
-import LogoOrCredits from "./LogoOrCredits";
-
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -36,7 +33,7 @@ export default async function Navbar() {
   } = await supabase.auth.getUser();
 
   // 2) fetch their "credits" column from the users table
-  const { data: profile, error } = await supabase
+  const { data: profile } = await supabase
     .from("users")
     .select("credits")
     .eq("id", user?.id || "")      // id is a UUID string
@@ -47,11 +44,10 @@ export default async function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-         {/* logo OR credits, depending on route */}
-         {/* Replace with a placeholder or define the LogoOrCredits component */}
-         <div>Logo or Credits Placeholder</div>
+        {/* ← logo on /, credits on every other page */}
+        <LogoOrCredits />
 
-        {/* Main nav */}
+        {/* center nav links */}
         {user && (
           <nav className="flex flex-nowrap overflow-x-auto gap-3 sm:gap-5 md:gap-6 whitespace-nowrap">
             <Link
@@ -60,6 +56,7 @@ export default async function Navbar() {
             >
               Home
             </Link>
+
             {packsIsEnabled && (
               <Link
                 href="/overview/packs"
@@ -68,6 +65,7 @@ export default async function Navbar() {
                 Packs
               </Link>
             )}
+
             {stripeIsConfigured && (
               <Link
                 href="/get-credits"
@@ -79,59 +77,51 @@ export default async function Navbar() {
           </nav>
         )}
 
-        {/* Right side */}
-        <div className="flex items-center">
-          <div className="ml-4">
-            <ThemeToggle />
-          </div>
+        {/* right side: theme toggle + login/avatar */}
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
 
           {!user ? (
             <Link href="/login">
               <Button size="sm">Login</Button>
             </Link>
           ) : (
-            <div className="flex items-center gap-4">
-              {stripeIsConfigured && (
-                // pass the number of credits to your client‐side badge
-                <ClientSideCredits creditsRow={{ credits }} />
-              )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
-                    <AvatarIcon className="h-10 w-10 text-primary" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
+                  <AvatarIcon className="h-10 w-10 text-primary" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 z-50">
+                <DropdownMenuLabel className="text-primary text-center whitespace-nowrap">
+                  {user.email}
+                </DropdownMenuLabel>
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-default flex justify-between px-4 py-2">
+                  <span>Your Credits</span>
+                  <span className="font-semibold">{credits}</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/overview" className="w-full px-4 py-2 text-left">
+                    Create Photos
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+                <form action="/auth/sign-out" method="post">
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    className="w-full text-left whitespace-nowrap"
+                  >
+                    Log out
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 z-50">
-                  <DropdownMenuLabel className="text-primary text-center whitespace-nowrap">
-                    {user.email}
-                  </DropdownMenuLabel>
-
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-default flex justify-between px-4 py-2">
-                    <span>Your Credits</span>
-                    <span className="font-semibold">{credits}</span>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/overview" className="w-full px-4 py-2 text-left">
-                      Create Photos
-                    </Link>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator />
-                  <form action="/auth/sign-out" method="post">
-                    <Button
-                      type="submit"
-                      variant="ghost"
-                      className="w-full text-left whitespace-nowrap"
-                    >
-                      Log out
-                    </Button>
-                  </form>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                </form>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>
