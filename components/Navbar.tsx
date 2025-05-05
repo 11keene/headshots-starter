@@ -1,13 +1,20 @@
+// components/Navbar.tsx
+import Image from "next/image";
+import Link from "next/link";
 import { AvatarIcon, HamburgerMenuIcon } from "@radix-ui/react-icons";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuItem } from "./ui/dropdown-menu";
-import Link from "next/link";
-import Image from "next/image";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+} from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import React from "react";
 import { Database } from "@/types/supabase";
-import ClientSideCredits from "./realtime/ClientSideCredits";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -21,85 +28,75 @@ export default async function Navbar() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // fetch user credits
+  // for backend (logged-in) view pull credits
   const { data: profile } = await supabase
     .from("users")
     .select("credits")
-    .eq("id", user?.id || "")
+    .eq("id", user?.id ?? "")
     .single<{ credits: number }>();
   const credits = profile?.credits ?? 0;
 
-  // Determine if we're on a protected page (user logged in)
-  const isProtected = !!user;
+  const isBackend = Boolean(user);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-      <div className="container mx-auto flex h-16 items-center px-4">
-        {/* Left: Logo or Credits */}
-        <div className="flex-shrink-0">
-          {isProtected ? (
-            <span className="text-base font-medium">{credits} Credits</span>
-          ) : (
-            <Link href="/">
-              <div className="flex items-center gap-1">
-                <Image src="/logo.png" alt="AI Maven Logo" width={24} height={24} />
-                <span className="font-semibold text-base">AI Maven</span>
-              </div>
-            </Link>
-          )}
-        </div>
+      {/* ← add justify-between here */}
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        {isBackend ? (
+          // BACKEND: credits on the left
+          <div className="text-sm font-semibold">{credits} Credits</div>
+        ) : (
+          // HOMEPAGE: logo + site name on the left
+          <Link href="/" className="flex items-center gap-2 font-semibold text-base">
+            <Image
+              src="/logo.png"
+              alt="AI Maven Logo"
+              width={24}
+              height={24}
+              className="rounded-full"
+            />
+            <span>AI Maven</span>
+          </Link>
+        )}
 
-        {/* Center: Nav links for authenticated user */}
-        {isProtected && (
-          <nav className="flex-1 flex justify-center space-x-6">
-            <Link href="/overview" className="text-sm font-semibold hover:text-primary">
+        {isBackend && (
+          // backend center nav
+          <nav className="flex gap-6 text-sm font-semibold">
+            <Link href="/overview" className="hover:text-primary transition-colors">
               Home
             </Link>
-            <Link href="/get-credits" className="text-sm font-semibold hover:text-primary">
+            <Link href="/get-credits" className="hover:text-primary transition-colors">
               Get Credits
             </Link>
           </nav>
         )}
 
-        {/* Right: Menu */}
-        <div className="flex-shrink-0 flex items-center">
-          {!user ? (
-            <Link href="/login">
-              <Button size="sm">Login</Button>
-            </Link>
-          ) : (
+        {/* right side */}
+        <div className="flex items-center gap-4">
+          {isBackend ? (
+            /* hamburger dropdown for backend */
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <HamburgerMenuIcon className="h-6 w-6" />
+                <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
+                  <HamburgerMenuIcon className="h-6 w-6 text-primary" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="font-medium text-center">
-                  {user.email}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/overview">Home</Link>
-                </DropdownMenuItem>
+              <DropdownMenuContent className="w-48 z-50">
                 {packsIsEnabled && (
                   <DropdownMenuItem asChild>
                     <Link href="/overview/packs">Packs</Link>
                   </DropdownMenuItem>
                 )}
-                {stripeIsConfigured && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/get-credits">Get Credits</Link>
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-default flex justify-between">
-                  <span>Your Credits</span>
-                  <span className="font-semibold">{credits}</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/overview">Create Photos</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="px-4 text-xs text-gray-500">
+                  {user!.email}
+                </DropdownMenuLabel>
+                <DropdownMenuItem className="flex justify-between px-4">
+                  <span>Your Credits</span>
+                  <span className="font-semibold">{credits}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <form action="/auth/sign-out" method="post">
@@ -111,6 +108,11 @@ export default async function Navbar() {
                 </form>
               </DropdownMenuContent>
             </DropdownMenu>
+          ) : (
+            // homepage login on the right
+            <Link href="/login">
+              <Button size="sm">Login</Button>
+            </Link>
           )}
         </div>
       </div>
