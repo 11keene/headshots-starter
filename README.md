@@ -158,7 +158,7 @@ To enable Stripe billing, you will need to fill out the following fields in your
 - STRIPE_PRICE_ID_ONE_CREDIT=your-stripe-price-id-one-credit
 - STRIPE_PRICE_ID_THREE_CREDITS=your-stripe-price-id-three-credit
 - STRIPE_PRICE_ID_FIVE_CREDITS=your-stripe-price-id-five-credit
-- NEXT_PUBLIC_STRIPE_IS_ENABLED=false # set to true to enable Stripe payments
+- NEXT_PUBLIC_STRIPE_IS_ENABLED=false # set to true to enable Stripe payment
 
 You need to do multiple things to get Stripe working:
 
