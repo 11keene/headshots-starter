@@ -20,22 +20,27 @@ import { ThemeToggle } from "./homepage/theme-toggle";
 import Image from "next/image";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const stripeIsConfigured = process.env.NEXT_PUBLIC_STRIPE_IS_ENABLED === "true";
 const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
-export const revalidate = 0;
 
 export default async function Navbar() {
   const supabase = createServerComponentClient<Database>({ cookies });
+
+  // 1) get the logged-in user
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: credits } = await supabase
-    .from("credits")
-    .select("*")
-    .eq("user_id", user?.id ?? "")
-    .single();
+  // 2) fetch their "credits" column from the users table
+  const { data: profile, error } = await supabase
+    .from("users")
+    .select("credits")
+    .eq("id", user?.id ?? "")      // id is a UUID string
+    .single<{ credits: number }>();
+
+  const credits = profile?.credits ?? 0;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
@@ -55,7 +60,7 @@ export default async function Navbar() {
           <span>AI Maven</span>
         </Link>
 
-        {/* Nav – scrollable on small, full gap on larger */}
+        {/* Main nav */}
         {user && (
           <nav className="flex flex-nowrap overflow-x-auto gap-3 sm:gap-5 md:gap-6 whitespace-nowrap">
             <Link
@@ -64,7 +69,6 @@ export default async function Navbar() {
             >
               Home
             </Link>
-
             {packsIsEnabled && (
               <Link
                 href="/overview/packs"
@@ -73,7 +77,6 @@ export default async function Navbar() {
                 Packs
               </Link>
             )}
-
             {stripeIsConfigured && (
               <Link
                 href="/get-credits"
@@ -87,24 +90,24 @@ export default async function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center">
-        <div className="ml-4">
-          <ThemeToggle />
-</div>
-          {!user && (
+          <div className="ml-4">
+            <ThemeToggle />
+          </div>
+
+          {!user ? (
             <Link href="/login">
               <Button size="sm">Login</Button>
             </Link>
-          )}
-
-          {user && (
+          ) : (
             <div className="flex items-center gap-4">
-              {stripeIsConfigured && credits && (
-                <ClientSideCredits creditsRow={credits} />
+              {stripeIsConfigured && (
+                // pass the number of credits to your client‐side badge
+                <ClientSideCredits creditsRow={{ credits }} />
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
-                    <AvatarIcon className="h-10 w-10 text-primary" /> 
+                    <AvatarIcon className="h-10 w-10 text-primary" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56 z-50">
@@ -115,15 +118,12 @@ export default async function Navbar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="cursor-default flex justify-between px-4 py-2">
                     <span>Your Credits</span>
-                    <span className="font-semibold">{credits?.credits ?? 0}</span>
+                    <span className="font-semibold">{credits}</span>
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link
-                      href="/overview"
-                      className="w-full px-4 py-2 text-left"
-                    >
+                    <Link href="/overview" className="w-full px-4 py-2 text-left">
                       Create Photos
                     </Link>
                   </DropdownMenuItem>
