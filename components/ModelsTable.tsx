@@ -1,5 +1,7 @@
-"use client";
+// File: components/ModelsTable.tsx
 
+import React from "react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -7,78 +9,65 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+} from "./ui/table";
 
-import { Database } from "@/types/supabase";
-import { Icons } from "./icons";
-import { useRouter } from "next/navigation";
-import { modelRowWithSamples } from "@/types/utils";
+export interface modelRowWithSamples {
+  id: number;
+  name: string;
+  pack: string;
+  status: string;
+  fine_tuned_face_id: string;
+  trained_at: string;
+  samples: { uri: string }[];
+}
 
-type ModelsTableProps = {
-  models: modelRowWithSamples[];
-};
+interface ModelsTableProps {
+  models?: modelRowWithSamples[];
+}
 
-export default async function ModelsTable({ models }: ModelsTableProps) {
+export default function ModelsTable({ models }: ModelsTableProps) {
   const router = useRouter();
-  const handleRedirect = (id: number) => {
-    router.push(`/overview/models/${id}`);
+
+  const handleRedirect = (modelId: number) => {
+    router.push(`/overview/models/${modelId}`);
   };
 
   return (
-    <div className="rounded-md border">
-      <Table className="w-full">
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Samples</TableHead>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Pack</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Trained At</TableHead>
+          <TableHead className="text-right">Example</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {models?.map((model) => (
+          <TableRow
+            key={model.id}                 // ← changed from model.modelId
+            onClick={() => handleRedirect(model.id)}
+            className="cursor-pointer h-16"
+          >
+            <TableCell>{model.name}</TableCell>
+            <TableCell>{model.pack}</TableCell>
+            <TableCell>{model.status}</TableCell>
+            <TableCell>{new Date(model.trained_at).toLocaleString()}</TableCell>
+            <TableCell className="text-right">
+              {model.samples[0]?.uri ? (
+                <img
+                  src={model.samples[0].uri}
+                  alt="Sample"
+                  className="h-8 w-8 rounded"
+                />
+              ) : (
+                "—"
+              )}
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {models?.map((model) => (
-            <TableRow
-              key={model.modelId}
-              onClick={() => handleRedirect(model.id)}
-              className="cursor-pointer h-16"
-            >
-              <TableCell className="font-medium">{model.name}</TableCell>
-              <TableCell>
-                <div>
-                  <Badge
-                    className="flex gap-2 items-center w-min"
-                    variant={
-                      model.status === "finished" ? "default" : "secondary"
-                    }
-                  >
-                    {model.status === "processing" ? "training" : model.status }
-                    {model.status === "processing" && (
-                      <Icons.spinner className="h-4 w-4 animate-spin" />
-                    )}
-                  </Badge>
-                </div>
-              </TableCell>
-              <TableCell>{model.type}</TableCell>
-              <TableCell>
-                <div className="flex gap-2 flex-shrink-0 items-center">
-                  {model.samples.slice(0, 3).map((sample) => (
-                    <Avatar key={sample.id}>
-                      <AvatarImage src={sample.uri} className="object-cover" />
-                    </Avatar>
-                  ))}
-                  {model.samples.length > 3 && (
-                    <Badge className="rounded-full h-10" variant={"outline"}>
-                      +{model.samples.length - 3}
-                    </Badge>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
