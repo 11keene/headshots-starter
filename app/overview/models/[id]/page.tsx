@@ -3,8 +3,6 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-
-// Make sure these paths match your project
 import ClientSideModel from "@/components/realtime/ClientSideModel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,9 +21,7 @@ export default async function ModelPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
 
   const { data: model } = await supabase
     .from("models")
@@ -34,24 +30,12 @@ export default async function ModelPage({
     .eq("user_id", user.id)
     .single();
 
-  if (!model) {
-    redirect("/overview");
-  }
-
-  const { data: images } = await supabase
-    .from("images")
-    .select("*")
-    .eq("modelId", model.id);
-
-  const { data: samples } = await supabase
-    .from("samples")
-    .select("*")
-    .eq("modelId", model.id);
+  if (!model) redirect("/overview");
 
   return (
-    <div id="train-model-container" className="w-full h-full">
+    <div id="train-model-container" className="w-full h-full p-4">
       <div className="flex items-center gap-4 pb-4">
-        <Link href="/overview" className="text-xs">
+        <Link href="/overview">
           <Button variant="outline" size="sm" className="flex items-center gap-2">
             <FaArrowLeft />
             Go Back
@@ -69,11 +53,8 @@ export default async function ModelPage({
         </Badge>
       </div>
 
-      <ClientSideModel
-        samples={samples ?? []}
-        serverModel={model}
-        serverImages={images ?? []}
-      />
+      {/* Only pass the model’s ID */}
+      <ClientSideModel modelId={model.id} />
     </div>
   );
 }
