@@ -1,4 +1,5 @@
 // components/Navbar.tsx
+"use client";
 
 import { AvatarIcon } from "@radix-ui/react-icons";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
