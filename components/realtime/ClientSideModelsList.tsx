@@ -1,52 +1,38 @@
+// components/realtime/ClientSideModelsList.tsx
 "use client";
-import { Button } from "@/components/ui/button";
-import { Database } from "@/types/supabase";
-import type { modelRowWithSamples as ModelRowWithSamples } from "@/types/utils"
-import { createClient } from "@supabase/supabase-js";
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { FaImages } from "react-icons/fa";
-import ModelsTable from "../ModelsTable";
 
-const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
+import { useState, useEffect } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import type { Database } from "@/types/supabase";
+import ClientSideModel from "./ClientSideModel";
+import ModelsTable, { modelRowWithSamples } from "../ModelsTable";
 
-export const revalidate = 0;
-
-type ClientSideModelsListProps = {
-  serverModels: ModelRowWithSamples[] | [];
+type ModelWithSamples = Database["public"]["Tables"]["models"]["Row"] & {
+  samples: Database["public"]["Tables"]["samples"]["Row"][];
+  name?: string; // Add 'name' property if it exists in your schema
+  fine_tuned_face_id?: string; // Add 'fine_tuned_face_id' property if it exists in your schema
+  pack?: string; // Add 'pack' property if it exists in your schema
+  trained_at?: string; // Add 'trained_at' property if it exists in your schema
 };
+
+interface ClientSideModelsListProps {
+  serverModels: ModelWithSamples[];
+}
 
 export default function ClientSideModelsList({
   serverModels,
 }: ClientSideModelsListProps) {
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  );
-  const [models, setModels] = useState<ModelRowWithSamples[]>(serverModels);
+  const [models, setModels] = useState<ModelWithSamples[]>(serverModels);
+  const supabase = createClientComponentClient<Database>();
 
   useEffect(() => {
     const channel = supabase
-      .channel("realtime-models")
+      .channel("realtime:models")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "models" },
-        async (payload: any) => {
-          const samples = await supabase
-            .from("samples")
-            .select("*")
-            .eq("modelId", payload.new.id);
-
-          const newModel: ModelRowWithSamples = {
-            ...payload.new,
-            samples: samples.data,
-          };
-
-          const dedupedModels = models.filter(
-            (model) => model.id !== payload.old?.id
-          );
-
-          setModels([...dedupedModels, newModel]);
+        { event: "INSERT", schema: "public", table: "models" },
+        (payload: { new: ModelWithSamples }) => {
+          setModels((current) => [...current, payload.new as ModelWithSamples]);
         }
       )
       .subscribe();
@@ -54,23 +40,29 @@ export default function ClientSideModelsList({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, models, setModels]);
+  }, [supabase]);
 
   return (
-    <div id="train-model-container" className="w-full">
-      {models && models.length > 0 && (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-row gap-4 w-full justify-between items-center text-center">
-            <h1>Your models</h1>
-            
-          </div>
-          <ModelsTable
-            models={models.map((m) => ({ ...m, name: m.name ?? "", pack: m.pack ?? "" }))}
-            />
-          </div>
-      )}
-     
-      
+    <div className="flex flex-col gap-4">
+      {/* Real-time individual model previews */}
+      {models.map((m) => (
+        <ClientSideModel key={m.id.toString()} modelId={m.id.toString()} />
+      ))}
+
+      {/* Tabular overview of all models */}
+      <div className="overflow-auto mt-8">
+      <ModelsTable
+  models={models.map((m): modelRowWithSamples => ({
+    id:                 Number(m.id),                // number
+    name:               m.name    ?? "",             // string
+    pack:               m.pack    ?? "",             // string
+    status:             m.status  ?? "",             // string
+    fine_tuned_face_id: m.fine_tuned_face_id ?? "",  // string
+    trained_at:         m.trained_at ?? "",         // string
+    samples:            m.samples.map((s) => ({ uri: s.sample_images[0] })),  // { uri: string }[]
+          }))}
+        />
+      </div>
     </div>
   );
 }
