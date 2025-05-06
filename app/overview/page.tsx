@@ -1,4 +1,5 @@
 // app/overview/page.tsx
+import { redirect } from "next/navigation";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { Database } from "@/types/supabase";
@@ -9,28 +10,29 @@ export const dynamic = "force-dynamic";
 export default async function OverviewPage() {
   const supabase = createServerComponentClient<Database>({ cookies });
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  if (!user) {
-    return <div>User not found</div>;
+  if (!session?.user) {
+    redirect("/login");
   }
 
-  // ─── Fetch user credits ───────────────────────────────────────────
+  const userId = session.user.id;
+
+  // Fetch user credits
   const { data: creditRow } = await supabase
     .from("credits")
     .select("credits")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .single();
   const credits = creditRow?.credits ?? 0;
 
-  // ─── Fetch models as before ───────────────────────────────────────
+  // Fetch user models
   const { data: models } = await supabase
     .from("models")
     .select(`*, samples (*)`)
-    .eq("user_id", user.id);
+    .eq("user_id", userId);
 
-  // ─── Pass credits down to the client component ───────────────────
   return (
     <OverviewClient
       serverModels={models ?? []}
