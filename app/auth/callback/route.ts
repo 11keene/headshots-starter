@@ -1,21 +1,20 @@
+// app/auth/v1/callback/route.ts
+import { NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import type { Database } from "@/types/supabase";
 
-export const runtime = "nodejs"; 
+export const runtime = "nodejs";
 
-export async function GET(request: Request) {
-  const url = new URL(request.url);
+export async function GET(req: Request) {
+  const url = new URL(req.url);
   const code = url.searchParams.get("code");
-  // Optional: grab a `next` param if you want to redirect somewhere else
-  const nextPath = url.searchParams.get("next") ?? "/overview";
 
   if (code) {
-    // exchange the code for a session cookie
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = createRouteHandlerClient<Database>({ cookies });
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // send the user on to your client portal
+  // once the cookie is set, send them on to /overview
   return NextResponse.redirect(`${url.origin}/overview`);
 }
