@@ -18,11 +18,7 @@ export default function OverviewClient({
 
   return (
     <div className="flex flex-col items-center w-full px-4">
-      {/* Display user credits */}
-      <div className="w-full flex justify-end mb-4">
-        <span className="text-sm text-gray-500">Credits:</span>
-        <span className="ml-2 text-lg font-semibold">{serverCredits}</span>
-      </div>
+      
 
       {/* Tabs */}
       <div className="flex gap-6 mt-8 mb-8">

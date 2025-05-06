@@ -45,7 +45,7 @@ export default async function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {isBackend ? (
           // BACKEND: credits on the left
-          <div className="text-sm font-semibold">{credits} Credits</div>
+<div className="text-sm font-semibold">Credit: {credits}</div>
         ) : (
           // HOMEPAGE: logo + site name on the left
           <Link href="/" className="flex items-center gap-2 font-semibold text-base">
