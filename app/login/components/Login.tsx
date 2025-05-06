@@ -1,3 +1,4 @@
+// app/login/components/Login.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -30,14 +31,13 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     formState: { errors, isSubmitted },
   } = useForm<Inputs>();
 
-  // ✅ FIXED useEffect to prevent hydration crash / infinite redirects
   useEffect(() => {
     let isMounted = true;
 
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (isMounted && session) {
-        router.replace("/overview");
+        router.replace("/auth/v1/callback");
       }
     };
 
@@ -45,7 +45,7 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
-        router.replace("/overview");
+        router.replace("/auth/v1/callback");
       }
     });
 
@@ -55,7 +55,6 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     };
   }, []);
 
-  // Magic link handler
   const onSubmit: SubmitHandler<Inputs> = async ({ email }) => {
     setIsSubmitting(true);
     const { error } = await supabase.auth.signInWithOtp({
@@ -71,12 +70,12 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     }
   };
 
-  // OAuth handler
   const socialSignIn = (provider: "google" | "facebook" | "apple") =>
     supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/v1/callback`,
+        flow: "pkce",
       },
     });
 
@@ -91,6 +90,7 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
         <span className="text-xl font-bold">AI Maven</span>
       </div>
 
+      {/* Apple (black background) */}
       <Button
         onClick={() => socialSignIn("apple")}
         className="w-full flex items-center justify-center gap-2 rounded-md bg-black hover:opacity-90 text-white py-4 font-semibold transition"
@@ -99,23 +99,22 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
         Continue with Apple
       </Button>
 
+      {/* Google (white background with Google logo) */}
       <Button
         onClick={() => socialSignIn("google")}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-red-600 hover:bg-red-700 text-white py-4 font-semibold transition"
+        className="w-full flex items-center justify-center gap-2 rounded-md bg-white hover:bg-gray-100 text-black py-4 font-semibold transition border border-gray-300"
       >
-        <div className="bg-white rounded-full p-1">
-          <FcGoogle size={20} />
-        </div>
+        <FcGoogle size={20} />
         Continue with Google
       </Button>
 
+      {/* Facebook (white background with blue “f” icon) */}
       <Button
         onClick={() => socialSignIn("facebook")}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-[#1877F2] hover:bg-blue-700 text-white py-4 font-semibold transition"
+        className="w-full flex items-center justify-center gap-2 rounded-md bg-white hover:bg-gray-100 text-black py-4 font-semibold transition border border-gray-300"
       >
-        <FaFacebookF size={20} />
+        <FaFacebookF size={20} className="text-[#1877F2]" />
         Continue with Facebook
-        
       </Button>
 
       <OR />
