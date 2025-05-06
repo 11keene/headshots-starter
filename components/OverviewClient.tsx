@@ -1,17 +1,19 @@
-// app/overview/page.tsx
+// components/OverviewClient.tsx
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import ClientSideModelsList from "@/components/realtime/ClientSideModelsList";
 
+interface OverviewClientProps {
+  serverModels: any[];
+  serverCredits: number;
+}
+
 export default function OverviewClient({
   serverModels,
   serverCredits,
-}: {
-  serverModels: any[];
-  serverCredits: number;
-}) {
+}: OverviewClientProps) {
   const [activeTab, setActiveTab] = useState<"headshot" | "custom">("headshot");
 
   return (
@@ -34,7 +36,6 @@ export default function OverviewClient({
         >
           Choose a Headshot
         </button>
-
         <button
           onClick={() => setActiveTab("custom")}
           className={`text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
@@ -50,7 +51,9 @@ export default function OverviewClient({
       {/* Tab Content */}
       {activeTab === "headshot" && (
         <div className="flex flex-col items-center w-full max-w-md mb-20">
-          <h2 className="text-2xl font-bold mb-2 text-center">Choose Your Headshot</h2>
+          <h2 className="text-2xl font-bold mb-2 text-center">
+            Choose Your Headshot
+          </h2>
           <p className="text-muted-foreground mb-8 text-center">
             Click to choose from our different pack styles.
           </p>
@@ -66,7 +69,9 @@ export default function OverviewClient({
 
       {activeTab === "custom" && (
         <div className="flex flex-col items-center w-full max-w-md mb-20">
-          <h2 className="text-2xl font-bold mb-2 text-center">Choose Your Custom Style</h2>
+          <h2 className="text-2xl font-bold mb-2 text-center">
+            Choose Your Custom Style
+          </h2>
           <p className="text-muted-foreground mb-8 text-center">
             Generate more personalized and customizable images.
           </p>
