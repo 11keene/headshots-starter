@@ -75,7 +75,6 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
       provider,
       options: {
         redirectTo: `${window.location.origin}/auth/v1/callback`,
-        flow: "pkce",
       },
     });
 
