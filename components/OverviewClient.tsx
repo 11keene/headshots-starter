@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import ClientSideModelsList from "@/components/realtime/ClientSideModelsList";
 
-export default function OverviewClient({ serverModels }: { serverModels: any[] }) {
+export default function OverviewClient({ serverModels }: { serverModels: any[]; serverCredits: number; }) { 
   const [activeTab, setActiveTab] = useState<"headshot" | "custom">("headshot");
 
   return (
