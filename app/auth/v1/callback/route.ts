@@ -10,15 +10,15 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
 
+  // Prepare the response so we can set cookies
+  const res = NextResponse.next();
+
   if (code) {
-    // Exchange the OAuth code for a Supabase session cookie
-    const res = NextResponse.next();
+    // Exchange the OAuth authorization code for a Supabase session cookie
     const supabase = createRouteHandlerClient<Database>({ cookies });
     await supabase.auth.exchangeCodeForSession(code);
-    // After setting the cookie, send them on
-    return res;
   }
 
-  // Fallback: no code? Just redirect to the dashboard
+  // Now that the cookie is set, redirect to the dashboard
   return NextResponse.redirect(`${url.origin}/overview`);
 }
