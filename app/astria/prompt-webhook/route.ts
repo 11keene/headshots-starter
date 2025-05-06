@@ -101,10 +101,10 @@ export async function POST(request: Request) {
   // 5) Insert each image URL into your `images` table
   const allHeadshots = prompt.images;
   const { data: model, error: modelError } = await supabase
-  .from("models")
-  .select("*")
-  .eq("id", model_id as string) // ← pass it as a string (or .toString())
-  .single();
+    .from("models")
+    .select("*")
+    .eq("id", Number(model_id))
+    .single();
 
   if (modelError || !model) {
     console.error("Model lookup failed:", modelError);
@@ -117,8 +117,8 @@ export async function POST(request: Request) {
   await Promise.all(
     allHeadshots.map((uri) =>
       supabase.from("images").insert({
-        images: [uri], // Assuming the `images` column expects an array of strings
-        user_id,       // Assuming `user_id` is required in the `images` table
+        modelId: model.id,
+        uri,
       })
     )
   );
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
       await resend.emails.send({
         from: RESEND_FROM_EMAIL,
         to: user.email!,
-        subject: `Your ${model.model_url || "AI"} headshots are ready!`,
+        subject: `Your ${model.name || "AI"} headshots are ready!`,
         html: `
           <p>Hi ${user.email},</p>
           <p>Your headshots have finished processing. Click below to view or download them:</p>
