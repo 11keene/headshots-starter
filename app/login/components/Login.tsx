@@ -37,7 +37,7 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (isMounted && session) {
-        router.replace("/auth/v1/callback");
+        router.replace("/overview");
       }
     };
 
@@ -45,7 +45,7 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
-        router.replace("/auth/v1/callback");
+        router.replace("/overview");
       }
     });
 
