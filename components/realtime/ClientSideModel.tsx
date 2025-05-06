@@ -1,109 +1,46 @@
-// File: components/realtime/ClientSideModel.tsx
+// components/realtime/ClientSideModel.tsx
+"use client";
 
-'use client';
+import { useState, useEffect } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import type { Database } from "@/types/supabase";
 
-import { useEffect, useState } from 'react';
-import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs';
-import type { Database } from '@/types/supabase';
+type ModelRow = Database["public"]["Tables"]["models"]["Row"];
 
-// 1) Declare the prop interface
 interface ClientSideModelProps {
-  modelId: number;
+  modelId: string;
 }
 
-// 2) Reuse your generated types for the rows
-type ModelRow = Database['public']['Tables']['models']['Row'];
-type SampleRow = Database['public']['Tables']['samples']['Row'];
-type ImageRow  = Database['public']['Tables']['images']['Row'];
-
 export default function ClientSideModel({ modelId }: ClientSideModelProps) {
-  const supabase = createPagesBrowserClient<Database>();
+  const supabase = createClientComponentClient<Database>();
   const [model, setModel] = useState<ModelRow | null>(null);
-  const [samples, setSamples] = useState<SampleRow[]>([]);
-  const [images, setImages]   = useState<ImageRow[]>([]);
 
   useEffect(() => {
-    // load model
+    // Fetch the model by its string ID
     supabase
-      .from('models')
-      .select('*')
-      .eq('id', modelId)
+      .from("models")
+      .select("*")
+      .eq("id", modelId)
       .single()
       .then(({ data, error }) => {
-        if (!error && data) setModel(data);
-      });
-
-    // load samples
-    supabase
-      .from('samples')
-      .select('*')
-      .eq('modelId', modelId)
-      .then(({ data, error }) => {
-        if (!error && data) setSamples(data);
-      });
-
-    // load images
-    supabase
-      .from('images')
-      .select('*')
-      .eq('modelId', modelId)
-      .then(({ data, error }) => {
-        if (!error && data) setImages(data);
-      });
-
-    // subscribe to updates on all three tables
-    const channel = supabase
-      .channel(`public:models:id=eq.${modelId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'models', filter: `id=eq.${modelId}` },
-        (payload) => setModel(payload.new as ModelRow)
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'samples', filter: `modelId=eq.${modelId}` },
-        async () => {
-          const { data } = await supabase
-            .from('samples')
-            .select('*')
-            .eq('modelId', modelId);
-          if (data) setSamples(data);
+        if (error) {
+          console.error("Error fetching model:", error);
+        } else {
+          setModel(data);
         }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'images', filter: `modelId=eq.${modelId}` },
-        async () => {
-          const { data } = await supabase
-            .from('images')
-            .select('*')
-            .eq('modelId', modelId);
-          if (data) setImages(data);
-        }
-      )
-      .subscribe();
+      });
+  }, [supabase, modelId]);
 
-    return () => void supabase.removeChannel(channel);
-  }, [modelId, supabase]);
+  if (!model) {
+    return <div>Loading model...</div>;
+  }
 
-  // Loading / status states
-  if (!model) return <div>Loading…</div>;
-  if (model.status !== 'finished') return <div>Training…</div>;
-
-  // Finished: show images
   return (
-    <div className="flex flex-col w-full lg:w-1/2 rounded-md p-4 bg-white shadow">
-      <h2 className="text-xl font-semibold mb-4">Results</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {images.map((img) => (
-          <img
-            key={img.id}
-            src={img.uri}
-            alt="generated"
-            className="rounded-md w-full h-auto object-cover"
-          />
-        ))}
-      </div>
+    <div className="p-4 border rounded">
+      <h3 className="text-lg font-semibold">{model.id}</h3>
+      {/* <p className="text-sm">Pack: {model.pack}</p> */}
+      <p className="text-sm">Status: {model.status}</p>
+      {/* Add more model fields here as needed */}
     </div>
   );
 }
