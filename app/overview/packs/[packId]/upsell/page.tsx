@@ -8,8 +8,8 @@ import { packs } from "../../../../../data/packs";
 export default function HeadshotUpsell() {
   const paramsObj = useParams();
   const packId = Array.isArray(paramsObj?.packId)
-  ? paramsObj.packId[0]
-  : paramsObj?.packId || "";
+    ? paramsObj.packId[0]
+    : paramsObj?.packId || "";
   const router = useRouter();
   const params = useSearchParams();
 
@@ -103,7 +103,7 @@ export default function HeadshotUpsell() {
             <div
               key={p.id}
               onClick={() => togglePack(p.id)}
-              className={`cursor-pointer border rounded-lg overflow-hidden transition-shadow ${
+              className={`relative cursor-pointer border rounded-lg overflow-hidden transition-shadow ${
                 selected.includes(p.id)
                   ? "ring-4 ring-red-500 shadow-lg"
                   : "hover:shadow-md"
@@ -124,7 +124,7 @@ export default function HeadshotUpsell() {
         <div className="flex justify-center">
           <div
             onClick={toggleCustom}
-            className={`cursor-pointer border rounded-lg overflow-hidden shadow-md max-w-sm w-full ${
+            className={`relative cursor-pointer border rounded-lg overflow-hidden shadow-md max-w-sm w-full ${
               customSelected ? "ring-4 ring-red-500" : ""
             }`}
           >
