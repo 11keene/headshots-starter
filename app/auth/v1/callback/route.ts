@@ -11,10 +11,14 @@ export async function GET(req: Request) {
   const code = url.searchParams.get("code");
 
   if (code) {
+    // Exchange the OAuth code for a Supabase session cookie
+    const res = NextResponse.next();
     const supabase = createRouteHandlerClient<Database>({ cookies });
     await supabase.auth.exchangeCodeForSession(code);
+    // After setting the cookie, send them on
+    return res;
   }
 
-  // once the cookie is set, send them on to /overview
+  // Fallback: no code? Just redirect to the dashboard
   return NextResponse.redirect(`${url.origin}/overview`);
 }
