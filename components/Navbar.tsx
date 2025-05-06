@@ -30,10 +30,11 @@ export default async function Navbar() {
 
   // for backend (logged-in) view pull credits
   const { data: profile } = await supabase
-    .from("users")
+  .from("credits")   
     .select("credits")
-    .eq("id", user?.id ?? "")
+    .eq("user_id", user?.id ?? "") 
     .single<{ credits: number }>();
+
   const credits = profile?.credits ?? 0;
 
   const isBackend = Boolean(user);
