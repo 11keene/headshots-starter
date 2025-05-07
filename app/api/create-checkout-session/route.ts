@@ -1,5 +1,3 @@
-// File: app/api/create-checkout-session/route.ts
-
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { headers } from "next/headers";
@@ -33,20 +31,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3) Upsert the user into your users table
-    //    If they already exist, nothing changes; if not, we create them with 0 credits.
-    const { error: userErr } = await supabaseAdmin
+    // 3) Upsert the user (so the FK in orders will always be happy)
+    await supabaseAdmin
       .from("users")
       .upsert(
-        { id: user_id, credits: 0 },
+        { id: user_id, credits: 0 },      // if new user, start with 0 credits
         { onConflict: "id", ignoreDuplicates: false }
       );
-    if (userErr) {
-      console.error("❌ Failed to upsert user:", userErr);
-      // We can continue even if this fails, but your FK will be happy if it succeeds.
-    }
 
-    // 4) Build Stripe line items
+    // 4) Build your line items array
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
       { price: pack, quantity: 1 },
       ...(Array.isArray(extras)
@@ -60,24 +53,31 @@ export async function POST(req: Request) {
       mode: "payment",
       payment_method_types: ["card"],
       line_items: lineItems,
-      metadata: { user_id, pack },
+
+      // ← add this so your webhook can pick up the user without having to
+      //   ask them to be logged in again
+      client_reference_id: user_id,
+
+      // optional: still useful if you want to know which pack in metadata
+      metadata: { pack },
+
       success_url: `${origin}/overview/packs/${pack}/generate?packId=${pack}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing?packId=${pack}`,
     });
 
-    // 6) Insert the “pending” order (now safe from FK errors)
+    // 6) Record the PENDING order in Supabase
     const { error: orderErr } = await supabaseAdmin
       .from("orders")
       .insert({
-        user_id,
-        pack,
-        session_id: session.id,
+        user_id,                // uuid → users.id
+        pack_id: pack,          // ← must match your orders.pack_id (TEXT) → packs.id (TEXT)
+        session_id: session.id, // stripe session id so webhook can find this row
         status: "pending",
         created_at: new Date().toISOString(),
       });
     if (orderErr) console.error("❌ Failed to insert order:", orderErr);
 
-    // 7) Return the Stripe redirect URL
+    // 7) Return the Stripe Checkout URL
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
     console.error("🔥 create-checkout-session error:", err);
