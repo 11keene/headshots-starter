@@ -1,12 +1,9 @@
 // File: components/PricingClient.tsx
-
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-
-// ① Supabase hook to get the current user
 import { useSession } from "@supabase/auth-helpers-react";
 
 type Tier = {
@@ -17,26 +14,43 @@ type Tier = {
 };
 
 const TIERS: Tier[] = [
-  { id: "price_1RJLBd4RnIZz7j08beYwRGv1", title: "Starter",   subtitle: "12 pics · 120 mins · 1 attire · SD res" },
-  { id: "price_1RJLCO4RnIZz7j08tJ3vN1or", title: "Standard",  subtitle: "60 pics · 60 mins · 2 attires · SD res", badge: "83% pick this" },
-  { id: "price_1RJLDE4RnIZz7j08RlQUve2s", title: "Pro",       subtitle: "100 pics · 60 mins · All attires · HD res",      badge: "Best Value" },
-  { id: "price_1RJLDf4RnIZz7j08TLcrNcQ6", title: "Studio",    subtitle: "500 pics · 120 mins · Unlimited attires · 4K" },
+  {
+    id: "price_1RJLBd4RnIZz7j08beYwRGv1",
+    title: "Starter",
+    subtitle: "12 pics · 120 mins · 1 attire · SD res",
+  },
+  {
+    id: "price_1RJLCO4RnIZz7j08tJ3vN1or",
+    title: "Standard",
+    subtitle: "60 pics · 60 mins · 2 attires · SD res",
+    badge: "83% pick this",
+  },
+  {
+    id: "price_1RJLDE4RnIZz7j08RlQUve2s",
+    title: "Pro",
+    subtitle: "100 pics · 60 mins · All attires · HD res",
+    badge: "Best Value",
+  },
+  {
+    id: "price_1RJLDf4RnIZz7j08TLcrNcQ6",
+    title: "Studio",
+    subtitle: "500 pics · 120 mins · Unlimited attires · 4K",
+  },
 ];
 
 export default function PricingClient({
   packId,
   extraPacks,
 }: {
-  packId: string;
-  extraPacks: string;
+  packId: string;       // your packs.id (UUID)
+  extraPacks: string;   // comma-separated extra price IDs
 }) {
-  const router = useRouter();
+  const router   = useRouter();
+  const session  = useSession();
+  const userId   = session?.user.id ?? "";
+  const userEmail = session?.user.email ?? "";
   const [selected, setSelected] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  // ② Grab the logged-in user’s session
-  const session = useSession();
-  const userId = session?.user.id ?? "";
+  const [loading, setLoading]   = useState(false);
 
   const onContinue = async () => {
     if (!selected) {
@@ -47,17 +61,41 @@ export default function PricingClient({
       console.warn("⚠️ No user logged in");
       return;
     }
+    if (!userEmail) {
+      console.warn("⚠️ No email available on session");
+      return;
+    }
 
     setLoading(true);
 
-    const extras = extraPacks ? extraPacks.split(",") : [];
-    console.log("💡 onContinue fired with:", { selected, extras, userId });
+    // turn the extraPacks query-param into an array
+    const extrasArray = extraPacks
+      .split(",")
+      .map((p) => p.trim())
+      .filter((p) => p);
+
+    // the exact shape your API now expects:
+    const payload = {
+      packId,                   // → orders.pack_id FK (UUID)
+      stripePriceId: selected,  // → which Stripe price you’re charging
+      user_id: userId,          // → orders.user_id FK (UUID)
+      user_email: userEmail,    // → satisfy users.email not-null constraint
+      extras: extrasArray,      // optional additional price IDs
+    };
+
+    console.log("💡 [PricingClient] create-session payload:", payload);
 
     try {
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pack: selected, user_id: userId, extras }),
+        body: JSON.stringify({
+          packId: packId,               // <-- from the component props
+          stripePriceId: selected,      // <-- the Stripe price the user clicked
+          user_id: userId,              // <-- from useSession()
+          user_email: userEmail,        // <-- also from useSession()
+          extras: extrasArray,          // <-- your extras array
+        }),
       });
 
       const json = await res.json();
@@ -66,7 +104,7 @@ export default function PricingClient({
       if (json.url) {
         window.location.href = json.url;
       } else {
-        console.error("❌ no URL returned:", json);
+        console.error("❌ no URL returned:", json.error || json);
         setLoading(false);
       }
     } catch (err) {
@@ -103,8 +141,8 @@ export default function PricingClient({
                 cursor-pointer rounded-lg border p-6 text-center transition-shadow
                 ${isActive
                   ? "border-red-600 shadow-lg"
-                  : "border-black-500 hover:shadow-md"
-                }`}
+                  : "border-black-500 hover:shadow-md"}
+              `}
             >
               <div className="h-[24px] mb-2">
                 {tier.badge && (
@@ -121,9 +159,7 @@ export default function PricingClient({
               <p className="text-gray-500 mb-4">{tier.subtitle}</p>
 
               {isActive && (
-                <div className="text-sm text-red-600 font-medium">
-                  Selected
-                </div>
+                <div className="text-sm text-red-600 font-medium">Selected</div>
               )}
             </div>
           );

@@ -1,4 +1,3 @@
-// components/Navbar.tsx
 import Image from "next/image";
 import Link from "next/link";
 import { AvatarIcon, HamburgerMenuIcon } from "@radix-ui/react-icons";
@@ -28,54 +27,39 @@ export default async function Navbar() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // for backend (logged-in) view pull credits
-  const { data: profile } = await supabase
-  .from("credits")   
-    .select("credits")
-    .eq("user_id", user?.id ?? "") 
-    .single<{ credits: number }>();
-
-  const credits = profile?.credits ?? 0;
+  let credits = 0;
+  if (user) {
+    const { data: userRow } = await supabase
+      .from("users")
+      .select("credits")
+      .eq("id", user.id)
+      .single<{ credits: number }>();
+    credits = userRow?.credits ?? 0;
+  }
 
   const isBackend = Boolean(user);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-      {/* ← add justify-between here */}
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {isBackend ? (
-          // BACKEND: credits on the left
-<div className="text-sm font-semibold">Credits: {credits}</div>
+          <div className="text-sm font-semibold">Credits: {credits}</div>
         ) : (
-          // HOMEPAGE: logo + site name on the left
           <Link href="/" className="flex items-center gap-2 font-semibold text-base">
-            <Image
-              src="/logo.png"
-              alt="AI Maven Logo"
-              width={24}
-              height={24}
-              className="rounded-full"
-            />
+            <Image src="/logo.png" alt="AI Maven Logo" width={24} height={24} className="rounded-full" />
             <span>AI Maven</span>
           </Link>
         )}
 
         {isBackend && (
-          // backend center nav
           <nav className="flex gap-6 text-sm font-semibold">
-            <Link href="/overview" className="hover:text-primary transition-colors">
-              Home
-            </Link>
-            <Link href="/get-credits" className="hover:text-primary transition-colors">
-              Get Credits
-            </Link>
+            <Link href="/overview" className="hover:text-primary transition-colors">Home</Link>
+            <Link href="/get-credits" className="hover:text-primary transition-colors">Get Credits</Link>
           </nav>
         )}
 
-        {/* right side */}
         <div className="flex items-center gap-4">
           {isBackend ? (
-            /* hamburger dropdown for backend */
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
@@ -110,7 +94,6 @@ export default async function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            // homepage login on the right
             <Link href="/login">
               <Button size="sm">Login</Button>
             </Link>

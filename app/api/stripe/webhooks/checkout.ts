@@ -43,6 +43,7 @@ export async function POST(request: Request) {
         .from("orders")
         .update({ status: "paid" })
         .eq("session_id", session.id);
+        
 
       // 5) Map your Price IDs → credit amounts
       const CREDIT_MAP: Record<string, number> = {

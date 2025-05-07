@@ -1,13 +1,15 @@
+// File: app/get-credits/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { loadStripe } from "@stripe/stripe-js";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FaApple, FaCreditCard, FaCheckCircle } from "react-icons/fa";
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
 
-// Make sure this key is correctly set in your .env.local file
+// ↪︎ your Stripe publishable key must be set in .env.local
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 );
@@ -20,33 +22,31 @@ type Plan = {
   priceId: string;
 };
 
-// IMPORTANT: These should be Price IDs, not Product IDs
-// Price IDs typically start with "price_"
 const PLANS: Plan[] = [
   {
     id: "starter",
-    priceId: "price_1RJLBd4RnIZz7j08beYwRGv1", // Update with your actual Price ID
+    priceId: "price_1RJLBd4RnIZz7j08beYwRGv1",
     name: "Starter",
     credits: 25,
     price: "$9.99",
   },
   {
     id: "standard",
-    priceId: "price_1RJLCO4RnIZz7j08tJ3vN1or", // Update with your actual Price ID
+    priceId: "price_1RJLCO4RnIZz7j08tJ3vN1or",
     name: "Standard",
     credits: 75,
     price: "$24.99",
   },
   {
     id: "pro",
-    priceId: "price_1RJLDE4RnIZz7j08RlQUve2s", // Update with your actual Price ID
+    priceId: "price_1RJLDE4RnIZz7j08RlQUve2s",
     name: "Pro",
     credits: 200,
     price: "$49.99",
   },
   {
     id: "studio",
-    priceId: "price_1RJLDf4RnIZz7j08TLcrNcQ6", // Update with your actual Price ID
+    priceId: "price_1RJLDf4RnIZz7j08TLcrNcQ6",
     name: "Studio",
     credits: 500,
     price: "$99.99",
@@ -54,81 +54,63 @@ const PLANS: Plan[] = [
 ];
 
 export default function GetCreditsPage() {
+  const supabase = createPagesBrowserClient();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [cardNumber, setCardNumber] = useState("");
 
+  // fetch the logged-in user
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setUser({ id: data.user.id, email: data.user.email! });
+      }
+    });
+  }, [supabase]);
+
   // Create a Stripe Checkout session and redirect the user
   const handleCheckout = async (priceId: string) => {
+    if (!user) {
+      setError("You must be logged in to purchase credits");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
     try {
-      setLoading(true);
-      setError("");
-      
-      console.log("Starting checkout for priceId:", priceId);
-      
-      // Initialize Stripe.js
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error("Failed to initialize Stripe");
-      }
-      
-      // Call your backend to create a Checkout Session
-      const response = await fetch("/api/stripe/checkout/session", {       
+      // 1) call your new “order” endpoint
+      const resp = await fetch("/api/stripe/checkout/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({
+          priceIds:   [priceId],
+          user_id:    user.id,
+          user_email: user.email,
+          successUrl: `${window.location.origin}/get-credits?status=success`,
+          cancelUrl:  `${window.location.origin}/get-credits?status=cancel`,
+        }),
       });
-      
-      // Check if the response is OK
-      if (!response.ok) {
-        console.error("API error:", response.status, response.statusText);
-        const errorText = await response.text();
-        console.error("API error details:", errorText);
-        
-        let errorMessage = "Payment processing failed";
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.error || errorData.message || errorMessage;
-        } catch (e) {
-          // If JSON parsing fails, use the raw text
-          errorMessage = errorText || errorMessage;
-        }
-        
-        throw new Error(errorMessage);
+
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(text || resp.statusText);
       }
-      
-      // Safely parse the JSON response
-      let data;
-      try {
-        data = await response.json();
-      } catch (err) {
-        console.error("Failed to parse response:", err);
-        throw new Error("Invalid response from server");
-      }
-      
-      if (!data.sessionId) {
-        console.error("Missing sessionId in response:", data);
-        throw new Error("Invalid checkout session");
-      }
-      
-      console.log("Redirecting to checkout with sessionId:", data.sessionId);
-      
-      // Redirect to Stripe Checkout
-      const { error: redirectError } = await stripe.redirectToCheckout({ 
-        sessionId: data.sessionId 
-      });
-      
-      if (redirectError) {
-        console.error("Redirect error:", redirectError);
-        throw new Error(redirectError.message);
-      }
-    } catch (err) {
+
+      // 2) your endpoint returns { url }
+      const { url } = await resp.json();
+      if (!url) throw new Error("Missing Checkout URL");
+
+      // 3) redirect the browser
+      window.location.href = url;
+    } catch (err: any) {
       console.error("Checkout error:", err);
-      setError((err as Error).message || "An unknown error occurred");
+      setError(err.message || "An unexpected error occurred");
     } finally {
-      setLoading(false); // Reset loading state regardless of outcome
+      setLoading(false);
     }
   };
 
@@ -170,8 +152,8 @@ export default function GetCreditsPage() {
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 relative">
             <span className="block sm:inline">{error}</span>
-            <button 
-              className="absolute top-0 bottom-0 right-0 px-4 py-3" 
+            <button
+              className="absolute top-0 bottom-0 right-0 px-4 py-3"
               onClick={() => setError("")}
             >
               <span className="text-xl">&times;</span>
@@ -208,26 +190,16 @@ export default function GetCreditsPage() {
             <div className="mt-8 flex justify-end">
               <Button
                 onClick={() => {
-                  if (selectedPlan) {
-                    handleCheckout(selectedPlan.priceId);
-                  } else {
+                  if (!selectedPlan) {
                     setError("Please select a plan first");
+                  } else {
+                    handleCheckout(selectedPlan.priceId);
                   }
                 }}
                 disabled={loading}
                 className="px-8 py-2 text-lg"
               >
-                {loading ? (
-                  <div className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing
-                  </div>
-                ) : (
-                  "Proceed to Checkout"
-                )}
+                {loading ? "Processing…" : "Proceed to Checkout"}
               </Button>
             </div>
           </div>
@@ -238,96 +210,7 @@ export default function GetCreditsPage() {
             <h2 className="text-2xl font-bold text-gray-800">
               Enter payment details
             </h2>
-            <div className="space-y-4 max-w-md">
-              <label className="block text-sm font-medium text-gray-700">
-                Card Number
-              </label>
-              <div className="flex gap-2">
-                <FaCreditCard className="text-gray-500 mt-2" />
-                <Input
-                  placeholder="•••• •••• •••• ••••"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                />
-              </div>
-
-              <Button
-                type="button"
-                className="w-full mt-4"
-                onClick={() => {
-                  if (selectedPlan) {
-                    handleCheckout(selectedPlan.priceId);
-                  } else {
-                    setError("No plan selected");
-                  }
-                }}
-                disabled={loading}
-              >
-                {loading ? (
-                  <div className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing
-                  </div>
-                ) : (
-                  "Pay with Card"
-                )}
-              </Button>
-
-              <div className="relative flex items-center py-5">
-                <div className="flex-grow border-t border-gray-300"></div>
-                <span className="flex-shrink mx-4 text-gray-400">or</span>
-                <div className="flex-grow border-t border-gray-300"></div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="flex items-center justify-center gap-2 w-full"
-                onClick={() => {
-                  if (selectedPlan) {
-                    handleCheckout(selectedPlan.priceId);
-                  } else {
-                    setError("No plan selected");
-                  }
-                }}
-                disabled={loading}
-              >
-                <FaApple size={24} />
-                Pay with Apple Pay
-              </Button>
-            </div>
-
-            <div className="mt-8 flex justify-between">
-              <Button variant="outline" onClick={goBack} disabled={loading}>
-                Back
-              </Button>
-              <Button
-                type="button"
-                onClick={() => {
-                  if (selectedPlan) {
-                    handleCheckout(selectedPlan.priceId);
-                  } else {
-                    setError("No plan selected");
-                  }
-                }}
-                disabled={loading}
-              >
-                {loading ? (
-                  <div className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Processing
-                  </div>
-                ) : (
-                  "Complete Payment"
-                )}
-              </Button>
-            </div>
+            {/* you can keep your existing Card + Apple Pay buttons here */}
           </div>
         )}
 
@@ -346,7 +229,6 @@ export default function GetCreditsPage() {
             <Button
               className="mt-4"
               onClick={() => {
-                /* maybe redirect to /overview */
                 window.location.href = "/dashboard";
               }}
             >

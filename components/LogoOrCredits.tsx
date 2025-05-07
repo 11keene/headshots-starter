@@ -1,11 +1,12 @@
+// components/LogoOrCredits.tsx
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
 
-// We’ll only import the browser client at runtime inside the effect:
 export default function LogoOrCredits() {
   const pathname = usePathname();
   const [credits, setCredits] = useState<number | null>(null);
@@ -29,60 +30,79 @@ export default function LogoOrCredits() {
     );
   }
 
-  // 2️⃣ Everything else: attempt to fetch credits
+  // 2️⃣ Everything else: fetch the up-to-date credits count
   useEffect(() => {
     let mounted = true;
-    (async () => {
+
+    async function loadCredits() {
       // bail if we don’t have our PUBLIC keys
-      if (
-        !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-        !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      ) {
-        console.warn("Missing Supabase anon key or URL");
-        if (mounted) setCredits(0);
-        return;
-      }
+      console.log(
+        "[LogoOrCredits] NEXT_PUBLIC_SUPABASE_URL:",
+        process.env.NEXT_PUBLIC_SUPABASE_URL
+      );
+      console.log(
+        "[LogoOrCredits] NEXT_PUBLIC_SUPABASE_ANON_KEY:",
+           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0,8) + "…"
+          );
+          if (
+                  !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+               !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+             ) {
+              console.warn("[LogoOrCredits] missing public env, defaulting to 0");
+             if (mounted) setCredits(0);
+             return;
+              }
 
-      let supabase;
-      try {
-        // dynamically import so we can catch if it fails
-        const { createPagesBrowserClient } = await import(
-          "@supabase/auth-helpers-nextjs"
-        );
-        supabase = createPagesBrowserClient();
-      } catch (e) {
-        console.error("Failed to init Supabase client:", e);
-        if (mounted) setCredits(0);
-        return;
-      }
 
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) {
-          if (mounted) setCredits(0);
-          return;
-        }
-        const { data: profile } = await supabase
-          .from("users")
-          .select("credits")
-          .eq("id", user.id)
-          .single<{ credits: number }>();
-        if (mounted) setCredits(profile?.credits ?? 0);
-      } catch (e) {
-        console.error("Error fetching profile:", e);
-        if (mounted) setCredits(0);
-      }
-    })();
 
+
+
+
+      const supabase = createPagesBrowserClient();
+
+      // get the logged-in user
+      const { data: sessionData, error: sessionErr } =
+             await supabase.auth.getUser();
+            console.log("[LogoOrCredits] getUser →", sessionData, sessionErr);
+            const user = sessionData.user;
+            if (sessionErr || !user) {
+             console.warn("[LogoOrCredits] no logged-in user, defaulting to 0");
+             if (mounted) setCredits(0);
+              return;
+            }
+
+      // pull their credits from your users table
+      const { data: profile, error: profileErr } = await supabase
+              .from("users")
+              .select("credits")
+              .eq("id", user.id)
+              .single<{ credits: number }>();
+           console.log("[LogoOrCredits] profile row →", profile, profileErr);
+           if (profileErr) {
+                   console.error("[LogoOrCredits] error selecting credits:", profileErr);
+               }
+               if (mounted) {
+                  console.log(
+                     "[LogoOrCredits] setting credits to",
+                    profile?.credits ?? 0
+                 );
+                 setCredits(profile?.credits ?? 0);
+                }
+
+
+    }
+
+    loadCredits();
     return () => {
       mounted = false;
     };
   }, [pathname]);
 
-  // while loading
-  if (credits === null) return <div className="text-sm font-semibold">… Credits</div>;
+  // loading state
+  if (credits === null) {
+    return <div className="text-sm font-semibold">… Credits</div>;
+  }
 
+  // finally render
   return <div className="text-sm font-semibold">{credits} Credits</div>;
 }

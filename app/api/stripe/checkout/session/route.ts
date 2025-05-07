@@ -52,6 +52,8 @@ export async function POST(req: Request) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${YOUR_DOMAIN}/get-credits?status=success`,
       cancel_url: `${YOUR_DOMAIN}/get-credits?status=canceled`,
+      metadata: { user_id: "default_user_id" }, // Replace "default_user_id" with the actual user ID logic
+
     });
     
     console.log("Session created:", session.id);

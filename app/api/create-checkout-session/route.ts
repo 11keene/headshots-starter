@@ -1,14 +1,13 @@
+// File: app/api/create-checkout-session/route.ts
+
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { headers } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 
-// — Initialize Stripe —
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil",
 });
-
-// — Initialize Supabase Admin (service role) —
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -16,68 +15,76 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: Request) {
   try {
-    // 1) Parse the client payload
-    const { pack, user_id, extras } = (await req.json()) as {
-      pack?: string;
+    const {
+      packId,
+      stripePriceId,
+      user_id,
+      user_email,
+      extras = [],
+    } = (await req.json()) as {
+      packId?: string;
+      stripePriceId?: string;
       user_id?: string;
+      user_email?: string;
       extras?: string[];
     };
 
-    // 2) Validate required fields
-    if (!pack || !user_id) {
+    console.log("💬 [create-session] payload:", {
+      packId,
+      stripePriceId,
+      user_id,
+      user_email,
+      extras,
+    });
+
+    if (!packId || !stripePriceId || !user_id || !user_email) {
       return NextResponse.json(
-        { error: "pack and user_id are required" },
+        { error: "packId, stripePriceId, user_id and user_email are required" },
         { status: 400 }
       );
     }
 
-    // 3) Upsert the user (so the FK in orders will always be happy)
     await supabaseAdmin
       .from("users")
       .upsert(
-        { id: user_id, credits: 0 },      // if new user, start with 0 credits
-        { onConflict: "id", ignoreDuplicates: false }
+        { id: user_id, email: user_email, credits: 0 },
+        { onConflict: "id", ignoreDuplicates: true }
       );
 
-    // 4) Build your line items array
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-      { price: pack, quantity: 1 },
-      ...(Array.isArray(extras)
-        ? extras.map((priceId) => ({ price: priceId, quantity: 1 }))
-        : []),
+      { price: stripePriceId, quantity: 1 },
+      ...extras.map((p) => ({ price: p, quantity: 1 })),
     ];
 
-    // 5) Create the Stripe Checkout session
     const origin = headers().get("origin") ?? process.env.NEXT_PUBLIC_APP_URL!;
     const session = await stripe.checkout.sessions.create({
-      mode: "payment",
+      mode:                 "payment",
       payment_method_types: ["card"],
-      line_items: lineItems,
+      line_items:           lineItems,
+      client_reference_id:  user_id,
 
-      // ← add this so your webhook can pick up the user without having to
-      //   ask them to be logged in again
-      client_reference_id: user_id,
+      metadata: {
+        packId: packId,
+        priceId: stripePriceId,
+      },
 
-      // optional: still useful if you want to know which pack in metadata
-      metadata: { pack },
-
-      success_url: `${origin}/overview/packs/${pack}/generate?packId=${pack}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/pricing?packId=${pack}`,
+      success_url: `${origin}/overview/packs/${packId}/generate?packId=${packId}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${origin}/pricing?packId=${packId}`,
     });
+    console.log("✅ Stripe session created:", session.id);
 
-    // 6) Record the PENDING order in Supabase
     const { error: orderErr } = await supabaseAdmin
       .from("orders")
       .insert({
-        user_id,                // uuid → users.id
-        pack_id: pack,          // ← must match your orders.pack_id (TEXT) → packs.id (TEXT)
-        session_id: session.id, // stripe session id so webhook can find this row
-        status: "pending",
+        user_id,
+        pack_id:    packId,
+        price_id:   stripePriceId,
+        session_id: session.id,
+        status:     "pending",
         created_at: new Date().toISOString(),
       });
     if (orderErr) console.error("❌ Failed to insert order:", orderErr);
 
-    // 7) Return the Stripe Checkout URL
     return NextResponse.json({ url: session.url });
   } catch (err: any) {
     console.error("🔥 create-checkout-session error:", err);
