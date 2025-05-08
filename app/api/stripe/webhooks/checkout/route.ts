@@ -83,15 +83,16 @@ export async function POST(request: Request) {
     if (totalCredits > 0) {
       // 6a) Read current user credits
       const { data: userRow, error: fetchErr } = await supabaseAdmin
-        .from("users")
-        .select("credits")
-        .eq("id", userId)
-        .single();
-      if (fetchErr || !userRow) {
-        console.error("❌ Failed to fetch user credits:", fetchErr);
-        return NextResponse.json(
-          { error: "Credit fetch failed" },
-          { status: 500 }
+      .from('users')
+      .select('credits')
+      .eq('id', userId)
+      .maybeSingle()
+  
+    if (fetchErr || !userRow) {
+      console.error('⚠️ Could not fetch existing credits:', fetchErr)
+      return NextResponse.json(
+        { error: 'User not found in database' },
+        { status: 500 }
         );
       }
 

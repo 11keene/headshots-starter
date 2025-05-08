@@ -1,79 +1,67 @@
-import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
+// File: app/api/stripe/checkout/session/route.ts
+import { NextResponse } from 'next/server'
+import Stripe from 'stripe'
+import { createClient } from '@supabase/supabase-js'
 
-// Debug environment variables (only in development)
-if (process.env.NODE_ENV === 'development') {
-  console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
-}
+// — Initialize Supabase Admin (service role) —
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
-// Safe environment variable access
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-if (!stripeSecretKey) {
-}
-
-// Create Stripe instance with error handling
-const stripe = new Stripe(stripeSecretKey || "", {
+// — Initialize Stripe —
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-04-30.basil',
-});
+})
 
 export async function POST(req: Request) {
-  // Wrap everything in try-catch to ensure we always return valid JSON
   try {
-    let body: any;
-    try {
-      body = await req.json();
-    } catch (e: any) {
-      console.error("Failed to parse request body:", e);
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
-    const { priceId } = body;
-
-    if (!priceId) {
-      return NextResponse.json({ error: 'Missing priceId' }, { status: 400 });
+    const { priceId, user_id, user_email } = (await req.json()) as {
+      priceId?: string
+      user_id?: string
+      user_email?: string
     }
 
+    if (!priceId || !user_id || !user_email) {
+      return NextResponse.json(
+        { error: 'priceId, user_id and user_email are required' },
+        { status: 400 }
+      )
+    }
 
+    // ← UP SERT THE USER
+    const { error: upsertErr } = await supabaseAdmin
+      .from('users')
+      .upsert(
+        { id: user_id, email: user_email, credits: 0 },
+        { onConflict: 'id', ignoreDuplicates: true }
+      )
+    if (upsertErr) {
+      console.error('❌ Failed to upsert user:', upsertErr)
+      return NextResponse.json(
+        { error: 'Could not create or update user' },
+        { status: 500 }
+      )
+    }
 
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL!
 
-    
-    // Extract domain from request
-    const YOUR_DOMAIN = req.headers.get("origin") || 
-                         req.headers.get("referer")?.replace(/\/[^\/]*$/, '') || 
-                         "https://www.aimavenstudio.com";
-
-    console.log("Creating checkout session with:", {
-      priceId,
-      domain: YOUR_DOMAIN
-    });
-    
-    // Create Stripe session
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
+      payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${YOUR_DOMAIN}/get-credits?status=success`,
-      cancel_url: `${YOUR_DOMAIN}/get-credits?status=canceled`,
-      metadata: { user_id: "default_user_id" }, // Replace "default_user_id" with the actual user ID logic
+      client_reference_id: user_id,
+      metadata: { user_id, priceId },
+      success_url: `${origin}/get-credits?status=success`,
+      cancel_url: `${origin}/get-credits?status=canceled`,
+    })
 
-    });
-    
-    console.log("Session created:", session.id);
-    return NextResponse.json({ sessionId: session.id });    
-  } catch (error: any) {
-    // Log the full error for debugging
-    console.error("Stripe checkout error details:", error);
-    
-    // Extract useful information for the response
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    const additionalInfo = error?.type || error?.code || "";
-    
-    // Always return a valid JSON response with helpful error details
+    return NextResponse.json({ sessionId: session.id })
+  } catch (err: any) {
+    console.error('❌ Stripe checkout error:', err)
     return NextResponse.json(
-      { 
-        error: errorMessage,
-        details: additionalInfo,
-        message: "Payment processing failed. Please try again." 
-      },
+      { error: err.message || 'Internal error' },
       { status: 500 }
-    );
+    )
   }
 }

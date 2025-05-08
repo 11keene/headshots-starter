@@ -82,16 +82,14 @@ export default function GetCreditsPage() {
     setError("");
 
     try {
-      // 1) call your new “order” endpoint
-      const resp = await fetch("/api/stripe/checkout/order", {
+      // 1) call your credits‐only endpoint
+      const resp = await fetch("/api/stripe/checkout/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          priceIds:   [priceId],
+          priceId:    priceId,
           user_id:    user.id,
           user_email: user.email,
-          successUrl: `${window.location.origin}/get-credits?status=success`,
-          cancelUrl:  `${window.location.origin}/get-credits?status=cancel`,
         }),
       });
 
@@ -100,12 +98,13 @@ export default function GetCreditsPage() {
         throw new Error(text || resp.statusText);
       }
 
-      // 2) your endpoint returns { url }
-      const { url } = await resp.json();
-      if (!url) throw new Error("Missing Checkout URL");
+      // 2) your endpoint now returns { sessionId }
+      const { sessionId } = await resp.json();
 
-      // 3) redirect the browser
-      window.location.href = url;
+      // 3) hand off to Stripe.js
+      const stripe = await stripePromise;
+      if (!stripe) throw new Error("Stripe.js failed to load");
+      await stripe.redirectToCheckout({ sessionId });
     } catch (err: any) {
       console.error("Checkout error:", err);
       setError(err.message || "An unexpected error occurred");
