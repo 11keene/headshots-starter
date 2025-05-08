@@ -1,3 +1,5 @@
+// File: components/Navbar.tsx
+
 import Image from "next/image";
 import Link from "next/link";
 import { AvatarIcon, HamburgerMenuIcon } from "@radix-ui/react-icons";
@@ -18,7 +20,8 @@ import { Database } from "@/types/supabase";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const stripeIsConfigured = process.env.NEXT_PUBLIC_STRIPE_IS_ENABLED === "true";
+const stripeIsConfigured =
+  process.env.NEXT_PUBLIC_STRIPE_IS_ENABLED === "true";
 const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
 
 export default async function Navbar() {
@@ -32,7 +35,7 @@ export default async function Navbar() {
     const { data: userRow } = await supabase
       .from("users")
       .select("credits")
-      .eq("id", user.id)
+      .eq("id", user.id)       // ← make sure this is `id`, not `user_id`
       .single<{ credits: number }>();
     credits = userRow?.credits ?? 0;
   }
@@ -45,16 +48,35 @@ export default async function Navbar() {
         {isBackend ? (
           <div className="text-sm font-semibold">Credits: {credits}</div>
         ) : (
-          <Link href="/" className="flex items-center gap-2 font-semibold text-base">
-            <Image src="/logo.png" alt="AI Maven Logo" width={24} height={24} className="rounded-full" />
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-semibold text-base"
+          >
+            <Image
+              src="/logo.png"
+              alt="AI Maven Logo"
+              width={24}
+              height={24}
+              className="rounded-full"
+            />
             <span>AI Maven</span>
           </Link>
         )}
 
         {isBackend && (
           <nav className="flex gap-6 text-sm font-semibold">
-            <Link href="/overview" className="hover:text-primary transition-colors">Home</Link>
-            <Link href="/get-credits" className="hover:text-primary transition-colors">Get Credits</Link>
+            <Link
+              href="/overview"
+              className="hover:text-primary transition-colors"
+            >
+              Home
+            </Link>
+            <Link
+              href="/get-credits"
+              className="hover:text-primary transition-colors"
+            >
+              Get Credits
+            </Link>
           </nav>
         )}
 
@@ -86,7 +108,11 @@ export default async function Navbar() {
                 <DropdownMenuSeparator />
                 <form action="/auth/sign-out" method="post">
                   <DropdownMenuItem asChild>
-                    <Button type="submit" variant="ghost" className="w-full text-left">
+                    <Button
+                      type="submit"
+                      variant="ghost"
+                      className="w-full text-left"
+                    >
                       Log out
                     </Button>
                   </DropdownMenuItem>

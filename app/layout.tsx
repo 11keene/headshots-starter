@@ -11,20 +11,45 @@ import { ThemeProvider } from "@/components/homepage/theme-provider";
 import { validateConfig } from "@/lib/config";
 import Navbar from "@/components/Navbar";
 
-// Dynamically load the client‐only SupabaseProvider (no SSR)
+// ← NEW imports for server-side upsert
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+
+validateConfig();
+
+// Dynamically load the client-only SupabaseProvider (no SSR)
 const SupabaseProvider = dynamic(
   () => import("@/components/SupabaseProvider"),
   { ssr: false }
 );
-
-validateConfig();
 
 export const metadata = {
   title: "AI Maven",
   description: "Generate awesome headshots in minutes using AI",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // — NEW: upsert auth user into public.users —
+  const supabaseServer = createServerComponentClient({ cookies });
+  const {
+    data: { user },
+  } = await supabaseServer.auth.getUser();
+
+  if (user) {
+    await supabaseServer.from("users").upsert(
+      {
+        id: user.id,
+        email: user.email,
+        credits: 0,
+      },
+      { onConflict: "id", ignoreDuplicates: true }
+    );
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
