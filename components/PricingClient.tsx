@@ -116,10 +116,14 @@ export default function PricingClient({
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <button
-        onClick={() => router.back()}
+       onClick={() =>
+        router.push(
+            `/overview/packs/${packId}/next${extraPacks ? `?extraPacks=${extraPacks}` : ""}`
+          )
+        }
         className="mb-6 inline-flex items-center text-gray-700 hover:text-black"
-      >
-        ← Go Back
+     >
+       ← Go Back
       </button>
 
       <h1 className="text-3xl font-bold text-center mb-2 text-black-500">

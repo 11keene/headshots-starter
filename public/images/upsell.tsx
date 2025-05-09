@@ -1,26 +1,22 @@
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
-
-const packs = [
-  { id: "professional headshots", name: "Professional Headshots", exampleImg: "/images/bob.png" },
-  { id: "bold-colors", name: "Bold Colors", exampleImg: "/images/bold-colors.jpg" },
-  { id: "realtor", name: " Realtor", exampleImg: "/images/pixiecut.png" },
-  { id: "glamour", name: "Glamour Shot", exampleImg: "/images/straight.png" },
-  { id: "vikings", name: "Vikings", exampleImg: "/images/pasthoulderlength.png" },
-  { id: "dating", name: "Dating", exampleImg: "/images/straight.png" },
-];
+import { packs as allPacks } from "@/data/packs";      // ← new import
+import type { Pack } from "@/data/packs";
 
 export default function CustomUpsellPage() {
   const [showAll, setShowAll] = useState(false);
   const VISIBLE = 3;
-  const visiblePacks = showAll ? packs : packs.slice(0, VISIBLE);
+  
+  // use the imported list (includes Test Pack in dev)
+  const visiblePacks = showAll ? allPacks : allPacks.slice(0, VISIBLE);
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Add More Packs?</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
-        {visiblePacks.map((pack) => (
+        {visiblePacks.map((pack: Pack) => (
           <div key={pack.id} className="border rounded-lg overflow-hidden">
             <img
               src={pack.exampleImg}
@@ -42,7 +38,7 @@ export default function CustomUpsellPage() {
         ))}
       </div>
 
-      {!showAll && packs.length > VISIBLE && (
+      {!showAll && allPacks.length > VISIBLE && (
         <button
           onClick={() => setShowAll(true)}
           className="mb-4 text-blue-600 hover:underline"

@@ -1,4 +1,4 @@
-// app/overview/packs/[packId]/next/page.tsx
+// File: app/overview/packs/[packId]/next/page.tsx
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
@@ -6,6 +6,11 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { FiUploadCloud, FiArrowLeft, FiTrash2 } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
+import { useUploadContext } from "../UploadContext";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useSession } from "@supabase/auth-helpers-react";
+
+const supabase = createClientComponentClient();
 
 export default function UploadPage() {
   const paramsObj = useParams();
@@ -16,52 +21,38 @@ export default function UploadPage() {
   const params = useSearchParams();
   const extraPacks = params?.get("extraPacks") || "";
 
-  // actual File objects (used for uploading if you do)
+  const session = useSession();
+  const userId = session?.user.id;
+
+  const { previewUrls, setPreviewUrls } = useUploadContext();
   const [files, setFiles] = useState<File[]>([]);
-  // preview URLs persisted in localStorage
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
-  // 1) Hydrate previews from localStorage on mount
+  // hydrate files from previewUrls once
   useEffect(() => {
     if (!packId) return;
-    const saved = localStorage.getItem(`uploads-${packId}`);
-    if (saved) {
-      const urls: string[] = JSON.parse(saved);
-      setPreviewUrls(urls);
-      // optionally reconstruct dummy File entries so remove still works
-      setFiles(
-        urls.map((url) => new File([], url.split("/").pop() || "upload"))
-      );
-    }
-  }, [packId]);
+    setFiles(
+      previewUrls.map(
+        (url) => new File([], url.split("/").pop() || "upload.jpg")
+      )
+    );
+  }, []);
 
-  // 2) Whenever files change, rebuild previews & persist
+  // rebuild previewUrls on files change
   useEffect(() => {
-    if (!packId) return;
     const urls = files.map((f) => URL.createObjectURL(f));
     setPreviewUrls(urls);
-    localStorage.setItem(`uploads-${packId}`, JSON.stringify(urls));
-  }, [files, packId]);
+  }, [files, setPreviewUrls]);
 
-  // Add new files (up to 10)
   const onFiles = useCallback((fList: FileList | null) => {
     if (!fList) return;
     const arr = Array.from(fList);
     setFiles((prev) => [...prev, ...arr].slice(0, 10));
   }, []);
 
-  // Remove a file/preview by index
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
-    setPreviewUrls((prev) => prev.filter((_, i) => i !== index));
-    // persist removal immediately
-    localStorage.setItem(
-      `uploads-${packId}`,
-      JSON.stringify(previewUrls.filter((_, i) => i !== index))
-    );
   };
 
-  // Drag & drop handler
   const onDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -70,28 +61,79 @@ export default function UploadPage() {
     [onFiles]
   );
 
-  // Navigate to pricing
-  const goPricing = () => {
-    router.push(`/pricing?packId=${packId}&extraPacks=${extraPacks}`);
+  // ——— Step 6: upload, start tune, then redirect to status page ———
+  const goNext = async () => {
+    if (!userId) {
+      router.push("/login");
+      return;
+    }
+
+    // 1) convert previews → actual Files
+    const uploadFiles: File[] = await Promise.all(
+      previewUrls.map(async (url) => {
+        const res = await fetch(url);
+        const blob = await res.blob();
+        return new File(
+          [blob],
+          url.split("/").pop() || "upload.jpg",
+          { type: blob.type }
+        );
+      })
+    );
+
+    // 2) push each File into Supabase Storage → collect public URLs
+    const publicUrls: string[] = [];
+    for (const file of uploadFiles) {
+      const path = `${userId}/${packId}/${file.name}`;
+      const { data, error: upErr } = await supabase.storage
+        .from("user-uploads")
+        .upload(path, file, { upsert: true });
+      if (upErr || !data?.path) {
+        console.error("Storage upload failed:", upErr);
+        return;
+      }
+      const { data: urlData } = supabase.storage
+        .from("user-uploads")
+        .getPublicUrl(data.path);
+      publicUrls.push(urlData.publicUrl);
+    }
+
+    // 3) call your /api/start-tune route
+    const tuneResp = await fetch("/api/start-tune", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        packId,
+        inputs: publicUrls,
+      }),
+    });
+    if (!tuneResp.ok) {
+      console.error("start-tune failed:", await tuneResp.text());
+      return;
+    }
+    const { tuneId } = await tuneResp.json();
+
+    // 4) redirect to your training-status page
+    router.push(`/overview/packs/${packId}/training?tuneId=${tuneId}`);
   };
+  // ————————————————————————————————————————————————————————————
 
   return (
     <div className="p-6 sm:p-8 max-w-3xl mx-auto">
-      {/* Back button */}
       <button
-        onClick={() => router.back()}
+        onClick={() => router.push("/overview/packs")}
         className="inline-flex items-center mb-6 text-gray-700 hover:text-black"
       >
-        <FiArrowLeft className="mr-2" /> Back
+        <FiArrowLeft className="mr-2" /> Go Back to Packs
       </button>
 
       <h1 className="text-2xl font-bold mb-2">Upload your photos</h1>
       <p className="text-gray-600 mb-6">
-        Select at least <span className="font-semibold">6</span> photos (max 10).
-        Mix close‑ups, selfies &amp; mid‑range shots to help the AI learn you best.
+        Select at least <span className="font-semibold">6</span> photos (max 10).{" "}
+        Mix close-ups, selfies & mid-range shots to help the AI learn you best.
       </p>
 
-      {/* Drag & Drop Zone */}
       <div
         onDrop={onDrop}
         onDragOver={(e) => e.preventDefault()}
@@ -107,11 +149,10 @@ export default function UploadPage() {
         <FiUploadCloud className="mx-auto mb-4 text-4xl text-red-600" />
         <Button variant="outline">Browse files</Button>
         <p className="mt-2 text-sm text-gray-500">
-          or drag &amp; drop your photos here (PNG, JPG, WEBP up to 120 MB)
+          or drag & drop your photos here (PNG, JPG, WEBP up to 120 MB)
         </p>
       </div>
 
-      {/* Preview Strip with Trash Icons */}
       {previewUrls.length > 0 && (
         <div className="mt-6 grid grid-cols-4 gap-4">
           {previewUrls.map((url, i) => (
@@ -133,16 +174,15 @@ export default function UploadPage() {
         </div>
       )}
 
-      {/* Guidance Cards */}
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
         {[
-          { title: "Selfies", desc: "Frontal, well‑lit at eye‑level", img: "/placeholders/selfie.png" },
-          { title: "Variety", desc: "Different outfits &amp; backgrounds", img: "/placeholders/variety.png" },
+          { title: "Selfies", desc: "Frontal, well-lit at eye-level", img: "/placeholders/selfie.png" },
+          { title: "Variety", desc: "Different outfits & backgrounds", img: "/placeholders/variety.png" },
           { title: "No Blurry", desc: "Sharp, not too dark or bright", img: "/placeholders/no-blurry.png" },
           { title: "Natural", desc: "Avoid heavy filters or edits", img: "/placeholders/natural.png" },
-        ].map((card) => (
+        ].map((card, idx) => (
           <motion.div
-            key={card.title}
+            key={idx}
             whileHover={{ scale: 1.03 }}
             className="flex items-center gap-4 p-4 bg-white rounded-lg shadow hover:shadow-lg transition"
           >
@@ -155,12 +195,14 @@ export default function UploadPage() {
         ))}
       </div>
 
-      {/* Sticky Continue Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-end">
         <span className="self-center mr-auto text-sm text-gray-600">
           {previewUrls.length} of 6 required
         </span>
-        <Button disabled={previewUrls.length < 6} onClick={goPricing}>
+        <Button
+          disabled={previewUrls.length < 6}
+          onClick={goNext}
+        >
           Continue
         </Button>
       </div>
