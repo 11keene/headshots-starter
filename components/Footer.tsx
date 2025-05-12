@@ -32,7 +32,7 @@ export default function Footer() {
             </p>
           </div>
           <div className="space-y-4">
-            <h3 className="text-sm font-medium text-ivory">Product</h3>
+            <h3 className="text-sm font-medium text-warm-gray">Product</h3>
             <ul className="space-y-2">
               {["How It Works","Examples","Pricing"].map((label) => (
                 <li key={label}>
@@ -68,7 +68,7 @@ export default function Footer() {
             </ul>
           </div>
           <div className="space-y-4">
-            <h3 className="text-sm font-medium text-ivory">Legal</h3>
+            <h3 className="text-sm font-medium text-warm-gray">Legal</h3>
             <ul className="space-y-2">
               {[
                 { href: "mailto:support@aimavenstudio.com", label: "Contact" },
@@ -90,7 +90,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t pt-8 md:flex-row">
-          <p className="text-sm text-ivory">
+          <p className="text-sm text-warm-gray">
             © {new Date().getFullYear()} AI Maven. All rights reserved.
           </p>
         </div>

@@ -130,13 +130,13 @@ export default function ProcessSection() {
   return (
     <section id="how-it-works" className="py-20 md:py-32">
       <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center gap-4 text-center md:gap-8">
-          <Badge variant="outline" className="mb-2">
+        <div className="flex flex-col items-center justify-center text-charcoal  gap-4 text-center md:gap-8">
+          <Badge variant="outline" className="mb-2 border-dusty-coral text-dusty-coral">
             Simple Process
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Your Signature Look, In 3 Simple Steps
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-charcoal md:text-5xl">Your Signature Look, In 3 Simple Steps
           </h2>
-          <p className="max-w-[700px] text-muted-foreground text-lg">
+          <p className="max-w-[700px] text-muted-foreground text-charcoal text-lg">
          
  Our intuitive platform turns your selfies into stunning, professional-grade headshots — crafted to reflect your story, your ambition, and your brand.
 

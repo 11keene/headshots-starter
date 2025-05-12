@@ -74,20 +74,20 @@ export default function ModernPricing() {
                 </div>
               )}
 
-              <h3 className="text-xl font-bold">{tier.title}</h3>
+              <h3 className="text-xl text-charcoal font-bold">{tier.title}</h3>
               <div className="mt-4 flex items-baseline">
-                <span className="text-3xl md:text-5xl font-extrabold">
+                <span className="text-3xl text-charcoal md:text-5xl font-extrabold">
                   {tier.price}
                 </span>
               </div>
-              <p className="mt-4 text-sm text-muted-foreground">
+              <p className="mt-4 text-sm text-charcoal text-muted-foreground">
                 {tier.description}
               </p>
               <ul className="my-6 space-y-4">
                 {tier.features.map((feat, i) => (
                   <li key={i} className="flex items-center gap-2">
                     <Check className="h-4 w-3 text-primary" />
-                    <span className="text-sm md:text-base leading-snug">{feat}</span>
+                    <span className="text-sm text-charcoal md:text-base leading-snug">{feat}</span>
                   </li>
                 ))}
               </ul>
@@ -102,7 +102,7 @@ export default function ModernPricing() {
           ))}
         </div>
 
-        <p className="mt-4 text-center text-sm text-muted-foreground">
+        <p className="mt-4 text-center text-charcoal text-sm text-muted-foreground">
           All plans include a 7-day satisfaction guarantee. Need a custom plan?{" "}
           <Link href="/contact" className="text-primary hover:underline">
             Contact sales

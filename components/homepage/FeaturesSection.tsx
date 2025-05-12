@@ -39,8 +39,8 @@ export default function FeaturesSection() {
     <section className="py-20 md:py-32 bg-muted/30">
       <div className="container px-4 md:px-6">
         <div className="text-center mb-12">
-          <Badge variant="outline" className="mb-4">Features</Badge>
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+          <Badge variant="outline" className="mb-4 border-dusty-coral text-dusty-coral">Features</Badge>
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-charcoal md:text-5xl">
           Everything You Need to Look the Part — and Feel It Too
 
           </h2>

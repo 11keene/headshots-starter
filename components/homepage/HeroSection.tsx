@@ -16,10 +16,10 @@ export default function HeroSection() {
 >
   #1 AI Headshot Generator for Bold Brands and Big Goals
 </Badge>
-          <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl mb-6">
+          <h1 className="text-4xl font-bold tracking-tighter text-charcoal sm:text-5xl md:text-6xl mb-6">
           The AI Headshot Experience Built for Ambitious <span className="text-primary">Professionals</span>
           </h1>
-          <p className="text-muted-foreground text-lg md:text-xl max-w-[800px] mx-auto">
+          <p className="text-muted-foreground text-charcoal  text-lg md:text-xl max-w-[800px] mx-auto">
           Welcome to AI Maven Studio — where your transformation begins.
  No camera crew. No overpriced photo shoots. Just effortless excellence — powered by AI, styled by purpose.
 
