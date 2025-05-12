@@ -30,9 +30,9 @@ export default function TestimonialsSection() {
           <Badge variant="outline" className="mb-2">
             Testimonials
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">What Our Users Say</h2>
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Words That Reflect the Transformation</h2>
           <p className="max-w-[700px] text-muted-foreground text-lg">
-            Thousands of professionals have transformed their online presence with our AI headshots.
+          Thousands of professionals have experienced what it feels like to finally see themselves in their photos — polished, powerful, and brand-ready. Here's what they’re saying:
           </p>
         </div>
         <div className="mt-16 grid gap-8 md:grid-cols-3">

@@ -11,9 +11,10 @@ export default function ExamplesSection() {
           <Badge variant="outline" className="mb-2">
             See the Results
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Stunning Transformations</h2>
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Real People. Real Impact.</h2>
           <p className="max-w-[700px] text-muted-foreground text-lg">
-            See how our AI transforms regular selfies into professional headshots that make you stand out.
+          See how everyday selfies become extraordinary brand statements — all within minutes.
+          Our AI doesn’t just enhance your image — it reveals your confidence, your edge, your next level.
           </p>
         </div>
         <div className="mt-16 grid gap-4 sm:gap-6 md:gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">

@@ -3,28 +3,33 @@ import { Badge } from "@/components/ui/badge"
 
 const features = [
   {
-    title: "Multiple Styles",
-    description: "Choose from various professional styles and backgrounds",
+    title: "Signature Styles (Pre-Made Packs)",
+    description: "Our themed packs are professionally curated to give you a strong visual identity with ease. Choose a look that fits your industry or personality — from Modern Business to Bold Creative, each pack is designed for maximum impact.",
     icon: <Camera className="h-6 w-6" />
   },
   {
-    title: "High Resolution",
-    description: "Get print-ready images in stunning 4K resolution",
+    title: "Custom Styles (Build Your Own)",
+    description: "Prefer more control? Choose your own direction by selecting the key elements of your shoot — like background, outfit tone, and overall vibe. Custom styles offer a flexible, elevated experience tailored just for you.",
     icon: <Camera className="h-6 w-6" />
   },
   {
-    title: "Fast Delivery",
-    description: "Receive your photos in just 20 minutes",
+    title: "Crystal-Clear Quality",
+    description: "All images are delivered in high-resolution 4K, ensuring they’re crisp, clean, and print-ready.",
     icon: <Clock className="h-6 w-6" />
   },
   {
-    title: "Commercial License",
-    description: "Use your photos anywhere, including commercial purposes",
+    title: "Lightning-Fast Delivery",
+    description: "Get your polished headshots in as little as 20 minutes. No retouch delays. No back-and-forth.",
+    icon: <Clock className="h-6 w-6" />
+  },
+  {
+    title: "Full Commercial Rights",
+    description: "Your headshots are yours to use freely — for business cards, billboards, social media, or speaking engagements.",
     icon: <Shield className="h-6 w-6" />
   },
   {
-    title: "AI Enhancement",
-    description: "Advanced AI technology for natural-looking results",
+    title: "AI, Perfected",
+    description: "Our advanced system produces natural, photorealistic results that feel as real as they look — always aligned with your best self.",
     icon: <Star className="h-6 w-6" />
   },
 ]
@@ -36,7 +41,8 @@ export default function FeaturesSection() {
         <div className="text-center mb-12">
           <Badge variant="outline" className="mb-4">Features</Badge>
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-            Everything You Need for Perfect Headshots
+          Everything You Need to Look the Part — and Feel It Too
+
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

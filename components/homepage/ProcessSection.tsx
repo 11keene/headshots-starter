@@ -9,22 +9,22 @@ import { cn } from "@/lib/utils"
 const processSteps = [
   {
     number: 1,
-    title: "Upload Your Photos",
-    description: "Upload 4+ high-quality selfies: front facing, 1 person in frame, no glasses or hats.",
+    title: "Upload Your Selfies",
+    description: "Send us 6+ high-quality selfies (front-facing, natural lighting, no hats or glasses). Just be you — we’ll handle the magic.",
     icon: <Camera className="h-5 w-5" />,
     images: ["/example1.png", "/example2.png", "/example3.png"]
   },
   {
     number: 2,
-    title: "Our AI Gets to Work",
-    description: "The AI magic takes ~20 minutes. You'll get an email when it's ready!",
+    title: " Let the AI Work Its Magic",
+    description: "In about 20 minutes, our powerful AI gets to know your features and builds your custom model. You'll be notified the moment your shoot is ready.",
     icon: <Sparkles className="h-5 w-5" />,
     processingImage: "/blur.png"
   },
   {
     number: 3,
-    title: "Get Amazing Headshots",
-    description: "Once your model is trained, we'll give you amazing headshots!",
+    title: "Reveal Your Glow-Up",
+    description: "Download a full gallery of edittorial-quality headshots that feel like you — only elevated. Polished, professional, and ready to make a statement. ",
     icon: <Download className="h-5 w-5" />,
     resultImages: ["/result1.png", "/result2.png", "/result3.png"]
   }
@@ -134,9 +134,12 @@ export default function ProcessSection() {
           <Badge variant="outline" className="mb-2">
             Simple Process
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">How It Works</h2>
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Your Signature Look, In 3 Simple Steps
+          </h2>
           <p className="max-w-[700px] text-muted-foreground text-lg">
-            Our AI-powered platform transforms your selfies into professional headshots in just three simple steps.
+         
+ Our intuitive platform turns your selfies into stunning, professional-grade headshots — crafted to reflect your story, your ambition, and your brand.
+
           </p>
         </div>
         <div className="mt-16 grid gap-8 md:grid-cols-3 md:gap-12">

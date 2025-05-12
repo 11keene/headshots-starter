@@ -22,7 +22,7 @@ export default function CTASection() {
           </p>
           <Link href="/login" className="mt-4">
             <Button size="lg" className="bg-primary hover:bg-primary/90 text-white">
-              Create your headshots now
+              Create My Headshots Now
             </Button>
           </Link>
         </div>

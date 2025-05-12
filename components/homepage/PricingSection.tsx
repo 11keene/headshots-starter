@@ -10,10 +10,11 @@ export default function PricingSection() {
             Pricing
           </Badge>
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-            Professional-grade headshots for <span className="text-primary">a fraction</span> of the cost
+          Premium Headshots<span className="text-primary"> Without</span> the Premium Price Tag
           </h2>
           <p className="max-w-[700px] text-muted-foreground text-lg">
-            Professional photographers charge $200-$500 for a session. Our AI creates stunning headshots for much less.
+          Why spend $200–$500 on a traditional photoshoot when you can get professional-quality results in minutes — for a fraction of the cost?
+          At AI Maven Studio, we make transformation affordable, accessible, and completely aligned with your brand.
           </p>
         </div>
         <div className="mt-16">
