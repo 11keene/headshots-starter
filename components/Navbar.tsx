@@ -16,6 +16,7 @@ import {
 import { Button } from "./ui/button";
 import React from "react";
 import { Database } from "@/types/supabase";
+import LoginDropdown from "./LoginDropdown"; 
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -35,7 +36,7 @@ export default async function Navbar() {
     const { data: userRow } = await supabase
       .from("users")
       .select("credits")
-      .eq("id", user.id)       // ← make sure this is `id`, not `user_id`
+      .eq("id", user.id)       // ← make sure this is id, not user_id
       .single<{ credits: number }>();
     credits = userRow?.credits ?? 0;
   }
@@ -120,9 +121,7 @@ export default async function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link href="/login">
-              <Button size="sm">Login</Button>
-            </Link>
+            <LoginDropdown />
           )}
         </div>
       </div>
