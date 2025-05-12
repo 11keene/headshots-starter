@@ -47,7 +47,7 @@ export default function Footer() {
             </ul>
           </div>
           <div className="space-y-4">
-            <h3 className="text-sm font-medium text-ivory">Resources</h3>
+            <h3 className="text-sm font-medium text-warm-gray">Resources</h3>
             <ul className="space-y-2">
               {[
                 { href: "https://github.com", label: "GitHub" },

@@ -1,47 +1,55 @@
 // File: components/Navbar.tsx
+"use client";
 
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { AvatarIcon, HamburgerMenuIcon } from "@radix-ui/react-icons";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
 import {
   DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuSeparator,
   DropdownMenuItem,
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
-import React from "react";
-import { Database } from "@/types/supabase";
-import LoginDropdown from "./LoginDropdown"; 
+import { HamburgerMenuIcon } from "@radix-ui/react-icons";
+import { FiGlobe } from "react-icons/fi";
+import LoginDropdown from "./LoginDropdown";
+import { ThemeToggle } from "@/components/homepage/theme-toggle";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export default function Navbar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const supabase = useSupabaseClient();
+  const session = useSession();
+  const [credits, setCredits] = useState<number>(0);
 
-const stripeIsConfigured =
-  process.env.NEXT_PUBLIC_STRIPE_IS_ENABLED === "true";
-const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
-
-export default async function Navbar() {
-  const supabase = createServerComponentClient<Database>({ cookies });
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let credits = 0;
-  if (user) {
-    const { data: userRow } = await supabase
+  // Fetch credits client‐side once session is available
+  useEffect(() => {
+    if (!session?.user) return;
+    supabase
       .from("users")
       .select("credits")
-      .eq("id", user.id)       // ← make sure this is id, not user_id
-      .single<{ credits: number }>();
-    credits = userRow?.credits ?? 0;
-  }
+      .eq("id", session.user.id)
+      .single()
+      .then(({ data, error }) => {
+        if (data && !error) setCredits(data.credits);
+      });
+  }, [session, supabase]);
 
-  const isBackend = Boolean(user);
+  const isBackend = Boolean(session?.user);
+  const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
+
+  // Supported locales
+  const locales = [
+    { code: "en", label: "English" },
+    { code: "de", label: "Deutsch" },
+    { code: "fr", label: "Français" },
+    { code: "pt", label: "Português" },
+    { code: "es", label: "Español" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
@@ -66,16 +74,10 @@ export default async function Navbar() {
 
         {isBackend && (
           <nav className="flex gap-6 text-sm font-semibold">
-            <Link
-              href="/overview"
-              className="hover:text-primary transition-colors"
-            >
+            <Link href="/overview" className="hover:text-primary transition-colors">
               Home
             </Link>
-            <Link
-              href="/get-credits"
-              className="hover:text-primary transition-colors"
-            >
+            <Link href="/get-credits" className="hover:text-primary transition-colors">
               Get Credits
             </Link>
           </nav>
@@ -99,27 +101,78 @@ export default async function Navbar() {
                   <Link href="/overview">Create Photos</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel className="px-4 text-xs text-gray-500">
-                  {user!.email}
-                </DropdownMenuLabel>
                 <DropdownMenuItem className="flex justify-between px-4">
                   <span>Your Credits</span>
                   <span className="font-semibold">{credits}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <form action="/auth/sign-out" method="post">
-                  <DropdownMenuItem asChild>
-                    <Button
-                      type="submit"
-                      variant="ghost"
-                      className="w-full text-left"
-                    >
-                      Log out
-                    </Button>
-                  </DropdownMenuItem>
-                </form>
+                <DropdownMenuItem>
+                  <Button
+                    variant="ghost"
+                    className="w-full text-left"
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      router.push("/");
+                    }}
+                  >
+                    Log out
+                  </Button>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          ) : pathname === "/" ? (
+            <>
+              {/* Language picker on homepage */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                    <FiGlobe className="h-5 w-5 text-charcoal" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="bottom" align="start" className="w-40">
+                 {locales.map(({ code, label }) => (
+  <DropdownMenuItem asChild key={code}>
+     <Link href={pathname} locale={code} replace>
+       {label}
+     </Link>
+   </DropdownMenuItem>
+ ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Homepage additional dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                    <HamburgerMenuIcon className="h-6 w-6 text-charcoal" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  side="bottom"
+                  align="center"
+                  className="w-40 bg-ivory/100 text-charcoal shadow-lg"
+                >
+                  {/* Center the dark mode toggle */}
+                  <DropdownMenuItem className="flex justify-center py-2">
+                    <ThemeToggle />
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="border-white/50" />
+                  {/* Login button */}
+                  <DropdownMenuItem asChild>
+                    <Link href="/login">
+                      <Button
+                        variant="ghost"
+                        className="w-full text-left text-charcoal hover:bg-sage-green"
+                      >
+                        Log in
+                      </Button>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : pathname === "/login" ? (
+            <ThemeToggle />
           ) : (
             <LoginDropdown />
           )}
