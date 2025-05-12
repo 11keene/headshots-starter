@@ -55,25 +55,25 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {isBackend ? (
-          <div className="text-sm font-semibold">Credits: {credits}</div>
+          <div className="text-sm text-charcoal font-semibold">Credits: {credits}</div>
         ) : (
           <Link
             href="/"
-            className="flex items-center gap-2 font-semibold text-base"
+            className="flex items-center gap-2 text-charcoal font-semibold text-base"
           >
             <Image
               src="/logo.png"
               alt="AI Maven Logo"
               width={24}
               height={24}
-              className="rounded-full"
+              className="rounded-full text-charcoal "
             />
             <span>AI Maven</span>
           </Link>
         )}
 
         {isBackend && (
-          <nav className="flex gap-6 text-sm font-semibold">
+          <nav className="flex gap-6 text-charcoal text-sm font-semibold">
             <Link href="/overview" className="hover:text-primary transition-colors">
               Home
             </Link>

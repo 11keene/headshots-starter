@@ -98,14 +98,14 @@ function ProcessStep({ step, isActive, index }: { step: typeof processSteps[0], 
       animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 20 }}
       transition={{ duration: 0.5, delay: index * 0.2 }}
       className={cn(
-        "group flex flex-col items-center text-center",
+        "group flex flex-col items-center text-charcoal text-center",
         "rounded-2xl border bg-card p-6 shadow-sm transition-all duration-200 hover:shadow-md",
         isActive && "border-primary"
       )}
     >
       <div className="mb-6 flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary ring-2 ring-primary/20">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full text-charcoal bg-primary/10 text-primary ring-2 ring-primary/20">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full text-charcoal bg-primary text-primary-foreground">
             {step.number}
           </div>
         </div>
@@ -117,8 +117,8 @@ function ProcessStep({ step, isActive, index }: { step: typeof processSteps[0], 
       {renderVisual()}
 
       <div className="mt-6 space-y-2">
-        <h3 className="text-xl font-semibold tracking-tight">{step.title}</h3>
-        <p className="text-sm text-muted-foreground">{step.description}</p>
+        <h3 className="text-xl text-charcoal font-semibold tracking-tight">{step.title}</h3>
+        <p className="text-sm text-charcoal text-muted-foreground">{step.description}</p>
       </div>
     </motion.div>
   )

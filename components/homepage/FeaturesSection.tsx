@@ -38,7 +38,7 @@ export default function FeaturesSection() {
   return (
     <section className="py-20 md:py-32 bg-muted/30">
       <div className="container px-4 md:px-6">
-        <div className="text-center mb-12">
+        <div className="text-center text-charcoal mb-12">
           <Badge variant="outline" className="mb-4 border-dusty-coral text-dusty-coral">Features</Badge>
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-charcoal md:text-5xl">
           Everything You Need to Look the Part — and Feel It Too
@@ -52,7 +52,7 @@ export default function FeaturesSection() {
                 {feature.icon}
               </div>
               <h3 className="font-semibold mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
+              <p className="text-muted-foreground text-charcoal ">{feature.description}</p>
             </div>
           ))}
         </div>
