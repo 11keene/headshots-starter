@@ -41,7 +41,7 @@ export default function CustomUpsellPage() {
       {!showAll && allPacks.length > VISIBLE && (
         <button
           onClick={() => setShowAll(true)}
-          className="mb-4 text-blue-600 hover:underline"
+          className="mb-4 text-charcoal hover:underline"
         >
           See More…
         </button>
@@ -49,7 +49,7 @@ export default function CustomUpsellPage() {
 
       <Link
         href="/custom-intake/next"
-        className="block text-center px-6 py-2 bg-green-600 text-white font-medium rounded"
+        className="block text-center px-6 py-2 bg-dusty-coral/90 text-white font-medium rounded"
       >
         Continue to Upload
       </Link>

@@ -59,9 +59,9 @@ export default function ModernPricing() {
             <div
               key={idx}
               className={cn(
-                "relative flex flex-col p-4 bg-white border rounded-lg shadow-md transition-all ease-in-out",
+                "relative flex flex-col p-4 bg-ivory border rounded-lg shadow-md transition-all ease-in-out",
                 "hover:scale-105 hover:shadow-xl",
-                "hover:border-red-500 hover:bg-red-50",
+                "hover:border-dusty-coral/90 hover:bg-dusty-coral/10",
                 "w-[160px] h-[500px]",
                 "sm:w-full sm:h-[400px] md:h-[500px] md:w-[215px] lg:flex-grow",
                 tier.popular && "pricing-card-popular"
@@ -69,7 +69,7 @@ export default function ModernPricing() {
             >
               {tier.popular && <div className="pricing-badge">Most Popular</div>}
               {tier.bestValue && (
-                <div className="absolute -top-3 right-6 rounded-full bg-blue-600 px-3 py-1 text-xs font-medium text-white">
+                <div className="absolute -top-3 right-6 rounded-full bg-sage-green px-3 py-1 text-xs font-medium text-white">
                   Best Value
                 </div>
               )}
@@ -93,7 +93,7 @@ export default function ModernPricing() {
               </ul>
               <div className="mt-auto">
                 <Link href="/login" className="block w-full" aria-label={`Select ${tier.title} plan`}>
-                  <Button className={cn("w-full text-white", "bg-red-600 hover:bg-red-700")}>
+                  <Button className={cn("w-full text-white", "bg-dusty-coral hover:bg-sage-green")}>
                     {tier.buttonText}
                   </Button>
                 </Link>

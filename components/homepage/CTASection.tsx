@@ -11,7 +11,7 @@ const images = [
 
 export default function CTASection() {
   return (
-    <section className="py-20 md:py-32 bg-black text-white">
+    <section className="py-20 md:py-32 bg-charcoal text-white">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center justify-center gap-4 text-center md:gap-8">
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">

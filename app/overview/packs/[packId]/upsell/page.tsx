@@ -50,7 +50,7 @@ export default function HeadshotUpsell() {
       <div className="flex justify-between mb-4">
         <button
           onClick={() => router.back()}
-          className="px-4 py-2 bg-black text-white rounded-md text-sm sm:text-base"
+          className="px-4 py-2 bg-muted-gold text-white rounded-md text-sm sm:text-base"
         >
           Back
         </button>
@@ -58,14 +58,14 @@ export default function HeadshotUpsell() {
         {isSkip ? (
           <button
             onClick={goContinue}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md text-sm sm:text-base hover:bg-gray-300 transition"
+            className="px-4 py-2 bg-warm-gray/70 text-gray-800 rounded-md text-sm sm:text-base hover:bg-warm-gray transition"
           >
             No Thanks
           </button>
         ) : (
           <button
             onClick={activeTab === "headshot" ? goContinue : goCustom}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm sm:text-base transition"
+            className="px-4 py-2 bg-dusty-coral hover:bg-dusty-coral text-white rounded-md text-sm sm:text-base transition"
           >
             Continue
           </button>
@@ -78,8 +78,8 @@ export default function HeadshotUpsell() {
           onClick={() => setActiveTab("headshot")}
           className={`px-4 py-2 font-semibold rounded-md transition ${
             activeTab === "headshot"
-              ? "text-black border-b-4 border-red-500"
-              : "text-muted-foreground hover:text-black"
+              ? "text-charcoal border-b-4 border-muted-gold"
+              : "text-muted-foreground hover:text-charcoal"
           }`}
         >
           Select Additional Headshots
@@ -88,8 +88,8 @@ export default function HeadshotUpsell() {
           onClick={() => setActiveTab("custom")}
           className={`px-4 py-2 font-semibold rounded-md transition ${
             activeTab === "custom"
-              ? "text-black border-b-4 border-red-500"
-              : "text-muted-foreground hover:text-black"
+              ? "text-charcoal border-b-4 border-muted-gold"
+              : "text-muted-foreground hover:text-charcoal"
           }`}
         >
           Select Custom Photoshoot
@@ -105,7 +105,7 @@ export default function HeadshotUpsell() {
               onClick={() => togglePack(p.id)}
               className={`relative cursor-pointer border rounded-lg overflow-hidden transition-shadow ${
                 selected.includes(p.id)
-                  ? "ring-4 ring-red-500 shadow-lg"
+                  ? "ring-4 ring-muted-gold shadow-lg"
                   : "hover:shadow-md"
               }`}
             >
@@ -114,7 +114,7 @@ export default function HeadshotUpsell() {
                 alt={p.name}
                 className="w-full h-100 object-cover"
               />
-              <div className="absolute inset-x-0 bottom-0 bg-black text-white text-center font-semibold py-2">
+              <div className="absolute inset-x-0 bottom-0 bg-muted-gold text-white text-center font-semibold py-2">
                 {p.name}
               </div>
             </div>
@@ -125,7 +125,7 @@ export default function HeadshotUpsell() {
           <div
             onClick={toggleCustom}
             className={`relative cursor-pointer border rounded-lg overflow-hidden shadow-md max-w-sm w-full ${
-              customSelected ? "ring-4 ring-red-500" : ""
+              customSelected ? "ring-4 ring-muted-gold" : ""
             }`}
           >
             <img
@@ -133,7 +133,7 @@ export default function HeadshotUpsell() {
               alt="Custom Photoshoot"
               className="w-full h-100 object-cover"
             />
-            <div className="absolute inset-x-0 bottom-0 bg-black text-white text-center font-semibold py-2">
+            <div className="absolute inset-x-0 bottom-0 bg-muted-gold text-white text-center font-semibold py-2">
               Custom Photoshoot
             </div>
           </div>

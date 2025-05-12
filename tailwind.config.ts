@@ -53,6 +53,14 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+
+        // ── BRAND PALETTE ───────────────────────────────────────────────────────
+        ivory: "#F5F1E8",        // your “Ivory”
+        "warm-gray": "#B8B3AD",
+        charcoal: "#33312E",
+        "dusty-coral": "#E29578",
+        "sage-green": "#A3B18A",
+        "muted-gold": "#D4B483",
       },
       borderRadius: {
         lg: "var(--radius)",

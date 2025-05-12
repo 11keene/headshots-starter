@@ -16,7 +16,7 @@ export default function AnnouncementBar() {
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative bg-black text-white py-2 px-4 text-center text-sm"
+      className="relative bg-charcoal text-white py-2 px-4 text-center text-sm"
     >
       <div className="container mx-auto flex items-center justify-center">
         <p>{message}</p>

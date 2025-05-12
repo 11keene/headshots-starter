@@ -15,9 +15,9 @@ export default function Page({ searchParams }: PageProps) {
   const packId = searchParams.packId ?? "defaultPack";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-warm-gray p-4">
       {/* You can wrap in a container for styling */}
-      <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg overflow-hidden">
+      <div className="w-full max-w-2xl bg-ivory rounded-xl shadow-lg overflow-hidden">
         <header className="px-6 py-4 border-b">
           <h1 className="text-2xl font-semibold">Custom Photoshoot Intake</h1>
         </header>

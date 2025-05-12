@@ -123,7 +123,7 @@ export default function UploadPage() {
     <div className="p-6 sm:p-8 max-w-3xl mx-auto">
       <button
         onClick={() => router.push("/overview/packs")}
-        className="inline-flex items-center mb-6 text-gray-700 hover:text-black"
+        className="inline-flex items-center mb-6 text-gray-700 hover:text-sage-green"
       >
         <FiArrowLeft className="mr-2" /> Go Back to Packs
       </button>
@@ -137,7 +137,7 @@ export default function UploadPage() {
       <div
         onDrop={onDrop}
         onDragOver={(e) => e.preventDefault()}
-        className="relative border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-gray-400 transition cursor-pointer"
+        className="relative border-2 border-dashed border-dusty-coral rounded-xl p-8 text-center hover:border-sage-green transition cursor-pointer"
       >
         <input
           type="file"
@@ -146,7 +146,7 @@ export default function UploadPage() {
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           onChange={(e) => onFiles(e.target.files)}
         />
-        <FiUploadCloud className="mx-auto mb-4 text-4xl text-red-600" />
+        <FiUploadCloud className="mx-auto mb-4 text-4xl text-dusty-coral" />
         <Button variant="outline">Browse files</Button>
         <p className="mt-2 text-sm text-gray-500">
           or drag & drop your photos here (PNG, JPG, WEBP up to 120 MB)
@@ -159,7 +159,7 @@ export default function UploadPage() {
             <div key={i} className="relative w-full h-24">
               <button
                 onClick={() => removeFile(i)}
-                className="absolute top-1 right-1 z-10 bg-white rounded-full p-1 text-red-600 hover:text-red-800 shadow"
+                className="absolute top-1 right-1 z-10 bg-ivory rounded-full p-1 text-dusty-coral hover:text-sage-green shadow"
                 title="Remove this photo"
               >
                 <FiTrash2 size={16} />
@@ -184,7 +184,7 @@ export default function UploadPage() {
           <motion.div
             key={idx}
             whileHover={{ scale: 1.03 }}
-            className="flex items-center gap-4 p-4 bg-white rounded-lg shadow hover:shadow-lg transition"
+            className="flex items-center gap-4 p-4 bg-ivory rounded-lg shadow hover:shadow-lg transition"
           >
             <img src={card.img} alt={card.title} className="w-16 h-16 rounded-md object-cover" />
             <div>
@@ -195,8 +195,8 @@ export default function UploadPage() {
         ))}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-end">
-        <span className="self-center mr-auto text-sm text-gray-600">
+      <div className="fixed bottom-0 left-0 right-0 bg-ivory border-t p-4 flex justify-end">
+        <span className="self-center mr-auto text-sm text-warm-gray">
           {previewUrls.length} of 6 required
         </span>
         <Button

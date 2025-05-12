@@ -14,7 +14,7 @@ export default function Page() {
   return (
     <div className="flex min-h-screen">
       {/* Left branding */}
-      <div className="hidden lg:flex w-1/2 bg-neutral-100 p-10 flex-col items-center justify-center">
+      <div className="hidden lg:flex w-1/2 bg-warm-gray p-10 flex-col items-center justify-center">
         <img src="/logo.png" alt="AI Maven Logo" className="w-20 h-20 mb-6 rounded-full" />
         <h1 className="text-3xl font-bold mb-4">Welcome to AI Maven</h1>
         <p className="text-center max-w-sm">

@@ -117,26 +117,26 @@ export default function GetCreditsPage() {
   const goBack = () => setStep((s) => Math.max(1, s - 1));
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-ivory flex flex-col lg:flex-row">
       {/* Sidebar */}
-      <div className="bg-gray-800 text-gray-100 w-full lg:w-1/4 p-8 flex flex-col gap-6">
+      <div className="bg-warm-gray text-charcoal w-full lg:w-1/4 p-8 flex flex-col gap-6">
         {["1. Pick a Plan", "2. Payment Info", "3. Confirmation"].map(
           (label, i) => (
             <div key={i} className="flex items-center gap-3">
               <div
                 className={`h-8 w-8 flex items-center justify-center rounded-full ${
-                  step === i + 1 ? "bg-red-600" : "border border-gray-500"
+                  step === i + 1 ? "bg-dusty-coral" : "border border-dusty-coral"
                 }`}
               >
                 {step > i + 1 ? (
-                  <FaCheckCircle className="text-green-400" />
+                  <FaCheckCircle className="text-sage-green" />
                 ) : (
                   <span className="font-semibold">{i + 1}</span>
                 )}
               </div>
               <span
                 className={`font-medium ${
-                  step === i + 1 ? "text-white" : "text-gray-400"
+                  step === i + 1 ? "text-white" : "text-charcoal"
                 }`}
               >
                 {label}
@@ -149,7 +149,7 @@ export default function GetCreditsPage() {
       {/* Main Content */}
       <div className="flex-grow p-8 flex flex-col">
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 relative">
+          <div className="bg-dusty-coral border bg-dusty-coral bg-dusty-coral px-4 py-3 rounded mb-4 relative">
             <span className="block sm:inline">{error}</span>
             <button
               className="absolute top-0 bottom-0 right-0 px-4 py-3"
@@ -172,14 +172,14 @@ export default function GetCreditsPage() {
                   onClick={() => setSelectedPlan(plan)}
                   className={`cursor-pointer border-2 transition p-6 ${
                     selectedPlan?.id === plan.id
-                      ? "border-red-600"
-                      : "border-gray-200"
+                      ? "border-dusty-coral"
+                      : "border-warm-gray"
                   }`}
                 >
                   <h3 className="text-lg font-semibold mb-2">
                     {plan.name}
                   </h3>
-                  <p className="text-4xl font-extrabold text-red-600 mb-2">
+                  <p className="text-4xl font-extrabold text-dusty-coral mb-2">
                     {plan.credits}
                   </p>
                   <p className="text-gray-600 font-medium">{plan.price}</p>

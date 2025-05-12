@@ -235,7 +235,7 @@ export default function ThreeDBeforeAfterGallery() {
                     {/* AI Generated badge */}
                     <div className="absolute bottom-2 right-2 rounded-full bg-primary px-3 py-1 text-xs text-white">
                       <span className="flex items-center gap-1">
-                        <span className="h-2 w-2 rounded-full bg-white"></span>
+                        <span className="h-2 w-2 rounded-full bg-ivory"></span>
                         AI Generated
                       </span>
                     </div>
@@ -263,7 +263,7 @@ export default function ThreeDBeforeAfterGallery() {
       {/* Navigation buttons */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-3 shadow-md hover:bg-white transition-all hover:scale-110"
+        className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-ivory/80 p-3 shadow-md hover:bg-white transition-all hover:scale-110"
         aria-label="Previous slide"
         disabled={isFlipping}
       >

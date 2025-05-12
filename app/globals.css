@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    
     /* — Primary theme (light) — */
     --background: 41.5 39.4% 93.5%;          /* Ivory  #F5F1E8 */
     --foreground: 36.0 5.2% 19.0%;           /* Charcoal  #33312E */

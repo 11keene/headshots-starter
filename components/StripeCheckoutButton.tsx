@@ -44,7 +44,7 @@ export default function StripeCheckoutButton({ priceId }: { priceId: string }) {
     <button
       onClick={handleClick}
       disabled={loading}
-      className="px-6 py-3 bg-red-600 text-white rounded hover:bg-red-700 transition"
+      className="px-6 py-3 bg-dusty-coral text-white rounded hover:bg-dusty-coral/90 transition"
     >
       {loading ? 'Loading…' : 'Buy with Card or Apple Pay'}
     </button>

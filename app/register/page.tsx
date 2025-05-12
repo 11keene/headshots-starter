@@ -73,7 +73,7 @@ export default function RegisterPage() {
     <div className="max-w-md mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">Create an Account</h1>
       {errorMsg && (
-        <div className="mb-4 text-red-600 bg-red-100 p-2 rounded">
+        <div className="mb-4 text-red-600 bg-dusty-coral p-2 rounded">
           {errorMsg}
         </div>
       )}
@@ -108,7 +108,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+          className="w-full bg-dusty-coral/90 text-white py-2 rounded hover:bg-dusty-coral/90 transition"
         >
           {loading ? "Signing up..." : "Sign Up"}
         </button>

@@ -121,12 +121,12 @@ export default function PricingClient({
             `/overview/packs/${packId}/next${extraPacks ? `?extraPacks=${extraPacks}` : ""}`
           )
         }
-        className="mb-6 inline-flex items-center text-gray-700 hover:text-black"
+        className="mb-6 inline-flex items-center text-gray-700 hover:text-charcoal"
      >
        ← Go Back
       </button>
 
-      <h1 className="text-3xl font-bold text-center mb-2 text-black-500">
+      <h1 className="text-3xl font-bold text-center mb-2 text-charcoal-500">
         Amazing headshots are waiting for you!
       </h1>
       <p className="text-center text-gray-600 mb-8">
@@ -144,35 +144,35 @@ export default function PricingClient({
                 h-[220px] flex flex-col justify-between
                 cursor-pointer rounded-lg border p-6 text-center transition-shadow
                 ${isActive
-                  ? "border-red-600 shadow-lg"
+                  ? "border-dusty-coral shadow-lg"
                   : "border-black-500 hover:shadow-md"}
               `}
             >
               <div className="h-[24px] mb-2">
                 {tier.badge && (
-                  <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-semibold">
+                  <span className="inline-block rounded-full bg-dusty-coral px-3 py-1 text-xs font-semibold">
                     {tier.badge}
                   </span>
                 )}
               </div>
 
-              <h2 className="text-xl font-semibold mb-1 text-red-700">
+              <h2 className="text-xl font-semibold mb-1 text-dusty-coral">
                 {tier.title}
               </h2>
 
               <p className="text-gray-500 mb-4">{tier.subtitle}</p>
 
               {isActive && (
-                <div className="text-sm text-red-600 font-medium">Selected</div>
+                <div className="text-sm text-dusty-coral font-medium">Selected</div>
               )}
             </div>
           );
         })}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-center">
+      <div className="fixed bottom-0 left-0 right-0 bg-ivoryborder-t p-4 flex justify-center">
         <Button
-          className="w-full sm:w-auto bg-red-600 text-white"
+          className="w-full sm:w-auto bg-dusty-coral text-white"
           disabled={!selected || loading}
           onClick={onContinue}
           isLoading={loading}

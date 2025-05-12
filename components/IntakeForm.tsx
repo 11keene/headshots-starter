@@ -110,9 +110,9 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   return (
     <div className="max-w-lg mx-auto p-6 space-y-6">
       {/* Progress bar */}
-      <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+      <div className="w-full bg-warm-gray h-2 rounded-full overflow-hidden">
         <div
-          className="h-2 bg-gradient-to-r from-red-600 to-red-600 transition-all"
+          className="h-2 bg-gradient-to-r from-sage-green to-sage-green transition-all"
           style={{ width: `${((step + 1) / QUESTIONS.length) * 100}%` }}
         />
       </div>
@@ -131,8 +131,8 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
                 whileHover={{ scale: 1.02 }}
                 className={`border-2 rounded-lg overflow-hidden flex flex-col items-center transition-shadow ${
                   answers[question.key] === o.value
-                    ? "border-red-600 shadow-lg"
-                    : "border-gray-300 hover:shadow-md"
+                    ? "border-dusty-coral shadow-lg"
+                    : "border-warm-gray hover:shadow-md"
                 }`}
               >
                 <img src={o.img} alt={o.label} className="w-full h-32 object-cover" />
@@ -149,8 +149,8 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
                 key={o.value}
                 className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
                   (answers[question.key] || []).includes(o.value)
-                    ? "bg-red-50 border-red-400"
-                    : "border-gray-300 hover:bg-gray-50"
+                    ? "bg-dusty-coral border-dusty-coral"
+                    : "border-gray-300 hover:bg-warm-gray"
                 }`}
               >
                 <input
@@ -173,7 +173,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
             </label>
             <select
               id={`select-${question.key}`}
-              className="w-full p-3 border rounded-lg focus:border-red-500"
+              className="w-full p-3 border rounded-lg focus:border-dusty-coral"
               value={answers[question.key] || ""}
               onChange={(e) => choose(e.target.value)}
             >

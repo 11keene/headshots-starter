@@ -11,7 +11,7 @@ export default function PacksPage() {
       <div className="mb-4">
         <button
           onClick={() => router.push("/overview")}
-          className="px-4 py-2 bg-gray-200 rounded-md"
+          className="px-4 py-2 bg-muted-gold/70 rounded-md"
         >
           Back
         </button>
@@ -41,7 +41,7 @@ export default function PacksPage() {
 
             {/* ↓ thinner, fully centered caption bar */}
             <div className="
-                bg-black
+                bg-muted-gold
                 text-white
                 flex items-center justify-center
                 text-center font-semibold

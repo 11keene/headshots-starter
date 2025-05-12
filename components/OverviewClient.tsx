@@ -26,8 +26,8 @@ export default function OverviewClient({
           onClick={() => setActiveTab("headshot")}
           className={`text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
             activeTab === "headshot"
-              ? "text-black translate-y-[-2px] border-b-4 border-red-500"
-              : "text-muted-foreground hover:text-black"
+              ? "text-charcoal translate-y-[-2px] border-b-4 border-muted-gold"
+              : "text-muted-foreground hover:text-charcoal"
           }`}
         >
           Choose a Headshot
@@ -37,8 +37,8 @@ export default function OverviewClient({
           onClick={() => setActiveTab("custom")}
           className={`text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
             activeTab === "custom"
-              ? "text-black translate-y-[-2px] border-b-4 border-red-500"
-              : "text-muted-foreground hover:text-black"
+              ? "text-charcoal translate-y-[-2px] border-b-4 border-muted-gold"
+              : "text-muted-foreground hover:text-charcoal"
           }`}
         >
           Custom Photoshoot

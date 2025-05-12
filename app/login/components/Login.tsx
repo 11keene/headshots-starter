@@ -92,7 +92,7 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
       {/* Apple (black background) */}
       <Button
         onClick={() => socialSignIn("apple")}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-black hover:opacity-90 text-white py-4 font-semibold transition"
+        className="w-full flex items-center justify-center gap-2 rounded-md bg-black hover:bg-muted-gold text-white py-4 font-semibold transition border-warm-gray"
       >
         <FaApple size={20} />
         Continue with Apple
@@ -101,7 +101,7 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
       {/* Google (white background with Google logo) */}
       <Button
         onClick={() => socialSignIn("google")}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-white hover:bg-gray-100 text-black py-4 font-semibold transition border border-gray-300"
+        className="w-full flex items-center justify-center gap-2 rounded-md bg-white hover:bg-muted-gold text-charcoal py-4 font-semibold transition border border-warm-gray"
       >
         <FcGoogle size={20} />
         Continue with Google
@@ -110,7 +110,7 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
       {/* Facebook (white background with blue “f” icon) */}
       <Button
         onClick={() => socialSignIn("facebook")}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-white hover:bg-gray-100 text-black py-4 font-semibold transition border border-gray-300"
+        className="w-full flex items-center justify-center gap-2 rounded-md bg-white hover:bg-muted-gold text-charcoal py-4 font-semibold transition border border-warm-gray"
       >
         <FaFacebookF size={20} className="text-[#1877F2]" />
         Continue with Facebook
@@ -126,15 +126,15 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
             {...register("email", { required: "Email is required" })}
             className="pr-10"
           />
-          <MdEmail className="absolute right-3 top-3 text-red-500" size={20} />
+          <MdEmail className="absolute right-3 top-3 text-muted-gold" size={20} />
         </div>
         {isSubmitted && errors.email && (
-          <span className="text-xs text-red-400">{errors.email.message}</span>
+          <span className="text-xs text-white">{errors.email.message}</span>
         )}
         <Button
           type="submit"
           isLoading={isSubmitting}
-          className="w-full bg-white text-black font-semibold border border-gray-300 rounded px-4 py-2 hover:bg-gray-100"
+          className="w-full bg-white text-charcoal font-semibold border border-warm-gray rounded px-4 py-2 hover:bg-muted-gold"
         >
           Continue with Email
         </Button>

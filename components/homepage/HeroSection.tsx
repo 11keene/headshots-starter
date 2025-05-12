@@ -11,7 +11,7 @@ export default function HeroSection() {
       <div className="container px-4 md:px-6">
         <div className="mx-auto max-w-3xl text-center mb-8">
         <Badge
-  className="mb-4 bg-red-100 text-red-700 border-transparent"
+  className="mb-4 bg-dusty-coral/20 text-dusty-coral/100 border-transparent"
   variant="default"
 >
   #1 AI Headshot Generator for Bold Brands and Big Goals
