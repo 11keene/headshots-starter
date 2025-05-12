@@ -17,8 +17,8 @@ export default function PacksPage() {
         </button>
       </div>
 
-      <h1 className="text-2xl font-bold mb-4">Choose Your Headshot Pack</h1>
-      <p className="text-muted-foreground mb-6">
+      <h1 className="text-2xl text-charcoal font-bold mb-4">Choose Your Headshot Pack</h1>
+      <p className="text-muted-foreground text-charcoal mb-6">
         Click on a pack to continue.
       </p>
 

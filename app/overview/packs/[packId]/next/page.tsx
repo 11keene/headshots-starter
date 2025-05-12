@@ -128,7 +128,7 @@ export default function UploadPage() {
         <FiArrowLeft className="mr-2" /> Go Back to Packs
       </button>
 
-      <h1 className="text-2xl font-bold mb-2">Upload your photos</h1>
+      <h1 className="text-2xl text-charcoal font-bold mb-2">Upload your photos</h1>
       <p className="text-gray-600 mb-6">
         Select at least <span className="font-semibold">6</span> photos (max 10).{" "}
         Mix close-ups, selfies & mid-range shots to help the AI learn you best.

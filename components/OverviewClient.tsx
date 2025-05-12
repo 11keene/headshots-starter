@@ -48,10 +48,10 @@ export default function OverviewClient({
       {/* Tab Content */}
       {activeTab === "headshot" && (
         <div className="flex flex-col items-center w-full max-w-md mb-20">
-          <h2 className="text-2xl font-bold mb-2 text-center">
+          <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
             Choose Your Headshot
           </h2>
-          <p className="text-muted-foreground mb-8 text-center">
+          <p className="text-muted-foreground mb-8 text-charcoal text-center">
             Click to choose from our different pack styles.
           </p>
           <Link href="/overview/packs" className="w-full">
@@ -66,10 +66,10 @@ export default function OverviewClient({
 
       {activeTab === "custom" && (
         <div className="flex flex-col items-center w-full max-w-md mb-20">
-          <h2 className="text-2xl font-bold mb-2 text-center">
+          <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
             Choose Your Custom Style
           </h2>
-          <p className="text-muted-foreground mb-8 text-center">
+          <p className="text-muted-foreground mb-8 text-charcoal text-center">
             Generate more personalized and customizable images.
           </p>
           <Link href="/custom-intake" className="w-full">

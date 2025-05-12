@@ -59,13 +59,13 @@ export default function Navbar() {
         ) : (
           <Link
             href="/"
-            className="flex items-center gap-2 text-charcoal font-semibold text-base"
+            className="flex items-center gap-1 text-charcoal font-semibold text-base"
           >
             <Image
-              src="/logo.png"
+              src="/newlogo.png"
               alt="AI Maven Logo"
-              width={24}
-              height={24}
+              width={40}
+              height={35}
               className="rounded-full text-charcoal "
             />
             <span>AI Maven</span>
