@@ -26,18 +26,7 @@ export default function Navbar() {
   const session = useSession();
   const [credits, setCredits] = useState<number>(0);
 
-  // Fetch credits client‐side once session is available
-  useEffect(() => {
-    if (!session?.user) return;
-    supabase
-      .from("users")
-      .select("credits")
-      .eq("id", session.user.id)
-      .single()
-      .then(({ data, error }) => {
-        if (data && !error) setCredits(data.credits);
-      });
-  }, [session, supabase]);
+  
 
   const isBackend = Boolean(session?.user);
   const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
@@ -54,32 +43,28 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {isBackend ? (
-          <div className="text-sm text-charcoal font-semibold">
-            Credits: {credits}
-          </div>
-        ) : (
+        
           <Link
             href="/"
-            className="flex items-center gap-1 text-charcoal font-semibold text-base"
+            className="flex items-center gap-1 text-charcoal font-semibold text-small"
           >
             <Image
               src="/newlogo.png"
               alt="AI Maven Logo"
-              width={40}
+              width={25}
               height={35}
               className="rounded-full text-charcoal"
             />
             <span>AI Maven</span>
           </Link>
-        )}
+        
 
         {isBackend && (
-          <nav className="flex gap-6 text-charcoal text-sm font-semibold">
+          <nav className="relative flex gap-3 -left-5 text-charcoal text-sm font-semibold">
             <Link href="/overview" className="hover:text-primary transition-colors">
               Home
             </Link>
-            <Link href="/get-credits" className="hover:text-primary transition-colors">
+            <Link href="/get-credits" className="hover:text-primary text-charcoal transition-colors">
               Pricing
             </Link>
           </nav>

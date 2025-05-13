@@ -44,7 +44,7 @@ export default async function RootLayout({
       {
         id: user.id,
         email: user.email,
-        credits: 0,
+      
       },
       { onConflict: "id", ignoreDuplicates: true }
     );
