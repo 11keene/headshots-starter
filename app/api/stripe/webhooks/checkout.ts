@@ -33,44 +33,24 @@ export async function POST(request: Request) {
 
   // 3) Only handle checkout.session.completed
   if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const user_id = session.metadata?.user_id as string;
-    const pack     = session.metadata?.pack as string;
+    const session   = event.data.object as Stripe.Checkout.Session;
+    const user_id   = session.metadata?.user_id   as string;
+    const price_id  = session.metadata?.price_id  as string;
+    const plan_name = session.metadata?.plan_name as string;
 
-    if (user_id && pack) {
-      // 4) Mark the Supabase order as paid
+    if (user_id && price_id && plan_name) {
+      // 4) Mark the Supabase order as paid and record which plan
       await supabaseAdmin
         .from("orders")
-        .update({ status: "paid" })
+        .update({ status: "paid", price_id, plan_name })
         .eq("session_id", session.id);
-        
 
-      // 5) Map your Price IDs → credit amounts
-      const CREDIT_MAP: Record<string, number> = {
-        price_1RJLBd4RnIZz7j08beYwRGv1:  25,
-        price_1RJLCO4RnIZz7j08tJ3vN1or:  75,
-        price_1RJLDE4RnIZz7j08RlQUve2s: 200,
-        price_1RJLDf4RnIZz7j08TLcrNcQ6: 500,
-      };
-      const toAdd = CREDIT_MAP[pack] || 0;
-
-      if (toAdd > 0) {
-        // 6) Increment the user's total credits
-        await supabaseAdmin
-          .from("users")
-          .update({ credits: { increment: toAdd } })
-          .eq("id", user_id);
-
-        // 7) Log the credit‐grant in your credits history table
-        await supabaseAdmin
-          .from("credits")
-          .insert({ user_id, credits: toAdd });
-
-        console.log(`✅ Credited ${toAdd} to user ${user_id}`);
-      }
+      console.log(
+        `✅ Order ${session.id} for user ${user_id} marked paid (plan: ${plan_name})`
+      );
     }
   }
 
-  // 8) Acknowledge receipt
+  // 5) Acknowledge receipt
   return NextResponse.json({ received: true });
 }
