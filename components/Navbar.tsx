@@ -24,14 +24,11 @@ export default function Navbar() {
   const router = useRouter();
   const supabase = useSupabaseClient();
   const session = useSession();
-  const [credits, setCredits] = useState<number>(0);
-
-  
 
   const isBackend = Boolean(session?.user);
   const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
 
-  // Supported locales
+  // Supported locales for the homepage language switcher
   const locales = [
     { code: "en", label: "English" },
     { code: "de", label: "Deutsch" },
@@ -43,36 +40,42 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        
-          <Link
-            href="/"
-            className="flex items-center gap-1 text-charcoal font-semibold text-small"
-          >
-            <Image
-              src="/newlogo.png"
-              alt="AI Maven Logo"
-              width={25}
-              height={35}
-              className="rounded-full text-charcoal"
-            />
-            <span>AI Maven</span>
-          </Link>
-        
+        {/* Logo always visible */}
+        <Link
+          href="/"
+          className="flex items-center gap-1 text-charcoal font-semibold text-small"
+        >
+          <Image
+            src="/newlogo.png"
+            alt="AI Maven Logo"
+            width={25}
+            height={35}
+            className="rounded-full text-charcoal"
+          />
+          <span>AI Maven</span>
+        </Link>
 
-        {isBackend && (
+        {/* Show "Home / Pricing" links only when logged-in AND not on the public "/" */}
+        {isBackend && pathname !== "/" && (
           <nav className="relative flex gap-3 -left-5 text-charcoal text-sm font-semibold">
-            <Link href="/overview" className="hover:text-primary transition-colors">
+            <Link
+              href="/overview"
+              className="hover:text-primary transition-colors"
+            >
               Home
             </Link>
-            <Link href="/get-credits" className="hover:text-primary text-charcoal transition-colors">
+            <Link
+              href="/get-credits"
+              className="hover:text-primary transition-colors"
+            >
               Pricing
             </Link>
           </nav>
         )}
 
         <div className="flex items-center gap-4">
-          {isBackend ? (
-            // Dashboard Hamburger Menu
+          {/* Dashboard menu when logged in & not on "/" */}
+          {isBackend && pathname !== "/" ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
@@ -88,13 +91,10 @@ export default function Navbar() {
                 <DropdownMenuItem asChild>
                   <Link href="/overview">Create Photos</Link>
                 </DropdownMenuItem>
-
-                {/* ───────────── New “Contact” link ───────────── */}
                 <DropdownMenuItem asChild>
                   <a href="mailto:support@aimavenstudio.com">Contact</a>
                 </DropdownMenuItem>
-
-                
+                <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Button
                     variant="ghost"
@@ -110,16 +110,20 @@ export default function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : pathname === "/" ? (
-            // Homepage: Language picker + Additional Menu
+            // Public homepage menu: language + theme + contact + login
             <>
-              {/* Language picker on homepage */}
+              {/* Language picker */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
                     <FiGlobe className="h-5 w-5 text-charcoal" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="bottom" align="start" className="w-40">
+                <DropdownMenuContent
+                  side="bottom"
+                  align="start"
+                  className="w-40"
+                >
                   {locales.map(({ code, label }) => (
                     <DropdownMenuItem asChild key={code}>
                       <Link href={pathname} locale={code} replace>
@@ -130,7 +134,7 @@ export default function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Homepage additional dropdown */}
+              {/* Additional homepage dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
@@ -142,18 +146,13 @@ export default function Navbar() {
                   align="center"
                   className="w-40 bg-ivory/100 text-charcoal shadow-lg"
                 >
-                  {/* Center the dark mode toggle */}
                   <DropdownMenuItem className="flex justify-center py-2">
                     <ThemeToggle />
                   </DropdownMenuItem>
-
-                  {/* ───────────── New “Contact” link ───────────── */}
                   <DropdownMenuItem asChild>
                     <a href="mailto:support@aimavenstudio.com">Contact</a>
                   </DropdownMenuItem>
-
                   <DropdownMenuSeparator className="border-white/50" />
-                  {/* Login button */}
                   <DropdownMenuItem asChild>
                     <Link href="/login">
                       <Button
@@ -168,8 +167,10 @@ export default function Navbar() {
               </DropdownMenu>
             </>
           ) : pathname === "/login" ? (
+            // On the login page, show just the theme toggle
             <ThemeToggle />
           ) : (
+            // On any other unauthenticated route, show the standard login dropdown
             <LoginDropdown />
           )}
         </div>
