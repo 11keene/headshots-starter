@@ -18,13 +18,10 @@ export default function OverviewClient({
   serverCredits,
 }: OverviewClientProps) {
   const searchParams = useSearchParams();
-  // get the `tab` param (will be "starter" | "themed" | "custom")
   const tabParam = searchParams?.get("tab") as Tab | null;
-
-  // initialize to URL param if present, otherwise default to "starter"
   const [activeTab, setActiveTab] = useState<Tab>(tabParam ?? "starter");
 
-  // in case the query-param changes (i.e. via client navigation), re-sync
+  // keep in sync if someone navigates with ?tab=…
   useEffect(() => {
     if (tabParam === "starter" || tabParam === "themed" || tabParam === "custom") {
       setActiveTab(tabParam);
@@ -32,14 +29,15 @@ export default function OverviewClient({
   }, [tabParam]);
 
   return (
-    <div className="flex flex-col items-center w-full px-4">
+    // full-screen warm gray background
+    <div className="min-h-screen bg-warm-gray flex flex-col items-center w-full px-4 py-8">
       {/* Tabs */}
-      <div className="flex gap-6 mt-8 mb-8">
+      <div className="mt-8 mb-8 w-full max-w-lg grid grid-cols-3 gap-6">
         <button
           onClick={() => setActiveTab("starter")}
-          className={`text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
+          className={`whitespace-nowrap text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
             activeTab === "starter"
-              ? "text-charcoal translate-y-[-2px] border-b-4 border-muted-gold"
+              ? "text-ivory translate-y-[-2px] border-b-4 border-charcoal"
               : "text-muted-foreground hover:text-charcoal"
           }`}
         >
@@ -47,9 +45,9 @@ export default function OverviewClient({
         </button>
         <button
           onClick={() => setActiveTab("themed")}
-          className={`text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
+          className={`whitespace-nowrap text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
             activeTab === "themed"
-              ? "text-charcoal translate-y-[-2px] border-b-4 border-muted-gold"
+              ? "text-ivory translate-y-[-2px] border-b-4 border-charcoal"
               : "text-muted-foreground hover:text-charcoal"
           }`}
         >
@@ -57,9 +55,9 @@ export default function OverviewClient({
         </button>
         <button
           onClick={() => setActiveTab("custom")}
-          className={`text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
+          className={`whitespace-nowrap text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
             activeTab === "custom"
-              ? "text-charcoal translate-y-[-2px] border-b-4 border-muted-gold"
+              ? "text-ivory translate-y-[-2px] border-b-4 border-charcoal"
               : "text-muted-foreground hover:text-charcoal"
           }`}
         >
@@ -67,9 +65,9 @@ export default function OverviewClient({
         </button>
       </div>
 
-      {/* Tab Content */}
+      {/* Starter Pack Card */}
       {activeTab === "starter" && (
-        <div className="flex flex-col items-center w-full max-w-md mb-20">
+        <div className="bg-ivory w-full max-w-md p-6 rounded-lg shadow-md mb-20 flex flex-col items-center">
           <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
             Starter Pack
           </h2>
@@ -86,8 +84,9 @@ export default function OverviewClient({
         </div>
       )}
 
+      {/* Themed Packs Card */}
       {activeTab === "themed" && (
-        <div className="flex flex-col items-center w-full max-w-md mb-20">
+        <div className="bg-ivory w-full max-w-md p-6 rounded-lg shadow-md mb-20 flex flex-col items-center">
           <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
             Themed Packs
           </h2>
@@ -104,8 +103,9 @@ export default function OverviewClient({
         </div>
       )}
 
+      {/* Custom Pack Card */}
       {activeTab === "custom" && (
-        <div className="flex flex-col items-center w-full max-w-md mb-20">
+        <div className="bg-ivory w-full max-w-md p-6 rounded-lg shadow-md mb-20 flex flex-col items-center">
           <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
             Custom Pack
           </h2>
