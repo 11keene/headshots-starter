@@ -365,27 +365,26 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
         )}
 
         {question.type === "multi" && (
-          <div className="grid grid-cols-1 gap-3">
-            {question.options.map((o) => (
-              <motion.label
-                key={o.value}
-                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
-                  (answers[question.key] || []).includes(o.value)
-                    ? "bg-dusty-coral border-dusty-coral"
-                    : "border-gray-300 hover:bg-warm-gray"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={(answers[question.key] || []).includes(o.value)}
-                  readOnly
-                  aria-label={`Select ${o.label}`}
-                />
-                <img src={o.img} alt={o.label} className="w-10 h-10 rounded" />
-                <span>{o.label}</span>
-              </motion.label>
-            ))}
-          </div>
+       <div className="grid grid-cols-2 gap-4">
+       {question.options.map((o) => {
+         const isSelected = (answers[question.key] || []).includes(o.value);
+         return (
+           <motion.button
+             key={o.value}
+             onClick={() => choose(o.value)}
+             whileHover={{ scale: 1.02 }}
+             className={`border-2 rounded-lg flex flex-col items-center p-4 transition-shadow ${
+               isSelected
+                 ? "border-dusty-coral shadow-lg"
+                 : "border-warm-gray hover:shadow-md"
+             }`}
+           >
+             {o.img && <img src={o.img} alt={o.label} className="w-full h-24 object-cover mb-2" />}
+             <span>{o.label}</span>
+           </motion.button>
+         );
+       })}
+     </div>
         )}
 
         {question.type === "select" && (
