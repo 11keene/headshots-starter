@@ -35,7 +35,7 @@ export default function OverviewClient({
       <div className="mt-8 mb-8 w-full max-w-lg grid grid-cols-3 gap-6">
         <button
           onClick={() => setActiveTab("starter")}
-          className={`whitespace-nowrap text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
+          className={`whitespace-nowrap text-base sm:text-lg font-semibold px-1 py-2 rounded-md transition ${
             activeTab === "starter"
               ? "text-ivory translate-y-[-2px] border-b-4 border-charcoal"
               : "text-muted-foreground hover:text-charcoal"
@@ -45,7 +45,7 @@ export default function OverviewClient({
         </button>
         <button
           onClick={() => setActiveTab("themed")}
-          className={`whitespace-nowrap text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
+          className={`whitespace-nowrap text-base sm:text-lg font-semibold px-1 py-2 rounded-md transition ${
             activeTab === "themed"
               ? "text-ivory translate-y-[-2px] border-b-4 border-charcoal"
               : "text-muted-foreground hover:text-charcoal"
@@ -55,7 +55,7 @@ export default function OverviewClient({
         </button>
         <button
           onClick={() => setActiveTab("custom")}
-          className={`whitespace-nowrap text-base sm:text-lg font-semibold px-4 py-2 rounded-md transition ${
+          className={`whitespace-nowrap text-base sm:text-lg font-semibold px-1 py-2 rounded-md transition ${
             activeTab === "custom"
               ? "text-ivory translate-y-[-2px] border-b-4 border-charcoal"
               : "text-muted-foreground hover:text-charcoal"
