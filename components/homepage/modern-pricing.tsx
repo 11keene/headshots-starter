@@ -41,7 +41,7 @@ export default function ModernPricing() {
       originalPrice: "$39.99",
       price: "$29.99",
       description:
-        "A curated mini-shoot designed to deliver polished, professional images — fast. Ideal for updating your LinkedIn, profile picture, or personal brand with clean, natural looks that build instant credibility.",
+        "Ideal for updating your LinkedIn, profile picture, or personal brand with clean, natural looks that build instant credibility.",
       features: [
         "6 Prompts • 18 Images • 6 Unique Outfits • 6 Unique Backgrounds",
         "Studio-style lighting with warm, inviting tones",
@@ -56,7 +56,7 @@ export default function ModernPricing() {
       originalPrice: "$72.99",
       price: "$59.99",
       description:
-        "Each pack is built around a powerful theme — from CEO to Teacher, Nurse, Realtor, Creative Professional, and more. Every prompt has been handcrafted to reflect your role, energy, and brand identity. You’ll receive a full visual collection tailored to your industry’s tone and aesthetic.",
+        "Each pack is built around a powerful theme. You’ll receive a full visual collection tailored to your industry’s tone and aesthetic.",
       features: [
         "15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds",
         "Profession-specific styling and pose direction",
@@ -71,7 +71,7 @@ export default function ModernPricing() {
       originalPrice: "$99.99",
       price: "$74.99",
       description:
-        "This is your personalized photoshoot — powered by your answers. We use your style preferences, mood, industry, and brand voice to generate a completely customized set of professional images. Every detail is tailored to your unique vision, with prompts generated using our proprietary GPT system.",
+        "Your personalized photoshoot — We use your style preferences, mood, industry, and brand voice to generate a completely customized set of professional images.",
       features: [
         "15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds",
         "Personalized outfits, background settings, poses, and vibe",

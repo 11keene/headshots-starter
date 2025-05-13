@@ -94,12 +94,7 @@ export default function Navbar() {
                   <a href="mailto:support@aimavenstudio.com">Contact</a>
                 </DropdownMenuItem>
 
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="flex justify-between px-4">
-                  <span>Your Credits</span>
-                  <span className="font-semibold">{credits}</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                
                 <DropdownMenuItem>
                   <Button
                     variant="ghost"

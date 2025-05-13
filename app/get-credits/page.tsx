@@ -1,107 +1,84 @@
 // File: app/get-credits/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { loadStripe } from "@stripe/stripe-js";
-import { Card } from "@/components/ui/card";
+import { useEffect, useState } from "react";
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+type PlanID = "starter" | "themed" | "custom";
 
-type Plan = {
-  id: string;
+interface Plan {
+  id: PlanID;
   name: string;
   description: string;
-  price: string;         // now a string price, not credits
-  priceId: string;
-};
+  price: string;
+}
 
 const PLANS: Plan[] = [
   {
-    id:          "starter",
-    priceId:     "price_1ROLak4RnIZz7j08sUmtURum",
-    name:        "Starter Pack",
+    id: "starter",
+    name: "Starter Pack",
     description: "6 Prompts • 18 Images • 6 Unique Outfits • 6 Unique Backgrounds",
-    price:       "$29.99",
+    price: "$29.99",
   },
-  // …themed, custom …
+  {
+    id: "themed",
+    name: "Themed Packs",
+    description: "15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds",
+    price: "$59.99",
+  },
+  {
+    id: "custom",
+    name: "Custom Pack",
+    description: "15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds",
+    price: "$74.99",
+  },
 ];
 
 export default function PricingPage() {
   const supabase = createPagesBrowserClient();
-  const [user, setUser] = useState<{ id: string } | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<Plan|null>(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
 
+  // redirect to login if not signed in
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) setUser({ id: data.user.id });
+      if (data.user) setUserId(data.user.id);
+      else router.push("/login?redirectTo=/get-credits");
     });
-  }, [supabase]);
+  }, [supabase, router]);
 
-  const handleCheckout = async (plan: Plan) => {
-    if (!user) {
-      setError("You must be logged in to purchase.");
-      return;
-    }
-    setLoading(true);
-    setError("");
-
-    // hit your own API which creates a Stripe Session
-    const { sessionId, url, error: err } = await fetch("/api/stripe/checkout/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        priceId:  plan.priceId,
-        planName: plan.name,
-        user_id:  user.id,
-      }),
-    }).then(r => r.json());
-
-    if (err || !sessionId) {
-      setError(err || "Failed to start checkout");
-      setLoading(false);
-      return;
-    }
-
-    const stripe = await stripePromise;
-    if (!stripe) {
-      setError("Stripe.js failed to load");
-      setLoading(false);
-      return;
-    }
-
-    await stripe.redirectToCheckout({ sessionId });
+  const choosePlan = (planId: PlanID) => {
+    // send them to overview and set that tab active
+    router.push(`/overview?tab=${planId}`);
   };
 
   return (
     <div className="min-h-screen bg-ivory p-8">
-      {error && <div className="mb-4 text-red-600">{error}</div>}
       <h1 className="text-3xl font-bold mb-6">Pick Your Pack</h1>
       <div className="grid gap-6 md:grid-cols-3">
-        {PLANS.map(plan => (
+        {PLANS.map((plan) => (
           <Card
             key={plan.id}
-            onClick={() => setSelectedPlan(plan)}
-            className={`p-6 cursor-pointer border-2 transition ${
-              selectedPlan?.id === plan.id ? "border-dusty-coral" : "border-warm-gray"
-            }`}
+            className="p-6 border-2 border-warm-gray rounded-lg transition hover:shadow-lg flex flex-col"
           >
             <h2 className="text-xl font-semibold mb-2">{plan.name}</h2>
             <p className="text-gray-600 mb-4">{plan.description}</p>
-            <p className="text-4xl font-extrabold text-dusty-coral">{plan.price}</p>
+            <div className="mt-auto flex items-center justify-between">
+              <span className="text-4xl font-extrabold text-dusty-coral">
+                {plan.price}
+              </span>
+              <Button
+                onClick={() => choosePlan(plan.id)}
+                className="bg-dusty-coral hover:bg-sage-green text-white px-4 py-2 rounded-md text-sm"
+              >
+                Choose Plan
+              </Button>
+            </div>
           </Card>
         ))}
-      </div>
-      <div className="mt-8 text-right">
-        <Button
-          onClick={() => selectedPlan && handleCheckout(selectedPlan)}
-          disabled={!selectedPlan || loading}
-        >
-          {loading ? "Redirecting…" : "Checkout"}
-        </Button>
       </div>
     </div>
   );
