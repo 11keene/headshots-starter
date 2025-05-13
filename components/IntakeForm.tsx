@@ -1,7 +1,7 @@
 // components/IntakeForm.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -11,53 +11,266 @@ type Question = {
   key: string;
   type: "images" | "multi" | "select";
   title: string;
+  multi?: boolean;
   options: Option[];
   optional?: boolean;
 };
 
-const QUESTIONS: Question[] = [
+const GENDER_QUESTION: Question = {
+  key: "gender",
+  type: "images",
+  title: "Who are we styling today?",
+  options: [
+    { label: "Woman", value: "female", img: "https://via.placeholder.com/300x200?text=Woman" },
+    { label: "Man", value: "male", img: "https://via.placeholder.com/300x200?text=Man" }
+  ]
+};
+
+const WOMEN_QUESTIONS: Question[] = [
+  {
+    key: "hairLength",
+    type: "images",
+    title: "What is your hair length?",
+    options: [
+      { label: "Pixie Cut", value: "pixie", img: "https://via.placeholder.com/300x200?text=Pixie+Cut" },
+      { label: "Bob Cut", value: "bob", img: "https://via.placeholder.com/300x200?text=Bob+Cut" },
+      { label: "Shoulder", value: "shoulder", img: "https://via.placeholder.com/300x200?text=Shoulder" },
+      { label: "Past Shoulder", value: "past-shoulder", img: "https://via.placeholder.com/300x200?text=Past+Shoulder" },
+      { label: "Midback", value: "midback", img: "https://via.placeholder.com/300x200?text=Midback" },
+      { label: "Long", value: "long", img: "https://via.placeholder.com/300x200?text=Long" }
+    ]
+  },
+  {
+    key: "hairTexture",
+    type: "images",
+    title: "What is your hair texture?",
+    options: [
+      { label: "Straight", value: "straight", img: "https://via.placeholder.com/300x200?text=Straight" },
+      { label: "Wavy", value: "wavy", img: "https://via.placeholder.com/300x200?text=Wavy" },
+      { label: "Curly", value: "curly", img: "https://via.placeholder.com/300x200?text=Curly" },
+      { label: "Coily", value: "coily", img: "https://via.placeholder.com/300x200?text=Coily" }
+    ]
+  },
   {
     key: "attire",
     type: "images",
     title: "What will you wear?",
     options: [
-      { label: "Casual",   value: "casual",   img: "https://via.placeholder.com/300x200?text=Casual" },
-      { label: "Business", value: "business", img: "https://via.placeholder.com/300x200?text=Business" },
-      { label: "Creative", value: "creative", img: "https://via.placeholder.com/300x200?text=Creative" },
-    ],
+      { label: "Business Professional", value: "business professional", img: "" },
+      { label: "Business Casual", value: "business casual", img: "" },
+      { label: "Smart Casual", value: "smart casual", img: "" },
+      { label: "Creative/Trendy", value: "creative", img: "" },
+      { label: "Formal", value: "formal", img: "" }
+    ]
+  },
+  {
+    key: "bodyType",
+    type: "images",
+    title: "What is your body type?",
+    options: [
+      { label: "Slim", value: "slim", img: "" },
+      { label: "Regular", value: "regular", img: "" },
+      { label: "Curvy", value: "curvy", img: "" },
+      { label: "Plus Size", value: "plus size", img: "" },
+      { label: "Athletic", value: "athletic", img: "" }
+    ]
   },
   {
     key: "setting",
     type: "images",
     title: "Choose a setting",
     options: [
-      { label: "Studio",   value: "studio",   img: "https://via.placeholder.com/300x200?text=Studio" },
-      { label: "Outdoor",  value: "outdoor",  img: "https://via.placeholder.com/300x200?text=Outdoor" },
-      { label: "Workspace",value: "workspace",img: "https://via.placeholder.com/300x200?text=Workspace" },
-    ],
+      { label: "Studio", value: "studio", img: "" },
+      { label: "Office", value: "office", img: "" },
+      { label: "City", value: "city", img: "" },
+      { label: "Nature", value: "nature", img: "" },
+      { label: "Minimalist Indoors", value: "minimalist", img: "" }
+    ]
   },
   {
     key: "mood",
     type: "multi",
-    title: "Select your mood",
-    optional: true,
+    title: "Select your mood or vibe",
     options: [
-      { label: "Friendly", value: "friendly", img: "https://via.placeholder.com/100?text=😊" },
-      { label: "Serious",  value: "serious",  img: "https://via.placeholder.com/100?text=😐" },
-      { label: "Playful",  value: "playful",  img: "https://via.placeholder.com/100?text=😜" },
-    ],
+      { label: "Confident", value: "confident", img: "" },
+      { label: "Relaxed", value: "relaxed", img: "" },
+      { label: "Bold", value: "bold", img: "" },
+      { label: "Approachable", value: "approachable", img: "" },
+      { label: "Empowered", value: "empowered", img: "" },
+      { label: "Creative", value: "creative", img: "" }
+    ]
   },
   {
-    key: "useCase",
+    key: "brandColors",
+    type: "multi",
+    title: "Do you want us to subtly include your brand colors?",
+    optional: true,
+    options: [
+      { label: "Black", value: "black", img: "" },
+      { label: "White", value: "white", img: "" },
+      { label: "Beige", value: "beige", img: "" },
+      { label: "Blush Pink", value: "blush pink", img: "" },
+      { label: "Forest Green", value: "forest green", img: "" },
+      { label: "Cobalt Blue", value: "cobalt blue", img: "" },
+      { label: "Gold", value: "gold", img: "" },
+      { label: "Silver", value: "silver", img: "" }
+    ]
+  },
+  {
+    key: "industry",
     type: "select",
+    title: "What industry or profession are you in?",
+    options: [
+      { label: "Marketing", value: "marketing", img: "" },
+      { label: "Education", value: "education", img: "" },
+      { label: "Finance", value: "finance", img: "" },
+      { label: "Healthcare", value: "healthcare", img: "" },
+      { label: "Technology", value: "technology", img: "" },
+      { label: "Other", value: "other", img: "" }
+    ]
+  },
+  {
+    key: "photoUsage",
+    type: "multi",
     title: "What will you use these for?",
     options: [
-      { label: "LinkedIn",    value: "linkedin",    img: "" },
-      { label: "Website",     value: "website",     img: "" },
-      { label: "Social Media",value: "social",      img: "" },
-    ],
+      { label: "LinkedIn", value: "linkedin", img: "" },
+      { label: "Website", value: "website", img: "" },
+      { label: "Speaking Profile", value: "speaking", img: "" },
+      { label: "Podcast Cover", value: "podcast", img: "" },
+      { label: "Press Kit", value: "press", img: "" },
+      { label: "Social Media", value: "social", img: "" }
+    ]
   },
+  {
+    key: "creativeFlair",
+    type: "select",
+    title: "Would you like us to include a few creative, artsy prompts in your set?",
+    options: [
+      { label: "Yes", value: "yes", img: "" },
+      { label: "No", value: "no", img: "" }
+    ]
+  }
 ];
+
+
+const MEN_QUESTIONS: Question[] = [
+  {
+    key: "hairLength",
+    type: "images",
+    title: "What is your hair length?",
+    options: [
+      { label: "Buzz Cut", value: "buzz", img: "" },
+      { label: "Short", value: "short", img: "" },
+      { label: "Medium", value: "medium", img: "" },
+      { label: "Long", value: "long", img: "" }
+    ]
+  },
+  {
+    key: "attire",
+    type: "images",
+    title: "What will you wear?",
+    multi: true,
+    options: [
+      { label: "Business Professional", value: "business professional", img: "" },
+      { label: "Business Casual", value: "business casual", img: "" },
+      { label: "Smart Casual", value: "smart casual", img: "" },
+      { label: "Creative/Modern", value: "creative", img: "" },
+      { label: "Formal", value: "formal", img: "" }
+    ]
+  },
+  {
+    key: "bodyType",
+    type: "images",
+    title: "What is your body type?",
+    options: [
+      { label: "Slim", value: "slim", img: "" },
+      { label: "Average", value: "average", img: "" },
+      { label: "Muscular", value: "muscular", img: "" },
+      { label: "Stocky", value: "stocky", img: "" }
+    ]
+  },
+  {
+    key: "setting",
+    type: "images",
+    title: "Choose a setting",
+    multi: true,
+    options: [
+      { label: "Studio", value: "studio", img: "" },
+      { label: "Office", value: "office", img: "" },
+      { label: "City", value: "city", img: "" },
+      { label: "Nature", value: "nature", img: "" },
+      { label: "Minimalist Indoors", value: "minimalist", img: "" }
+    ]
+  },
+  {
+    key: "mood",
+    type: "multi",
+    title: "Select your mood or vibe",
+    multi: true,
+    options: [
+      { label: "Confident", value: "confident", img: "" },
+      { label: "Relaxed", value: "relaxed", img: "" },
+      { label: "Bold", value: "bold", img: "" },
+      { label: "Approachable", value: "approachable", img: "" },
+      { label: "Empowered", value: "empowered", img: "" },
+      { label: "Creative", value: "creative", img: "" }
+    ]
+  },
+  {
+    key: "brandColors",
+    type: "multi",
+    title: "Do you want us to subtly include your brand colors?",
+    multi: true,
+    optional: true,
+    options: [
+      { label: "Black", value: "black", img: "" },
+      { label: "White", value: "white", img: "" },
+      { label: "Beige", value: "beige", img: "" },
+      { label: "Forest Green", value: "forest green", img: "" },
+      { label: "Navy Blue", value: "navy blue", img: "" },
+      { label: "Charcoal Gray", value: "charcoal", img: "" },
+      { label: "Silver", value: "silver", img: "" }
+    ]
+  },
+  {
+    key: "industry",
+    type: "select",
+    title: "What industry or profession are you in?",
+    options: [
+      { label: "Marketing", value: "marketing", img: "" },
+      { label: "Education", value: "education", img: "" },
+      { label: "Finance", value: "finance", img: "" },
+      { label: "Healthcare", value: "healthcare", img: "" },
+      { label: "Technology", value: "technology", img: "" },
+      { label: "Other", value: "other", img: "" }
+    ]
+  },
+  {
+    key: "photoUsage",
+    type: "multi",
+    multi: true,
+    title: "What will you use these for?",
+    options: [
+      { label: "LinkedIn", value: "linkedin", img: "" },
+      { label: "Website", value: "website", img: "" },
+      { label: "Speaking Profile", value: "speaking", img: "" },
+      { label: "Podcast Cover", value: "podcast", img: "" },
+      { label: "Press Kit", value: "press", img: "" },
+      { label: "Social Media", value: "social", img: "" }
+    ]
+  },
+  {
+    key: "creativeFlair",
+    type: "select",
+    title: "Would you like us to include a few creative, artsy prompts in your set?",
+    options: [
+      { label: "Yes", value: "yes", img: "" },
+      { label: "No", value: "no", img: "" }
+    ]
+  }
+];
+
 
 type IntakeFormProps = {
   pack: string;
@@ -69,32 +282,36 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
 
-  // load
   useEffect(() => {
     const saved = localStorage.getItem(`intake-${pack}`);
-        if (saved) setAnswers(JSON.parse(saved));
+    if (saved) setAnswers(JSON.parse(saved));
   }, [pack]);
 
-  // save
   useEffect(() => {
     localStorage.setItem(`intake-${pack}`, JSON.stringify(answers));
-    }, [answers, pack]);
+  }, [answers, pack]);
 
-  const question = QUESTIONS[step];
+  const questionSet = useMemo(() => {
+    if (!answers.gender) return [GENDER_QUESTION];
+    return [GENDER_QUESTION, ...(answers.gender === "female" ? WOMEN_QUESTIONS : MEN_QUESTIONS)];
+  }, [answers.gender]);
 
-  const choose = (val: any) =>
-    setAnswers((a) => ({ ...a, [question.key]: val }));
+  const question = questionSet[step];
 
-  const toggle = (val: any) => {
-    const cur: any[] = answers[question.key] || [];
-    const next = cur.includes(val)
-      ? cur.filter((x) => x !== val)
-      : [...cur, val];
-    setAnswers((a) => ({ ...a, [question.key]: next }));
+  const choose = (val: any) => {
+    if (question.multi || question.type === "multi") {
+      const current = answers[question.key] || [];
+      const updated = current.includes(val)
+        ? current.filter((v: any) => v !== val)
+        : [...current, val];
+      setAnswers((a) => ({ ...a, [question.key]: updated }));
+    } else {
+      setAnswers((a) => ({ ...a, [question.key]: val }));
+    }
   };
 
   const next = () => {
-    if (step < QUESTIONS.length - 1) {
+    if (step < questionSet.length - 1) {
       setStep(step + 1);
     } else {
       if (onComplete) onComplete();
@@ -107,20 +324,21 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
     else router.back();
   };
 
+  useEffect(() => {
+    if (step > 0 && !answers.gender) setStep(0);
+  }, [answers.gender, step]);
+
   return (
     <div className="max-w-lg mx-auto p-6 space-y-6">
-      {/* Progress bar */}
       <div className="w-full bg-warm-gray h-2 rounded-full overflow-hidden">
         <div
           className="h-2 bg-gradient-to-r from-sage-green to-sage-green transition-all"
-          style={{ width: `${((step + 1) / QUESTIONS.length) * 100}%` }}
+          style={{ width: `${((step + 1) / questionSet.length) * 100}%` }}
         />
       </div>
 
-      {/* Question title */}
       <h2 className="text-2xl font-bold text-center">{question.title}</h2>
 
-      {/* Options */}
       <div className="space-y-6">
         {question.type === "images" && (
           <div className="grid grid-cols-2 gap-4">
@@ -130,7 +348,11 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
                 onClick={() => choose(o.value)}
                 whileHover={{ scale: 1.02 }}
                 className={`border-2 rounded-lg overflow-hidden flex flex-col items-center transition-shadow ${
-                  answers[question.key] === o.value
+                  (question.multi || question.type === "multi")
+                    ? (answers[question.key] || []).includes(o.value)
+                      ? "border-dusty-coral shadow-lg"
+                      : "border-warm-gray hover:shadow-md"
+                    : answers[question.key] === o.value
                     ? "border-dusty-coral shadow-lg"
                     : "border-warm-gray hover:shadow-md"
                 }`}
@@ -188,13 +410,12 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
         )}
       </div>
 
-      {/* Navigation */}
       <div className="flex justify-between">
         <Button variant="outline" onClick={back} disabled={step === 0}>
           Back
         </Button>
         <Button onClick={next} disabled={!answers[question.key] && !question.optional}>
-          {step === QUESTIONS.length - 1 ? "Submit" : "Next"}
+          {step === questionSet.length - 1 ? "Submit" : "Next"}
         </Button>
       </div>
     </div>
