@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Button } from "@/components/ui/button";
@@ -17,13 +17,17 @@ import { useToast } from "@/components/ui/use-toast";
 
 type Inputs = { email: string };
 
-export default function Login({ redirectTo }: { redirectTo: string }) {
+export default function Login() {
   const router = useRouter();
+  const params = useSearchParams();
   const supabase = createClientComponentClient();
+  const { toast } = useToast();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMagicLinkSent, setIsMagicLinkSent] = useState(false);
-  const { toast } = useToast();
+
+  // 1) Read the post-login target from ?redirectTo=...
+  const redirectTo = params?.get("redirectTo") || "/overview";
 
   const {
     register,
@@ -31,35 +35,27 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     formState: { errors, isSubmitted },
   } = useForm<Inputs>();
 
+  // 2) After sign‐in, send them to redirectTo
   useEffect(() => {
-    let isMounted = true;
-
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (isMounted && session) {
-        router.replace("/overview");
-      }
-    };
-
-    checkSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
-        router.replace("/overview");
+        router.replace(redirectTo);
       }
     });
+    return () => subscription.unsubscribe();
+  }, [redirectTo, router, supabase]);
 
-    return () => {
-      isMounted = false;
-      listener.subscription.unsubscribe();
-    };
-  }, []);
-
+  // 3) Send magic link to /login?redirectTo=<redirectTo>
   const onSubmit: SubmitHandler<Inputs> = async ({ email }) => {
     setIsSubmitting(true);
+    const callbackUrl = `${window.location.origin}/login?redirectTo=${encodeURIComponent(
+      redirectTo
+    )}`;
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: redirectTo },
+      options: { emailRedirectTo: callbackUrl },
     });
     setIsSubmitting(false);
 
@@ -74,6 +70,7 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
     supabase.auth.signInWithOAuth({
       provider,
       options: {
+        // OAuth uses a different callback; keep as is
         redirectTo: `${window.location.origin}/auth/v1/callback`,
       },
     });
@@ -84,40 +81,26 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-md">
+      {/* Logo + Title */}
       <div className="flex items-center gap-1 mb-4">
         <img src="/newlogo.png" alt="AI Maven Logo" className="w-10 h-10 rounded-full" />
         <span className="text-xl font-bold">AI Maven</span>
       </div>
 
-      {/* Apple (black background) */}
-      <Button
-        onClick={() => socialSignIn("apple")}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-black hover:bg-muted-gold text-white py-4 font-semibold transition border-warm-gray"
-      >
-        <FaApple size={20} />
-        Continue with Apple
+      {/* Social Buttons */}
+      <Button onClick={() => socialSignIn("apple")} className="w-full flex items-center justify-center gap-2 rounded-md bg-black hover:bg-muted-gold text-white py-4 font-semibold transition border-warm-gray">
+        <FaApple size={20} /> Continue with Apple
       </Button>
-
-      {/* Google (white background with Google logo) */}
-      <Button
-        onClick={() => socialSignIn("google")}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-white hover:bg-muted-gold text-charcoal py-4 font-semibold transition border border-warm-gray"
-      >
-        <FcGoogle size={20} />
-        Continue with Google
+      <Button onClick={() => socialSignIn("google")} className="w-full flex items-center justify-center gap-2 rounded-md bg-white hover:bg-muted-gold text-charcoal py-4 font-semibold transition border border-warm-gray">
+        <FcGoogle size={20} /> Continue with Google
       </Button>
-
-      {/* Facebook (white background with blue “f” icon) */}
-      <Button
-        onClick={() => socialSignIn("facebook")}
-        className="w-full flex items-center justify-center gap-2 rounded-md bg-white hover:bg-muted-gold text-charcoal py-4 font-semibold transition border border-warm-gray"
-      >
-        <FaFacebookF size={20} className="text-[#1877F2]" />
-        Continue with Facebook
+      <Button onClick={() => socialSignIn("facebook")} className="w-full flex items-center justify-center gap-2 rounded-md bg-white hover:bg-muted-gold text-charcoal py-4 font-semibold transition border border-warm-gray">
+        <FaFacebookF size={20} className="text-[#1877F2]" /> Continue with Facebook
       </Button>
 
       <OR />
 
+      {/* Email Input */}
       <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4">
         <div className="relative">
           <Input
@@ -140,6 +123,7 @@ export default function Login({ redirectTo }: { redirectTo: string }) {
         </Button>
       </form>
 
+      {/* Legal & Trust */}
       <div className="text-center text-sm text-muted-foreground space-y-2 mt-6 px-4">
         <p>
           New accounts are subject to our{" "}

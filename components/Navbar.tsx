@@ -55,7 +55,9 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {isBackend ? (
-          <div className="text-sm text-charcoal font-semibold">Credits: {credits}</div>
+          <div className="text-sm text-charcoal font-semibold">
+            Credits: {credits}
+          </div>
         ) : (
           <Link
             href="/"
@@ -66,7 +68,7 @@ export default function Navbar() {
               alt="AI Maven Logo"
               width={40}
               height={35}
-              className="rounded-full text-charcoal "
+              className="rounded-full text-charcoal"
             />
             <span>AI Maven</span>
           </Link>
@@ -85,6 +87,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
           {isBackend ? (
+            // Dashboard Hamburger Menu
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
@@ -100,6 +103,12 @@ export default function Navbar() {
                 <DropdownMenuItem asChild>
                   <Link href="/overview">Create Photos</Link>
                 </DropdownMenuItem>
+
+                {/* ───────────── New “Contact” link ───────────── */}
+                <DropdownMenuItem asChild>
+                  <a href="mailto:support@aimavenstudio.com">Contact</a>
+                </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="flex justify-between px-4">
                   <span>Your Credits</span>
@@ -121,6 +130,7 @@ export default function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : pathname === "/" ? (
+            // Homepage: Language picker + Additional Menu
             <>
               {/* Language picker on homepage */}
               <DropdownMenu>
@@ -130,13 +140,13 @@ export default function Navbar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="bottom" align="start" className="w-40">
-                 {locales.map(({ code, label }) => (
-  <DropdownMenuItem asChild key={code}>
-     <Link href={pathname} locale={code} replace>
-       {label}
-     </Link>
-   </DropdownMenuItem>
- ))}
+                  {locales.map(({ code, label }) => (
+                    <DropdownMenuItem asChild key={code}>
+                      <Link href={pathname} locale={code} replace>
+                        {label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -156,6 +166,12 @@ export default function Navbar() {
                   <DropdownMenuItem className="flex justify-center py-2">
                     <ThemeToggle />
                   </DropdownMenuItem>
+
+                  {/* ───────────── New “Contact” link ───────────── */}
+                  <DropdownMenuItem asChild>
+                    <a href="mailto:support@aimavenstudio.com">Contact</a>
+                  </DropdownMenuItem>
+
                   <DropdownMenuSeparator className="border-white/50" />
                   {/* Login button */}
                   <DropdownMenuItem asChild>

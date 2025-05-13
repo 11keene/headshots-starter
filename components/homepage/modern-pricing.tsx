@@ -1,7 +1,8 @@
+// File: components/ModernPricing.tsx
 "use client";
 
 import Link from "next/link";
-import type React from "react";
+import { useSession } from "@supabase/auth-helpers-react";    // ← NEW
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,8 @@ interface PricingTier {
 }
 
 export default function ModernPricing() {
+  const session = useSession();                          // ← NEW
+
   const tiers: PricingTier[] = [
     {
       title: "Starter",
@@ -67,9 +70,19 @@ export default function ModernPricing() {
                 tier.popular && "pricing-card-popular"
               )}
             >
-              {tier.popular && <div className="pricing-badge">Most Popular</div>}
+              {tier.popular && (
+                <div
+                  className="absolute -top-4 left-12
+                             bg-dusty-coral text-white
+                             text-xs font-semibold
+                             px-2 py-1.5
+                             rounded-full"
+                >
+                  Most Popular
+                </div>
+              )}
               {tier.bestValue && (
-                <div className="absolute -top-3 right-6 rounded-full bg-sage-green px-3 py-1 text-xs font-medium text-white">
+                <div className="absolute -top-3 right-6 rounded-full bg-sage-green px-3 py-1 text-xs font-semibold text-white">
                   Best Value
                 </div>
               )}
@@ -92,8 +105,17 @@ export default function ModernPricing() {
                 ))}
               </ul>
               <div className="mt-auto">
-                <Link href="/login" className="block w-full" aria-label={`Select ${tier.title} plan`}>
-                  <Button className={cn("w-full text-white", "bg-dusty-coral hover:bg-sage-green")}>
+                {/* ← UPDATED: if there's a session, go to /get-credits, else to /login */}
+                <Link
+                  href={
+                    session
+                      ? "/get-credits"
+                      : `/login?redirectTo=/get-credits`
+                  }
+                  className="block w-full"
+                  aria-label={`Select ${tier.title} plan`}
+                >
+                  <Button className="w-full bg-dusty-coral text-white hover:bg-sage-green">
                     {tier.buttonText}
                   </Button>
                 </Link>

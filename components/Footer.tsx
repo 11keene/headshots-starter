@@ -50,9 +50,9 @@ export default function Footer() {
             <h3 className="text-sm font-medium text-warm-gray">Resources</h3>
             <ul className="space-y-2">
               {[
-                { href: "https://github.com", label: "GitHub" },
-                { href: "https://docs.astria.ai", label: "Documentation" },
-                { href: "https://twitter.com/Astria_AI", label: "Twitter" },
+                
+                
+                { href: "https://www.instagram.com/kammilocs/?igshid=eGl6eXRoODM5OXU4", label: "Instagram" },
               ].map(({ href, label }) => (
                 <li key={label}>
                   <Link
@@ -72,8 +72,8 @@ export default function Footer() {
             <ul className="space-y-2">
               {[
                 { href: "mailto:support@aimavenstudio.com", label: "Contact" },
-                { href: "https://choosealicense.com/licenses/mit/", label: "License" },
-              ].map(({ href, label }) => (
+                { href: "/LICENSE.md", label: "License" },
+                            ].map(({ href, label }) => (
                 <li key={label}>
                   <Link
                     href={href}
