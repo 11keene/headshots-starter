@@ -5,9 +5,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { loadStripe } from "@stripe/stripe-js";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { FaApple, FaCreditCard, FaCheckCircle } from "react-icons/fa";
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
+import { FaApple, FaCreditCard, FaCheckCircle } from "react-icons/fa";
 
 // ↪︎ your Stripe publishable key must be set in .env.local
 const stripePromise = loadStripe(
@@ -17,39 +16,43 @@ const stripePromise = loadStripe(
 type Plan = {
   id: string;
   name: string;
+  description: string;
   credits: number;
   price: string;
+  originalPrice: string;    // ← new field
   priceId: string;
 };
 
 const PLANS: Plan[] = [
   {
     id: "starter",
-    priceId: "price_1RJLBd4RnIZz7j08beYwRGv1",
-    name: "Starter",
+    priceId: "price_1ROLak4RnIZz7j08sUmtURum",
+    name: "Starter Pack",
     credits: 25,
-    price: "$9.99",
+    originalPrice: "$39.99",   // ← your crossed-out price
+    price: "$29.99",
+    description:
+      "6 Prompts • 18 Images • 6 Unique Outfits • 6 Unique Backgrounds",
   },
   {
-    id: "standard",
-    priceId: "price_1RJLCO4RnIZz7j08tJ3vN1or",
-    name: "Standard",
+    id: "themed packs",
+    priceId: "price_1ROLcD4RnIZz7j08FGJELQOA",
+    name: "Themed Packs",
     credits: 75,
-    price: "$24.99",
+    originalPrice: "$72.99",
+    price: "$59.99",
+    description:
+      "15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds",
   },
   {
-    id: "pro",
-    priceId: "price_1RJLDE4RnIZz7j08RlQUve2s",
-    name: "Pro",
+    id: "custom pack",
+    priceId: "price_1ROLdH4RnIZz7j08wZHLLtcz",
+    name: "Custom Pack",
     credits: 200,
-    price: "$49.99",
-  },
-  {
-    id: "studio",
-    priceId: "price_1RJLDf4RnIZz7j08TLcrNcQ6",
-    name: "Studio",
-    credits: 500,
-    price: "$99.99",
+    originalPrice: "$99.99",
+    price: "$74.99",
+    description:
+      "15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds",
   },
 ];
 
@@ -59,7 +62,6 @@ export default function GetCreditsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [cardNumber, setCardNumber] = useState("");
 
   // fetch the logged-in user
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
@@ -77,31 +79,23 @@ export default function GetCreditsPage() {
       setError("You must be logged in to purchase credits");
       return;
     }
-
     setLoading(true);
     setError("");
-
     try {
-      // 1) call your credits‐only endpoint
       const resp = await fetch("/api/stripe/checkout/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          priceId:    priceId,
-          user_id:    user.id,
+          priceId,
+          user_id: user.id,
           user_email: user.email,
         }),
       });
-
       if (!resp.ok) {
         const text = await resp.text();
         throw new Error(text || resp.statusText);
       }
-
-      // 2) your endpoint now returns { sessionId }
       const { sessionId } = await resp.json();
-
-      // 3) hand off to Stripe.js
       const stripe = await stripePromise;
       if (!stripe) throw new Error("Stripe.js failed to load");
       await stripe.redirectToCheckout({ sessionId });
@@ -112,9 +106,6 @@ export default function GetCreditsPage() {
       setLoading(false);
     }
   };
-
-  const goNext = () => setStep((s) => Math.min(3, s + 1));
-  const goBack = () => setStep((s) => Math.max(1, s - 1));
 
   return (
     <div className="min-h-screen bg-ivory flex flex-col lg:flex-row">
@@ -149,7 +140,7 @@ export default function GetCreditsPage() {
       {/* Main Content */}
       <div className="flex-grow p-8 flex flex-col">
         {error && (
-          <div className="bg-dusty-coral border bg-dusty-coral bg-dusty-coral px-4 py-3 rounded mb-4 relative">
+          <div className="bg-dusty-coral px-4 py-3 rounded mb-4 relative">
             <span className="block sm:inline">{error}</span>
             <button
               className="absolute top-0 bottom-0 right-0 px-4 py-3"
@@ -176,13 +167,20 @@ export default function GetCreditsPage() {
                       : "border-warm-gray"
                   }`}
                 >
-                  <h3 className="text-lg font-semibold mb-2">
-                    {plan.name}
-                  </h3>
-                  <p className="text-4xl font-extrabold text-dusty-coral mb-2">
-                    {plan.credits}
+                  <h3 className="text-lg font-semibold mb-2">{plan.name}</h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    {plan.description}
                   </p>
-                  <p className="text-gray-600 font-medium">{plan.price}</p>
+
+                  {/* price block with crossed-out original */}
+                  <div className="relative mb-6">
+                    <span className="absolute -top-2 right-1 md:right-4 text-sm line-through text-muted-foreground">
+                      {plan.originalPrice}
+                    </span>
+                    <p className="text-4xl font-extrabold text-dusty-coral">
+                      {plan.price}
+                    </p>
+                  </div>
                 </Card>
               ))}
             </div>
@@ -209,7 +207,7 @@ export default function GetCreditsPage() {
             <h2 className="text-2xl font-bold text-gray-800">
               Enter payment details
             </h2>
-            {/* you can keep your existing Card + Apple Pay buttons here */}
+            {/* keep your existing Card + Apple Pay buttons here */}
           </div>
         )}
 

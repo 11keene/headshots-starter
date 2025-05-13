@@ -80,7 +80,7 @@ export default function Navbar() {
               Home
             </Link>
             <Link href="/get-credits" className="hover:text-primary transition-colors">
-              Get Credits
+              Pricing
             </Link>
           </nav>
         )}

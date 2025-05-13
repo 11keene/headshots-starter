@@ -18,13 +18,13 @@ import {
   Layers,
   Target,
 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface PricingTier {
   title: string;
   price: string;
+  originalPrice: string;
   description: string;
   features: string[];
   buttonText: string;
@@ -38,6 +38,7 @@ export default function ModernPricing() {
   const tiers: PricingTier[] = [
     {
       title: "Starter Pack",
+      originalPrice: "$39.99",
       price: "$29.99",
       description:
         "A curated mini-shoot designed to deliver polished, professional images — fast. Ideal for updating your LinkedIn, profile picture, or personal brand with clean, natural looks that build instant credibility.",
@@ -52,6 +53,7 @@ export default function ModernPricing() {
     },
     {
       title: "Themed Packs",
+      originalPrice: "$72.99",
       price: "$59.99",
       description:
         "Each pack is built around a powerful theme — from CEO to Teacher, Nurse, Realtor, Creative Professional, and more. Every prompt has been handcrafted to reflect your role, energy, and brand identity. You’ll receive a full visual collection tailored to your industry’s tone and aesthetic.",
@@ -66,6 +68,7 @@ export default function ModernPricing() {
     },
     {
       title: "Custom Pack",
+      originalPrice: "$99.99",
       price: "$74.99",
       description:
         "This is your personalized photoshoot — powered by your answers. We use your style preferences, mood, industry, and brand voice to generate a completely customized set of professional images. Every detail is tailored to your unique vision, with prompts generated using our proprietary GPT system.",
@@ -108,11 +111,18 @@ export default function ModernPricing() {
               )}
 
               <h3 className="text-2xl text-charcoal font-bold">{tier.title}</h3>
-              <div className="mt-2 flex items-baseline">
+
+              <div className="mt-2 relative">
+                {/* struck-through original price */}
+                <span className="absolute -top-2 right-12 md:right-1 text-lg line-through text-muted-foreground">
+                  {tier.originalPrice}
+                </span>
+                {/* discounted price */}
                 <span className="text-5xl text-dusty-coral font-extrabold">
                   {tier.price}
                 </span>
               </div>
+
               <p className="mt-4 text-xs font-semibold text-charcoal text-muted-foreground">
                 {tier.description}
               </p>
@@ -120,7 +130,6 @@ export default function ModernPricing() {
               <ul className="my-6 space-y-4">
                 {tier.features.map((feat, i) => {
                   let Icon = Check;
-
                   if (feat.includes("Prompts")) Icon = FileText;
                   else if (feat.includes("Images")) Icon = ImageIcon;
                   else if (feat.includes("Unique Outfits")) Icon = Shirt;
@@ -131,7 +140,8 @@ export default function ModernPricing() {
                   else if (feat.toLowerCase().includes("first impression")) Icon = Target;
                   else if (feat.toLowerCase().includes("reflects your brand")) Icon = Palette;
                   else if (feat.toLowerCase().includes("speaker pages")) Icon = Mic;
-                  else if (feat.toLowerCase().includes("visual storytelling")) Icon = Star;
+                  else if (feat.toLowerCase().includes("visual storytelling"))
+                    Icon = Star;
                   else if (feat.toLowerCase().startsWith("perfect for:")) Icon = Award;
 
                   return (
@@ -145,9 +155,7 @@ export default function ModernPricing() {
 
               <div className="mt-auto">
                 <Link
-                  href={
-                    session ? "/get-credits" : `/login?redirectTo=/get-credits`
-                  }
+                  href={session ? "/get-credits" : `/login?redirectTo=/get-credits`}
                   className="block w-full"
                   aria-label={`Select ${tier.title} plan`}
                 >
@@ -161,11 +169,8 @@ export default function ModernPricing() {
         </div>
 
         <p className="mt-4 text-center text-charcoal text-sm text-muted-foreground">
-           Need a custom plan?{" "}
-          <Link
-            href="mailto:support@aimavenstudio.com"
-            className="text-primary hover:underline"
-          >
+          Need a custom plan?{" "}
+          <Link href="mailto:support@aimavenstudio.com" className="text-primary hover:underline">
             Contact us
           </Link>
         </p>

@@ -56,7 +56,7 @@ export default function FAQSection() {
     {
       question: "What kind of photos should I upload?",
       answer:
-        "For best results, upload at least 4 high-quality selfies with good lighting. Photos should be front-facing with only one person in the frame. Avoid wearing glasses or hats, and try to capture different expressions and angles for more variety in your results.",
+        "For best results, upload at least 6 high-quality selfies with good lighting. Photos should be front-facing with only one person in the frame. Avoid wearing glasses or hats, and try to capture different expressions and angles for more variety in your results.",
     },
     {
       question: "Can I use these headshots professionally?",
@@ -71,7 +71,7 @@ export default function FAQSection() {
     {
       question: "What if I'm not satisfied with the results?",
       answer:
-        "We stand behind our AI technology and want you to be completely satisfied. If you're not happy with your headshots, contact our support team within 7 days of delivery, and we'll work with you to improve the results or provide a refund.",
+        "We stand behind our AI technology and want you to be completely satisfied. If you're not happy with your headshots, contact our support team within 7 days of delivery, and we'll work with you to improve the results",
     },
     {
       question: "How quickly will I receive my headshots?",
