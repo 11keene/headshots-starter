@@ -17,9 +17,12 @@ export default function HeadshotUpsell() {
   const gender =
     (searchParams?.get("gender") as "woman" | "man") || "all";
 
- // only show packs matching exactly this gender (no "all")
-const availableExtras = packs.filter(p => p.forGender === gender);
+  // — price for themed extras —
+  const originalPrice = 59.99;
+  const discountedPrice = parseFloat((originalPrice * 0.8).toFixed(2));
 
+  // only show packs matching exactly this gender (no "all")
+  const availableExtras = packs.filter(p => p.forGender === gender);
 
   // 3) selection state
   const [selected, setSelected] = useState<string[]>([]);
@@ -82,12 +85,21 @@ const availableExtras = packs.filter(p => p.forGender === gender);
             }`}
           >
             <img
-              src={p.exampleImg}
-              alt={p.name}
+              src="/images/pastshoulderlength.png"
+              alt="Past Shoulder Length"
               className="w-full h-100 object-cover"
             />
+            {/* price badge in top-right */}
+            <div className="absolute top-2 right-2 bg-warm-gray text-white text-xs font-semibold px-2 py-1 rounded text-right">
+      <div className="line-through text-[10px]">
+        ${originalPrice.toFixed(2)}
+      </div>
+      <div>
+        ${discountedPrice.toFixed(2)}
+      </div>
+    </div>
             <div className="absolute inset-x-0 bottom-0 bg-muted-gold text-white text-center font-semibold py-2">
-              {p.name}
+            {p.name}
             </div>
           </div>
         ))}

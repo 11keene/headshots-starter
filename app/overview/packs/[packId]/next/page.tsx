@@ -98,25 +98,21 @@ export default function UploadPage() {
       publicUrls.push(urlData.publicUrl);
     }
 
-    // 3) call your /api/start-tune route
-    const tuneResp = await fetch("/api/start-tune", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        packId,
-        inputs: publicUrls,
-      }),
-    });
-    if (!tuneResp.ok) {
-      console.error("start-tune failed:", await tuneResp.text());
-      return;
-    }
-    const { tuneId } = await tuneResp.json();
-
-    // 4) redirect to your training-status page
-    router.push(`/overview/packs/${packId}/training?tuneId=${tuneId}`);
-  };
+       // now: create a Stripe Checkout Session
+       const checkoutResp = await fetch("/api/create-checkout-session", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           packId,
+           extraPacks: extraPacks ? extraPacks.split(",") : [],
+           imageCount: publicUrls.length,
+           successUrl: `${window.location.origin}/overview/packs/${packId}/training?tuneId={CHECKOUT_SESSION_ID}`,
+           cancelUrl: `${window.location.origin}/overview/packs/${packId}/next?extraPacks=${extraPacks}`,
+         }),
+       });
+       const { url } = await checkoutResp.json();
+       router.push(url);
+      };
   // ————————————————————————————————————————————————————————————
 
   return (
