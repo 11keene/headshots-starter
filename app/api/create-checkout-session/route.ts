@@ -26,6 +26,7 @@ export async function POST(req: Request) {
       packId?: string;
       extras?: string[];
     };
+    console.log("[create-checkout-session] incoming body:", JSON.stringify({ stripePriceId, user_id, user_email, packId, extras }, null, 2));
 
     if (!stripePriceId || !user_id || !user_email) {
       return NextResponse.json(
@@ -55,20 +56,27 @@ export async function POST(req: Request) {
       line_items: lineItems,
       client_reference_id: user_id,
       metadata: { packId },
-      success_url:  `${origin}/overview/packs/${packId}/training?tuneId={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/overview/packs/${packId}/next?extraPacks=${extras.join(",")}`,
+      success_url: `${origin}/overview/packs/${packId}/generate?session_id={CHECKOUT_SESSION_ID}`,
+cancel_url:  `${origin}/overview/packs/${packId}/next?extraPacks=${extras.join(",")}`,
       mode: "payment",
     } as Stripe.Checkout.SessionCreateParams);
 
     // record a pending order (optional)
     if (packId) {
-      await supabaseAdmin.from("orders").insert({
-        user_id,
-        pack_id: packId,
-        price_id: stripePriceId,
-        session_id: session.id,
-        status: "pending",
-      });
+ // record a pending order
+await supabaseAdmin
+.from("orders")
+.insert({
+  user_id:    user_id,
+  pack_id:    packId,
+  session_id: session.id,
+  price_id:   stripePriceId,
+  extras:     extras.join(","),  // or JSON.stringify(extras) if your column is JSON
+  status:     "pending",
+  created_at: new Date().toISOString(),
+});
+console.log("[create-checkout-session] order inserted:", { packId, sessionId: session.id });
+
     }
 
     return NextResponse.json({ url: session.url });

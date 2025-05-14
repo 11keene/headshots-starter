@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useUploadContext } from "../UploadContext";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useSession } from "@supabase/auth-helpers-react";
+import { FiLoader } from "react-icons/fi"; 
+
 
 const supabase = createClientComponentClient();
 
@@ -20,6 +22,7 @@ const PRICE_IDS_CLIENT: Record<string, string> = {
 };
 
 export default function UploadPage() {
+  const [isLoading, setIsLoading] = useState(false);  // ← new loading state
   const paramsObj = useParams();
   const packId = Array.isArray(paramsObj?.packId)
     ? paramsObj.packId[0]
@@ -101,7 +104,7 @@ export default function UploadPage() {
       console.error("❌ No session URL returned from Stripe");
       return;
     }
-
+    setIsLoading(true);  
     // 2) redirect off-site to Stripe
     window.location.href = url;
 
@@ -197,8 +200,17 @@ export default function UploadPage() {
         <span className="self-center mr-auto text-sm text-warm-gray">
           {previewUrls.length} of 6 required
         </span>
-        <Button disabled={previewUrls.length < 6} onClick={goNext}>
-          Continue
+        <Button 
+          disabled={previewUrls.length < 6 || isLoading}  // ← also disable when loading
+          onClick={goNext}
+        >
+          {isLoading ? (
+            <span className="inline-flex items-center">
+              <FiLoader className="animate-spin mr-2" /> Loading…
+            </span>
+          ) : (
+            "Continue"
+          )}
         </Button>
       </div>
     </div>

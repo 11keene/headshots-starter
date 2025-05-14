@@ -2,9 +2,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Spinner } from "@/components/ui/spinner";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { packs as packData } from "../../../../../data/packs";
 
 export default function GeneratePage() {
   const params = useParams();
@@ -13,52 +14,88 @@ export default function GeneratePage() {
     : params?.packId || "";
   const searchParams = useSearchParams();
   const extraPacks = searchParams?.get("extraPacks") || "";
+  const router = useRouter();
 
   const supabase = createClientComponentClient();
 
   useEffect(() => {
     async function startJobs() {
-      const uploaded: string[] =
-        JSON.parse(localStorage.getItem(`uploads-${packId}`) || "[]");
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      // 1) get user
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user?.id) {
         console.error("[GeneratePage] no user signed in");
         return;
       }
+      const userId = user.id;
 
-      const payload = {
-        userId: user.id,
-        packs: [
-          { inputs: uploaded, numOutputs: uploaded.length }
-        ],
-      };
-      console.log("[GeneratePage] /api/start-astria payload:", payload);
+      // 2) list uploaded files
+      const { data: files, error: listError } = await supabase.storage
+        .from("user-uploads")
+        .list(`${userId}/${packId}`);
+      if (listError) {
+        console.error("[GeneratePage] failed to list uploads:", listError);
+        return;
+      }
 
-      const resp = await fetch("/api/start-astria", {
+      const publicUrls = files.map((f) => {
+        const { data: urlData } = supabase.storage
+          .from("user-uploads")
+          .getPublicUrl(f.name);
+        return urlData.publicUrl;
+      });
+
+      if (!publicUrls.length) {
+        console.error("[GeneratePage] no uploaded images");
+        router.push(`/overview/packs/${packId}/next?extraPacks=${extraPacks}`);
+        return;
+      }
+
+      // 3) build prompt
+      let promptText: string;
+      if (packId === "custom") {
+        // call your custom-prompt API to generate prompt from intake
+        const intake = JSON.parse(
+          localStorage.getItem(`intake-${packId}`) || "[]"
+        );
+        const resp = await fetch("/api/custom-prompt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, intake }),
+        });
+        const { prompt } = await resp.json();
+        promptText = prompt;
+      } else {
+        // use static template from data/packs
+        const packInfo = packData.find((p) => p.id === packId);
+        promptText = packInfo?.prompt_template || "";
+      }
+      console.log("[GeneratePage] packId:", packId, "extraPacks:", extraPacks);
+      console.log("[GeneratePage] publicUrls:", publicUrls);
+      console.log("[GeneratePage] promptText:", promptText);
+      // 4) call start-astria
+      const payload = { userId, packs: [{ prompt: promptText, inputs: publicUrls, numOutputs: publicUrls.length }] };
+      console.log("[GeneratePage] calling /api/start-astria with payload:", payload);
+      
+      const startResp = await fetch("/api/start-astria", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
-      if (!resp.ok) {
-        const errText = await resp.text();
-        console.error("[GeneratePage] start-astria error:", resp.status, errText);
+      if (!startResp.ok) {
+        console.error("[GeneratePage] astria error:", await startResp.text());
         return;
       }
-
-      const json = await resp.json();
-      console.log("[GeneratePage] start-astria success:", json);
+      console.log("[GeneratePage] astria started");
     }
+
     startJobs();
-  }, [packId, extraPacks, supabase]);
+  }, [packId, extraPacks, supabase, router]);
 
   return (
     <div className="p-8 text-center">
       <Spinner />
       <h1 className="text-2xl font-bold mt-6 mb-2">Order Processed!</h1>
-      <p className="text-gray-600">Your images are now being generated…</p>
+      <p className="text-gray-600">Generating your images…</p>
     </div>
   );
 }

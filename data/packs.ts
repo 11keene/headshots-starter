@@ -4,6 +4,7 @@ export interface Pack {
   id: string;
   name: string;
   exampleImg: string;
+  prompt_template?: string; 
   forGender: "woman" | "man" | "all";
 }
 
