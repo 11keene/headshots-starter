@@ -11,6 +11,7 @@ type Question = {
   key: string;
   type: "images" | "multi" | "select";
   title: string;
+  subtitle?: string; 
   multi?: boolean;
   options: Option[];
   optional?: boolean;
@@ -54,7 +55,9 @@ const WOMEN_QUESTIONS: Question[] = [
   {
     key: "attire",
     type: "images",
+    multi: true,
     title: "What will you wear?",
+    subtitle: "You can select more than one option.",
     options: [
       { label: "Business Professional", value: "business professional", img: "" },
       { label: "Business Casual", value: "business casual", img: "" },
@@ -78,7 +81,9 @@ const WOMEN_QUESTIONS: Question[] = [
   {
     key: "setting",
     type: "images",
+    multi: true,
     title: "Choose a setting",
+    subtitle: "You can select more than one option.",
     options: [
       { label: "Studio", value: "studio", img: "" },
       { label: "Office", value: "office", img: "" },
@@ -90,7 +95,9 @@ const WOMEN_QUESTIONS: Question[] = [
   {
     key: "mood",
     type: "multi",
+    multi: true,
     title: "Select your mood or vibe",
+    subtitle: "You can select more than one option.",
     options: [
       { label: "Confident", value: "confident", img: "" },
       { label: "Relaxed", value: "relaxed", img: "" },
@@ -103,7 +110,9 @@ const WOMEN_QUESTIONS: Question[] = [
   {
     key: "brandColors",
     type: "multi",
+    multi: true,
     title: "Do you want us to subtly include your brand colors?",
+    subtitle: "You can select more than one option.",
     optional: true,
     options: [
       { label: "Black", value: "black", img: "" },
@@ -132,7 +141,9 @@ const WOMEN_QUESTIONS: Question[] = [
   {
     key: "photoUsage",
     type: "multi",
+    multi: true,
     title: "What will you use these for?",
+    subtitle: "You can select more than one option.",
     options: [
       { label: "LinkedIn", value: "linkedin", img: "" },
       { label: "Website", value: "website", img: "" },
@@ -170,6 +181,7 @@ const MEN_QUESTIONS: Question[] = [
     key: "attire",
     type: "images",
     title: "What will you wear?",
+    subtitle: "You can select more than one option.",
     multi: true,
     options: [
       { label: "Business Professional", value: "business professional", img: "" },
@@ -194,6 +206,7 @@ const MEN_QUESTIONS: Question[] = [
     key: "setting",
     type: "images",
     title: "Choose a setting",
+    subtitle: "You can select more than one option.",
     multi: true,
     options: [
       { label: "Studio", value: "studio", img: "" },
@@ -207,6 +220,7 @@ const MEN_QUESTIONS: Question[] = [
     key: "mood",
     type: "multi",
     title: "Select your mood or vibe",
+    subtitle: "You can select more than one option.",
     multi: true,
     options: [
       { label: "Confident", value: "confident", img: "" },
@@ -221,6 +235,7 @@ const MEN_QUESTIONS: Question[] = [
     key: "brandColors",
     type: "multi",
     title: "Do you want us to subtly include your brand colors?",
+    subtitle: "You can select more than one option.",
     multi: true,
     optional: true,
     options: [
@@ -251,6 +266,7 @@ const MEN_QUESTIONS: Question[] = [
     type: "multi",
     multi: true,
     title: "What will you use these for?",
+    subtitle: "You can select more than one option.",
     options: [
       { label: "LinkedIn", value: "linkedin", img: "" },
       { label: "Website", value: "website", img: "" },
@@ -299,7 +315,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   const question = questionSet[step];
 
   const choose = (val: any) => {
-    if (question.multi || question.type === "multi") {
+    if (question.multi) {
       const current = answers[question.key] || [];
       const updated = current.includes(val)
         ? current.filter((v: any) => v !== val)
@@ -307,8 +323,13 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
       setAnswers((a) => ({ ...a, [question.key]: updated }));
     } else {
       setAnswers((a) => ({ ...a, [question.key]: val }));
+      // ✅ Auto-advance to next step after a short delay
+      setTimeout(() => {
+        next();
+      }, 300); // You can adjust this delay if needed
     }
   };
+  
 
   const next = () => {
     if (step < questionSet.length - 1) {
@@ -338,9 +359,15 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
       </div>
 
       <h2 className="text-2xl font-bold text-center">{question.title}</h2>
+{question.subtitle && (
+  <p className="text-center text-sm text-muted-foreground -mt-2">
+    {question.subtitle}
+  </p>
+)}
 
       <div className="space-y-6">
         {question.type === "images" && (
+          
           <div className="grid grid-cols-2 gap-4">
             {question.options.map((o) => (
               <motion.button
@@ -364,28 +391,40 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
           </div>
         )}
 
-        {question.type === "multi" && (
-       <div className="grid grid-cols-2 gap-4">
-       {question.options.map((o) => {
-         const isSelected = (answers[question.key] || []).includes(o.value);
-         return (
-           <motion.button
-             key={o.value}
-             onClick={() => choose(o.value)}
-             whileHover={{ scale: 1.02 }}
-             className={`border-2 rounded-lg flex flex-col items-center p-4 transition-shadow ${
-               isSelected
-                 ? "border-dusty-coral shadow-lg"
-                 : "border-warm-gray hover:shadow-md"
-             }`}
-           >
-             {o.img && <img src={o.img} alt={o.label} className="w-full h-24 object-cover mb-2" />}
-             <span>{o.label}</span>
-           </motion.button>
-         );
-       })}
-     </div>
+    {question.type === "multi" && (
+      <>
+        {question.multi && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              {question.options.map((o) => {
+                const isSelected = (answers[question.key] || []).includes(o.value);
+                return (
+                  <motion.button
+                    key={o.value}
+                    onClick={() => choose(o.value)}
+                    whileHover={{ scale: 1.02 }}
+                    className={`border-2 rounded-lg flex flex-col items-center p-4 transition-shadow ${
+                      isSelected
+                        ? "border-dusty-coral shadow-lg"
+                        : "border-warm-gray hover:shadow-md"
+                    }`}
+                  >
+                    {o.img && (
+                      <img
+                        src={o.img}
+                        alt={o.label}
+                        className="w-full h-24 object-cover mb-2"
+                      />
+                    )}
+                    <span>{o.label}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </>
         )}
+      </>
+    )}
 
         {question.type === "select" && (
           <div>
