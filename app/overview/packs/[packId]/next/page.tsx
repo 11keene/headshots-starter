@@ -27,6 +27,7 @@ export default function UploadPage() {
   const router = useRouter();
   const params = useSearchParams();
   const extraPacks = params?.get("extraPacks") || "";
+  const gender = params?.get("gender") || "";
 
   const session = useSession();
   const userId = session?.user.id;
@@ -114,10 +115,14 @@ export default function UploadPage() {
   return (
     <div className="p-6 sm:p-8 max-w-3xl mx-auto">
       <button
-        onClick={() => router.push("/overview/packs")}
+        onClick={() =>
+          router.push(
+            `/overview/packs/${packId}/upsell?gender=${gender}`
+          )
+        }
         className="inline-flex items-center mb-6 text-gray-700 hover:text-sage-green"
       >
-        <FiArrowLeft className="mr-2" /> Go Back to Packs
+        <FiArrowLeft className="mr-2" /> Back to Extras
       </button>
 
       <h1 className="text-2xl text-charcoal font-bold mb-2">

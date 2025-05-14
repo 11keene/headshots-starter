@@ -26,7 +26,7 @@ export default function ThemedSelection() {
         You chose: <strong>{gender === "woman" ? "Woman" : "Man"}</strong>
       </h2>
       <h1 className="text-xl sm:text-2xl font-bold mb-6 text-center">
-        Pick your themed pack
+        Pick Your Themed Pack
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
