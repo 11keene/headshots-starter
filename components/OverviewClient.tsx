@@ -100,7 +100,7 @@ export default function OverviewClient({
 
         {/* Starter Pack */}
         {activeTab === "starter" && (
-         <div className="bg-ivory w-full max-w-lg p-3 rounded-lg shadow-md mb-8 md:mb-20">
+         <div className="bg-ivory w-full max-w-xl p-6 rounded-lg shadow-md mb-20">
             <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
               Starter Pack
             </h2>
@@ -109,7 +109,7 @@ export default function OverviewClient({
               images — fast. Ideal for updating your LinkedIn, profile picture,
               or personal brand.
             </p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6">
               <Link
                 href="/overview/packs/starter/upsell?gender=woman"
                 className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
@@ -191,7 +191,7 @@ export default function OverviewClient({
 
         {/* Custom Pack */}
         {activeTab === "custom" && (
-          <div className="bg-ivory w-full max-w-xl p-6 rounded-lg shadow-md mb-20">
+           <div className="bg-ivory w-full max-w-xl p-6 rounded-lg shadow-md mb-20">
             <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
               Custom Pack
             </h2>
