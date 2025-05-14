@@ -40,7 +40,7 @@ export default function OverviewClient({
 }: OverviewClientProps) {
   const searchParams = useSearchParams();
   const tabParam = searchParams?.get("tab") as Tab | null;
-  const [activeTab, setActiveTab] = useState<Tab>(tabParam ?? "starter");
+  const [activeTab, setActiveTab] = useState<Tab>(tabParam ?? "themed");
 
   // keep in sync if someone navigates with ?tab=…
   useEffect(() => {
