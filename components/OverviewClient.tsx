@@ -93,7 +93,7 @@ export default function OverviewClient({
 
         {/* Starter Pack */}
         {activeTab === "starter" && (
-          <div className="bg-ivory w-full max-w-lg p-3 rounded-lg shadow-md mb-20">
+         <div className="bg-ivory w-full max-w-lg p-3 rounded-lg shadow-md mb-8 md:mb-20">
             <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
               Starter Pack
             </h2>
@@ -229,7 +229,7 @@ export default function OverviewClient({
       </div>
 
       {/* ─── Bottom: charcoal full-width ─── */}
-      <div className="bg-charcoal flex-1 w-full px-4 py-8">
+      <div className="bg-charcoal flex-1 w-full px-4 py-8 -mt-8 md:mt-0">
         {/* === Preview Images === */}
         <div className="max-w-lg mx-auto p-4 rounded-lg">
           <h3 className="text-ivory font-semibold mb-4 text-center">
