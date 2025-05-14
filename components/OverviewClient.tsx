@@ -54,13 +54,14 @@ export default function OverviewClient({
   }, [tabParam]);
 
   return (
-      <div
-        className="min-h-screen flex flex-col w-full"
-        style={{
-          /* add 1rem + whatever the phone’s bottom inset is */
-          paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)'
-        }}
-      >
+        <div
+          className="min-h-screen flex flex-col w-full"
+          style={{
+            // env(safe-area-inset-bottom) handles the home-indicator;
+            // + 44px (approx) makes room for the Safari toolbar
+            paddingBottom: "calc(env(safe-area-inset-bottom) + 44px)"
+          }}
+        >
       {/* ─── Top: warm-gray, centered ─── */}
       <div className="bg-warm-gray flex flex-col items-center w-full px-4 py-8">
         {/* Tabs */}
