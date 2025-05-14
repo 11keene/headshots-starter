@@ -54,7 +54,13 @@ export default function OverviewClient({
   }, [tabParam]);
 
   return (
-    <div className="min-h-screen flex flex-col w-full">
+      <div
+        className="min-h-screen flex flex-col w-full"
+        style={{
+          /* add 1rem + whatever the phone’s bottom inset is */
+          paddingBottom: 'calc(env(safe-area-inset-bottom) + 1rem)'
+        }}
+      >
       {/* ─── Top: warm-gray, centered ─── */}
       <div className="bg-warm-gray flex flex-col items-center w-full px-4 py-8">
         {/* Tabs */}
