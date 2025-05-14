@@ -1,36 +1,50 @@
-// File: components/HeadshotUpsell.tsx
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import type { Pack } from "../../../../../data/packs";
 import { packs } from "../../../../../data/packs";
 
 export default function HeadshotUpsell() {
   const paramsObj = useParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // 1) grab dynamic segments + query
   const packId = Array.isArray(paramsObj?.packId)
     ? paramsObj.packId[0]
     : paramsObj?.packId || "";
-  const router = useRouter();
+  const gender =
+    (searchParams?.get("gender") as "woman" | "man") || "all";
 
-  // headshot extra-packs (multi-select)
+ // only show packs matching exactly this gender (no "all")
+const availableExtras = packs.filter(p => p.forGender === gender);
+
+
+  // 3) selection state
   const [selected, setSelected] = useState<string[]>([]);
   const togglePack = (id: string) =>
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
 
-  // navigation handler
+  // 4) carry gender + extras forward
   const goContinue = () => {
     const extras = selected.join(",");
-    router.push(`/overview/packs/${packId}/next?extraPacks=${extras}`);
+    router.push(
+      `/overview/packs/${packId}/next?extraPacks=${extras}&gender=${gender}`
+    );
   };
 
-  // show “No Thanks” when nothing is selected
   const isSkip = selected.length === 0;
 
   return (
     <div className="p-6 sm:p-8 max-w-4xl mx-auto">
+      {/* show the choice */}
+      <h2 className="text-center mb-6 text-lg font-medium">
+        You chose: <strong>{gender === "woman" ? "Woman" : "Man"}</strong>
+      </h2>
+
       <h1 className="text-xl sm:text-2xl font-bold mb-6 text-center">
         Would you like to add additional photos?
       </h1>
@@ -43,26 +57,21 @@ export default function HeadshotUpsell() {
           Back
         </button>
 
-        {isSkip ? (
-          <button
-            onClick={goContinue}
-            className="px-4 py-2 bg-warm-gray/70 text-gray-800 rounded-md text-sm sm:text-base hover:bg-warm-gray transition"
-          >
-            No Thanks
-          </button>
-        ) : (
-          <button
-            onClick={goContinue}
-            className="px-4 py-2 bg-dusty-coral hover:bg-dusty-coral text-white rounded-md text-sm sm:text-base transition"
-          >
-            Continue
-          </button>
-        )}
+        <button
+          onClick={goContinue}
+          className={`px-4 py-2 rounded-md text-sm sm:text-base transition ${
+            isSkip
+              ? "bg-warm-gray/70 text-gray-800 hover:bg-warm-gray"
+              : "bg-dusty-coral hover:bg-dusty-coral text-white"
+          }`}
+        >
+          {isSkip ? "No Thanks" : "Continue"}
+        </button>
       </div>
 
-      {/* Always show the additional headshots grid */}
+      {/* only render gender-filtered extras */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {packs.map((p: Pack) => (
+        {availableExtras.map((p: Pack) => (
           <div
             key={p.id}
             onClick={() => togglePack(p.id)}

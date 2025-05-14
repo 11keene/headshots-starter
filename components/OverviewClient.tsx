@@ -65,43 +65,96 @@ export default function OverviewClient({
         </button>
       </div>
 
-      {/* Starter Pack Card */}
-      {activeTab === "starter" && (
-        <div className="bg-ivory w-full max-w-md p-6 rounded-lg shadow-md mb-20 flex flex-col items-center">
-          <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
-            Starter Pack
-          </h2>
-          <p className="text-charcoal text-sm text-center mb-8">
-            A curated mini-shoot designed to deliver polished, professional images — fast. Ideal for updating your LinkedIn, profile picture, or personal brand.
-          </p>
-          <Link href="/overview/packs?type=starter" className="w-full">
-            <img
-              src="/images/curly.png"
-              alt="Starter Pack"
-              className="rounded-lg transition-transform duration-300 hover:scale-105 hover:shadow-xl w-full"
-            />
-          </Link>
-        </div>
-      )}
+    {/* Starter Pack */}
+{activeTab === "starter" && (
+  <div className="bg-ivory w-full max-w-lg p-3 rounded-lg shadow-md mb-20">
+    <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
+      Starter Pack
+    </h2>
+    <p className="text-charcoal text-sm text-center mb-6">
+      A curated mini-shoot designed to deliver polished, professional images — fast. Ideal for updating your LinkedIn, profile picture, or personal brand.
+    </p>
+    <div className="grid grid-cols-2 gap-4">
+  <Link
+    href="/overview/packs/starter/upsell?gender=woman"
+    className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
+  >
+    <div className="overflow-hidden rounded-lg">
+    <img
+      src="/images/curly.png"
+     alt="Starter Pack for Woman"
+      className="block w-full"
+    />
+    <div className="bg-charcoal h-6 flex items-center justify-center">
+      <span className="text-ivory text-sm">For Woman</span>
+   </div>
+  </div>
+</Link>
+<Link
+    href="/overview/packs/starter/upsell?gender=man"
+    className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
+  >
+    <div className="overflow-hidden rounded-lg">
+    <img
+      src="/images/curly.png"
+     alt="Starter Pack for Woman"
+      className="block w-full"
+    />
+    <div className="bg-charcoal h-6 flex items-center justify-center">
+      <span className="text-ivory text-sm">For Man</span>
+   </div>
+  </div>
+</Link>
+    </div>
+  </div>
+)}
 
-      {/* Themed Packs Card */}
-      {activeTab === "themed" && (
-        <div className="bg-ivory w-full max-w-md p-6 rounded-lg shadow-md mb-20 flex flex-col items-center">
-          <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
-            Themed Packs
-          </h2>
-          <p className="text-charcoal text-sm text-center mb-8">
-            Pick from our profession-specific themes—CEO, Teacher, Nurse, Realtor, Creative Professional, and more—for a fully tailored look.
-          </p>
-          <Link href="/overview/packs?type=themed" className="w-full">
-            <img
-              src="/images/themed.png"
-              alt="Themed Packs"
-              className="rounded-lg transition-transform duration-300 hover:scale-105 hover:shadow-xl w-full"
-            />
-          </Link>
+
+      {/* Themed Packs — pick your gender first */}
+{activeTab === "themed" && (
+  <div className="bg-ivory w-full max-w-xl p-6 rounded-lg shadow-md mb-20">
+    <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
+      Themed Packs
+    </h2>
+    <p className="text-charcoal text-sm text-center mb-6">
+      First, choose whether you’re a woman or a man—then we’ll show you just your gender’s themes.
+    </p>
+    <div className="grid grid-cols-2 gap-6">
+      <Link
+        href="/overview/packs/themed-selection?gender=woman"
+        className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
+      >
+        <div className="overflow-hidden rounded-lg bg-white">
+          <img
+            src="/images/placeholder-woman.png"
+            alt="Themed Packs for Woman"
+            className="block w-full"
+          />
+          <div className="bg-charcoal h-6 flex items-center justify-center">
+            <span className="text-ivory text-sm">For Woman</span>
+          </div>
         </div>
-      )}
+      </Link>
+
+      <Link
+        href="/overview/packs/themed-selection?gender=man"
+        className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
+      >
+        <div className="overflow-hidden rounded-lg bg-white">
+          <img
+            src="/images/placeholder-man.png"
+            alt="Themed Packs for Man"
+            className="block w-full"
+          />
+          <div className="bg-charcoal h-6 flex items-center justify-center">
+            <span className="text-ivory text-sm">For Man</span>
+          </div>
+        </div>
+      </Link>
+    </div>
+  </div>
+)}
+
 
       {/* Custom Pack Card */}
       {activeTab === "custom" && (
