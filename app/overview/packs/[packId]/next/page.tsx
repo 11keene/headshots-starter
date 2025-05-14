@@ -10,15 +10,14 @@ import { useUploadContext } from "../UploadContext";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useSession } from "@supabase/auth-helpers-react";
 
-// at the top of app/api/create-checkout-session/route.ts
-const PRICE_IDS: Record<string,string> = {
-  starter: process.env.STRIPE_PRICE_ID_STARTER_PACK!,
-  themed:  process.env.STRIPE_PRICE_ID_THEMED_PACKS!,
-  custom:  process.env.STRIPE_PRICE_ID_CUSTOM_PACK!,
-};
-
-
 const supabase = createClientComponentClient();
+
+// exposed to the client via NEXT_PUBLIC_ env vars
+const PRICE_IDS_CLIENT: Record<string, string> = {
+  starter: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STARTER_PACK!,
+  themed:  process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_THEMED_PACKS!,
+  custom:  process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_CUSTOM_PACK!,
+};
 
 export default function UploadPage() {
   const paramsObj = useParams();
@@ -38,12 +37,8 @@ export default function UploadPage() {
   // hydrate files from previewUrls once
   useEffect(() => {
     if (!packId) return;
-    setFiles(
-      previewUrls.map(
-        (url) => new File([], url.split("/").pop() || "upload.jpg")
-      )
-    );
-  }, []);
+    // previewUrls derived earlier; no need to convert to File here
+  }, [packId, previewUrls]);
 
   // rebuild previewUrls on files change
   useEffect(() => {
@@ -57,9 +52,9 @@ export default function UploadPage() {
     setFiles((prev) => [...prev, ...arr].slice(0, 10));
   }, []);
 
-  const removeFile = (index: number) => {
+  const removeFile = useCallback((index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
+  }, []);
 
   const onDrop = useCallback(
     (e: React.DragEvent) => {
@@ -69,58 +64,52 @@ export default function UploadPage() {
     [onFiles]
   );
 
-  // ——— Step 6: upload, start tune, then redirect to status page ———
+  // Step 6: upload, then Stripe
+  // Step 6: upload in background, then Stripe
   const goNext = async () => {
     if (!userId) {
       router.push("/login");
       return;
     }
 
-    // 1) convert previews → actual Files
-    const uploadFiles: File[] = await Promise.all(
-      previewUrls.map(async (url) => {
-        const res = await fetch(url);
-        const blob = await res.blob();
-        return new File(
-          [blob],
-          url.split("/").pop() || "upload.jpg",
-          { type: blob.type }
-        );
-      })
-    );
+    // 1) immediately create Stripe Checkout Session
+    const stripePriceId = PRICE_IDS_CLIENT[
+      packId.startsWith("starter") ? "starter" : packId.startsWith("themed") ? "themed" : "custom"
+    ];
+    const extrasPriceIds = extraPacks
+      ? extraPacks.split(",").map(() => process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_EXTRA_HEADSHOT!).filter(Boolean)
+      : [];
 
-    // 2) push each File into Supabase Storage → collect public URLs
-    const publicUrls: string[] = [];
-    for (const file of uploadFiles) {
-      const path = `${userId}/${packId}/${file.name}`;
-      const { data, error: upErr } = await supabase.storage
-        .from("user-uploads")
-        .upload(path, file, { upsert: true });
-      if (upErr || !data?.path) {
-        console.error("Storage upload failed:", upErr);
-        return;
-      }
-      const { data: urlData } = supabase.storage
-        .from("user-uploads")
-        .getPublicUrl(data.path);
-      publicUrls.push(urlData.publicUrl);
+    const resp = await fetch("/api/create-checkout-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        stripePriceId,
+        user_id: userId,
+        user_email: session.user?.email || "",
+        packId,
+        extras: extrasPriceIds,
+      }),
+    });
+    if (!resp.ok) {
+      console.error("❌ create-checkout-session error:", await resp.text());
+      return;
     }
-        // 3) create a Stripe Checkout Session for pack + any extras
-        const checkoutResp = await fetch("/api/create-checkout-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            stripePriceId: PRICE_IDS[packId],
-            user_id: userId,
-            user_email: session.user.email,
-           packId,
-            extras: extraPacks ? extraPacks.split(",") : [],
-          }),
-        });
-        const { url } = await checkoutResp.json();
-        router.push(url);
-        return;  // stop further execution
-    };
+    const { url } = await resp.json();
+    if (!url) {
+      console.error("❌ No session URL returned from Stripe");
+      return;
+    }
+
+    // 2) redirect off-site to Stripe
+    window.location.href = url;
+
+    // 3) then upload files in background
+    files.forEach(file => {
+      const path = `${userId}/${packId}/${file.name}`;
+      supabase.storage.from("user-uploads").upload(path, file, { upsert: true });
+    });
+  };
 
   return (
     <div className="p-6 sm:p-8 max-w-3xl mx-auto">
@@ -131,10 +120,11 @@ export default function UploadPage() {
         <FiArrowLeft className="mr-2" /> Go Back to Packs
       </button>
 
-      <h1 className="text-2xl text-charcoal font-bold mb-2">Upload your photos</h1>
+      <h1 className="text-2xl text-charcoal font-bold mb-2">
+        Upload your photos
+      </h1>
       <p className="text-gray-600 mb-6">
-        Select at least <span className="font-semibold">6</span> photos (max 10).{" "}
-        Mix close-ups, selfies & mid-range shots to help the AI learn you best.
+        Select at least <span className="font-semibold">6</span> photos (max 10). Mix close-ups, selfies & mid-range shots to help the AI learn you best.
       </p>
 
       <div
@@ -202,10 +192,7 @@ export default function UploadPage() {
         <span className="self-center mr-auto text-sm text-warm-gray">
           {previewUrls.length} of 6 required
         </span>
-        <Button
-          disabled={previewUrls.length < 6}
-          onClick={goNext}
-        >
+        <Button disabled={previewUrls.length < 6} onClick={goNext}>
           Continue
         </Button>
       </div>
