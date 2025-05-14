@@ -1,10 +1,12 @@
 // components/IntakeForm.tsx
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useSearchParams } from "next/navigation";
+
 
 type Option = { label: string; value: string; img: string };
 type Question = {
@@ -295,9 +297,12 @@ type IntakeFormProps = {
 
 export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Normalize both “woman”/“female” → “female”, else “male”
+  const rawGender = searchParams?.get("gender") || "woman";
+  const gender = rawGender === "man" || rawGender === "male" ? "male" : "female";
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
-
   useEffect(() => {
     const saved = localStorage.getItem(`intake-${pack}`);
     if (saved) setAnswers(JSON.parse(saved));
@@ -307,10 +312,10 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
     localStorage.setItem(`intake-${pack}`, JSON.stringify(answers));
   }, [answers, pack]);
 
+// we already know gender from ?gender=…, so only show that gender’s questions
   const questionSet = useMemo(() => {
-    if (!answers.gender) return [GENDER_QUESTION];
-    return [GENDER_QUESTION, ...(answers.gender === "female" ? WOMEN_QUESTIONS : MEN_QUESTIONS)];
-  }, [answers.gender]);
+      return gender === "female" ? WOMEN_QUESTIONS : MEN_QUESTIONS;
+    }, [gender]);
 
   const question = questionSet[step];
 
@@ -332,22 +337,24 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   
 
   const next = () => {
-    if (step < questionSet.length - 1) {
-      setStep(step + 1);
-    } else {
-      if (onComplete) onComplete();
-      else router.push(`/overview/packs/${pack}/upsell?tab=custom`);
-    }
-  };
+        if (step < questionSet.length - 1) {
+          setStep(step + 1);
+        } else {
+          if (onComplete) {
+            onComplete();
+          } else {
+            // once the intake is done, go straight to upload (preserving gender)
+            router.push(`/overview/packs/${pack}/next?gender=${gender}`);
+          }
+        }
+      };
 
   const back = () => {
     if (step > 0) setStep(step - 1);
     else router.back();
   };
 
-  useEffect(() => {
-    if (step > 0 && !answers.gender) setStep(0);
-  }, [answers.gender, step]);
+
 
   return (
     <div className="max-w-lg mx-auto p-6 space-y-6">

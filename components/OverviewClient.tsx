@@ -201,7 +201,7 @@ export default function OverviewClient({
             </p>
             <div className="grid grid-cols-2 gap-6">
               <Link
-                href="/custom-intake?gender=woman"
+               href={`/custom-intake?packType=custom&gender=woman`}
                 className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
               >
                 <div className="overflow-hidden rounded-lg bg-white">
