@@ -10,6 +10,14 @@ import { useUploadContext } from "../UploadContext";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useSession } from "@supabase/auth-helpers-react";
 
+// at the top of app/api/create-checkout-session/route.ts
+const PRICE_IDS: Record<string,string> = {
+  starter: process.env.STRIPE_PRICE_ID_STARTER_PACK!,
+  themed:  process.env.STRIPE_PRICE_ID_THEMED_PACKS!,
+  custom:  process.env.STRIPE_PRICE_ID_CUSTOM_PACK!,
+};
+
+
 const supabase = createClientComponentClient();
 
 export default function UploadPage() {
@@ -97,23 +105,22 @@ export default function UploadPage() {
         .getPublicUrl(data.path);
       publicUrls.push(urlData.publicUrl);
     }
-
-       // now: create a Stripe Checkout Session
-       const checkoutResp = await fetch("/api/create-checkout-session", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({
+        // 3) create a Stripe Checkout Session for pack + any extras
+        const checkoutResp = await fetch("/api/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            stripePriceId: PRICE_IDS[packId],
+            user_id: userId,
+            user_email: session.user.email,
            packId,
-           extraPacks: extraPacks ? extraPacks.split(",") : [],
-           imageCount: publicUrls.length,
-           successUrl: `${window.location.origin}/overview/packs/${packId}/training?tuneId={CHECKOUT_SESSION_ID}`,
-           cancelUrl: `${window.location.origin}/overview/packs/${packId}/next?extraPacks=${extraPacks}`,
-         }),
-       });
-       const { url } = await checkoutResp.json();
-       router.push(url);
-      };
-  // ————————————————————————————————————————————————————————————
+            extras: extraPacks ? extraPacks.split(",") : [],
+          }),
+        });
+        const { url } = await checkoutResp.json();
+        router.push(url);
+        return;  // stop further execution
+    };
 
   return (
     <div className="p-6 sm:p-8 max-w-3xl mx-auto">
