@@ -55,8 +55,8 @@ export async function POST(req: Request) {
       line_items: lineItems,
       client_reference_id: user_id,
       metadata: { packId },
-      success_url,
-      cancel_url,
+      success_url:  `${origin}/overview/packs/${packId}/training?tuneId={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/overview/packs/${packId}/next?extraPacks=${extras.join(",")}`,
       mode: "payment",
     } as Stripe.Checkout.SessionCreateParams);
 
