@@ -23,18 +23,20 @@ export default function HeadshotUpsell() {
 
   // only show packs matching exactly this gender (no "all")
 // capture current slug (the one user already chose)
-const slug = Array.isArray(paramsObj?.slug)
-  ? paramsObj.slug[0]
-  : paramsObj?.slug || "";
-
-// filter out the selected pack and only show others for that gender
-const availableExtras = themedPacks.filter(
-  (p) =>
-    // exclude the pack they just chose (by ID)
-    p.id !== packId &&
-    // only show packs for this gender (or universal)
-    (p.forGender === gender || p.forGender === "all")
+// Determine if the chosen pack is a themed one
+const isThemed = Boolean(
+  themedPacks.find((p) => p.slug === packId || p.id === packId)
 );
+
+// Choose the source list
+const sourceList = isThemed ? themedPacks : packs;
+
+// Filter out the chosen pack; if themed filter by gender, if custom show all others
+const availableExtras = sourceList.filter((p) => {
+  if (p.slug === packId || p.id === packId) return false;
+  return isThemed ? p.forGender === gender || p.forGender === "all" : true;
+});
+
 
 
   // 3) selection state
