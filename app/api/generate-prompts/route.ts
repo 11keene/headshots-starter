@@ -1,5 +1,6 @@
 // File: /app/api/generate-prompts/route.ts
-
+import { promptPacks } from "@/lib/promptPacks";
+import { generateImagesFromPack } from "@/utils/generateFromPack";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { supabaseAdmin } from "@/lib/supabaseClient";
@@ -10,7 +11,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function POST(req: Request) {
   try {
-    const { pack, answers, user_id } = await req.json() as { pack: string; answers: any; user_id: string };
+    const { pack, answers, user_id } = await req.json() as { pack: keyof typeof promptPacks; answers: any; user_id: string };
 
     // 1️⃣ Fetch user to see if they have a custom tune
     const { data: user, error: userError } = await supabaseAdmin
@@ -29,33 +30,18 @@ export async function POST(req: Request) {
       `[generate-prompts] user_id=${user_id} | astria_model_id=${user?.astria_model_id || "<none>"} | using modelId=${modelId}`
     );
 
-    // 3️⃣ Generate prompts via ChatGPT
-    const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
-      { role: "system", content: "You generate 16 headshot prompts." },
-      {
-        role: "user",
-        content: `Pack: ${pack}\nAnswers:\n${JSON.stringify(answers, null, 2)}\nReply with a numbered list of 16 prompts.`,
-      },
-    ];
+// 3️⃣ Pull prompts directly from local promptPacks
+const prompts = promptPacks[pack];
+if (!prompts || prompts.length === 0) {
+  return NextResponse.json({ error: `No prompts found for pack "${pack}"` }, { status: 400 });
+}
 
-    const chatRes = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages,
-    });
-
-    const rawText = chatRes.choices[0].message?.content || "";
-    const prompts = rawText
-      .split(/\n\d+\.\s*/)
-      .map((p) => p.trim())
-      .filter(Boolean);
 
     // 4️⃣ Generate images from those prompts
     const fineTunedFaceId = `ft-${Date.now()}`;
-    const imageUrls = await generateImagesFromPrompts({
-      prompts,
-      fineTunedFaceId,
-      modelId,
-    });
+    const generation = await generateImagesFromPack(modelId, pack);
+const imageUrls = generation.results.map((result: any) => result.image_url);
+
 
     // 5️⃣ Insert into headshots table
     const { error: insertError } = await supabaseAdmin
