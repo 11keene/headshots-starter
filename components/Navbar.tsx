@@ -56,22 +56,30 @@ export default function Navbar() {
         </Link>
 
         {/* Show "Home / Pricing" links only when logged-in AND not on the public "/" */}
-        {isBackend && pathname !== "/" && (
-          <nav className="relative flex gap-3 -left-5 text-charcoal text-sm font-semibold">
-            <Link
-              href="/overview"
-              className="hover:text-primary transition-colors"
-            >
-              Home
-            </Link>
-            <Link
-              href="/get-credits"
-              className="hover:text-primary transition-colors"
-            >
-              Pricing
-            </Link>
-          </nav>
-        )}
+        {/* Show "Home / Packs / Pricing" links only when logged-in AND not on the public "/" */}
+{isBackend && pathname !== "/" && (
+  <nav className="relative flex gap-3 -left-5 text-charcoal text-sm font-semibold">
+    <Link
+      href="/overview"
+      className="hover:text-primary transition-colors"
+    >
+      Home
+    </Link>
+    <Link
+      href="/overview/packs"
+      className="hover:text-primary transition-colors"
+    >
+      Packs
+    </Link>
+    <Link
+      href="/get-credits"
+      className="hover:text-primary transition-colors"
+    >
+      Pricing
+    </Link>
+  </nav>
+)}
+
 
         <div className="flex items-center gap-4">
           {/* Dashboard menu when logged in & not on "/" */}

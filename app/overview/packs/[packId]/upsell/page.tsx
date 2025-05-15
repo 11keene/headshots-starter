@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import type { Pack } from "../../../../../data/packs";
-import { packs } from "../../../../../data/packs";
+import { themedPacks, packs } from "../../../../../data/packs";
 
 export default function HeadshotUpsell() {
   const paramsObj = useParams();
@@ -22,7 +22,20 @@ export default function HeadshotUpsell() {
   const discountedPrice = parseFloat((originalPrice * 0.8).toFixed(2));
 
   // only show packs matching exactly this gender (no "all")
-  const availableExtras = packs.filter(p => p.forGender === gender);
+// capture current slug (the one user already chose)
+const slug = Array.isArray(paramsObj?.slug)
+  ? paramsObj.slug[0]
+  : paramsObj?.slug || "";
+
+// filter out the selected pack and only show others for that gender
+const availableExtras = themedPacks.filter(
+  (p) =>
+    // exclude the pack they just chose (by ID)
+    p.id !== packId &&
+    // only show packs for this gender (or universal)
+    (p.forGender === gender || p.forGender === "all")
+);
+
 
   // 3) selection state
   const [selected, setSelected] = useState<string[]>([]);
@@ -85,10 +98,11 @@ export default function HeadshotUpsell() {
             }`}
           >
             <img
-              src="/images/pastshoulderlength.png"
-              alt="Past Shoulder Length"
-              className="w-full h-100 object-cover"
-            />
+  src={p.exampleImg}
+  alt={p.name}
+  className="w-full h-100 object-cover"
+/>
+
             {/* price badge in top-right */}
             <div className="absolute top-2 right-2 bg-warm-gray text-white text-xs font-semibold px-2 py-1 rounded text-right">
       <div className="line-through text-[10px]">

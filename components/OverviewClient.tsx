@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ClientSideModelsList from "@/components/realtime/ClientSideModelsList";
+import { starterPacks, themedPacks } from "@/data/packs";  // adjust the path as needed
+
 
 type Tab = "starter" | "themed" | "custom";
 
@@ -115,11 +117,11 @@ export default function OverviewClient({
                 className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
               >
                 <div className="overflow-hidden rounded-lg">
-                  <img
-                    src="/images/curly.png"
-                    alt="Starter Pack for Woman"
-                    className="block w-full"
-                  />
+                <img
+  src={starterPacks[0]?.exampleImg || ""}
+  alt={starterPacks[0]?.name || ""}
+  className="block w-full"
+/>
                   <div className="bg-charcoal h-6 flex items-center justify-center">
                     <span className="text-ivory text-sm">For Woman</span>
                   </div>
@@ -131,9 +133,9 @@ export default function OverviewClient({
               >
                 <div className="overflow-hidden rounded-lg">
                   <img
-                    src="/images/curly.png"
-                    alt="Starter Pack for Man"
-                    className="block w-full"
+                      src={starterPacks[1]?.exampleImg || ""}
+                      alt={starterPacks[1]?.name || ""}
+                      className="block w-full"
                   />
                   <div className="bg-charcoal h-6 flex items-center justify-center">
                     <span className="text-ivory text-sm">For Man</span>
@@ -161,9 +163,9 @@ export default function OverviewClient({
               >
                 <div className="overflow-hidden rounded-lg bg-white">
                   <img
-                    src="/images/placeholder-woman.png"
-                    alt="Themed Packs for Woman"
-                    className="block w-full"
+                      src={themedPacks[2]?.exampleImg || ""}
+                      alt={themedPacks[2]?.name || ""}
+                      className="block w-full"
                   />
                   <div className="bg-charcoal h-6 flex items-center justify-center">
                     <span className="text-ivory text-sm">For Woman</span>
@@ -176,9 +178,9 @@ export default function OverviewClient({
               >
                 <div className="overflow-hidden rounded-lg bg-white">
                   <img
-                    src="/images/placeholder-man.png"
-                    alt="Themed Packs for Man"
-                    className="block w-full"
+                  src={themedPacks[4]?.exampleImg || ""}
+                  alt={themedPacks[4]?.name || ""}
+                  className="block w-full"
                   />
                   <div className="bg-charcoal h-6 flex items-center justify-center">
                     <span className="text-ivory text-sm">For Man</span>
