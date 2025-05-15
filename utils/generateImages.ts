@@ -1,5 +1,7 @@
 // utils/generateImages.ts
 export async function generateImages(tuneId: string, prompts: string[]) {
+  console.log("→ Using ASTRIA_API_KEY:", process.env.ASTRIA_API_KEY?.slice(0,8));
+
     const res = await fetch(`https://api.astria.ai/tunes/${tuneId}/generations`, {
       method: "POST",
       headers: {

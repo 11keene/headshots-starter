@@ -11,6 +11,7 @@ export async function POST(req: Request) {
     { role: "system", content: "You are a creative prompt generator for photoshoots." },
     { role: "user", content: `Create a concise photoshoot prompt based on these preferences: ${JSON.stringify(intake)}` },
   ];
+  
   const chat = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages,
