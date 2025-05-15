@@ -17,36 +17,36 @@ export default function HeadshotUpsell() {
   const gender =
     (searchParams?.get("gender") as "woman" | "man") || "all";
 
-  // — price for themed extras —
+  // detect custom flow
+  const isCustom = packId === "defaultPack";
+  const isStarter = packId === "starterPack"; // Define isStarter based on your logic
+
+  // price calculation
   const originalPrice = 59.99;
   const discountedPrice = parseFloat((originalPrice * 0.8).toFixed(2));
 
-  // only show packs matching exactly this gender (no "all")
-// capture current slug (the one user already chose)
-// Determine if the chosen pack is a themed one
-const isThemed = Boolean(
-  themedPacks.find((p) => p.slug === packId || p.id === packId)
-);
+  // determine if themed flow
+  const isThemed = themedPacks.some(
+    (p) => p.id === packId || p.slug === packId
+  );
 
-// Choose the source list
-const sourceList = isThemed ? themedPacks : packs;
+  // choose source list
+  const sourceList = isThemed ? themedPacks : packs;
 
-// Filter out the chosen pack; if themed filter by gender, if custom show all others
-const availableExtras = sourceList.filter((p) => {
-  if (p.slug === packId || p.id === packId) return false;
-  return isThemed ? p.forGender === gender || p.forGender === "all" : true;
-});
+  // filter out the chosen pack
+  const availableExtras = sourceList.filter((p) => {
+    if (p.id === packId || p.slug === packId) return false;
+    return isThemed ? p.forGender === gender || p.forGender === "all" : true;
+  });
 
-
-
-  // 3) selection state
+  // selection state
   const [selected, setSelected] = useState<string[]>([]);
   const togglePack = (id: string) =>
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
 
-  // 4) carry gender + extras forward
+  // navigation
   const goContinue = () => {
     const extras = selected.join(",");
     router.push(
@@ -67,13 +67,28 @@ const availableExtras = sourceList.filter((p) => {
         Would you like to add additional photos?
       </h1>
 
-      <div className="flex justify-between mb-4">
-        <button
-          onClick={() => router.back()}
-          className="px-4 py-2 bg-muted-gold text-white rounded-md text-sm sm:text-base"
-        >
-          Back
-        </button>
+      <div
+        className={`flex mb-4 ${
+          isCustom ? "justify-end" : "justify-between"
+        }`}
+      >
+        {/* Back button for non-custom flows */}
+        {!isCustom && (
+          <button
+            onClick={() => {
+              if (isStarter) {
+                // Starter: back to dashboard
+                router.push("/overview");
+              } else {
+                // Themed: back to themed packs
+                router.push(`/overview/packs/themed-selection?gender=${gender}`);
+              }
+            }}
+            className="px-4 py-2 bg-muted-gold text-white rounded-md text-sm sm:text-base"
+          >
+            Back
+          </button>
+        )}
 
         <button
           onClick={goContinue}
@@ -87,7 +102,7 @@ const availableExtras = sourceList.filter((p) => {
         </button>
       </div>
 
-      {/* only render gender-filtered extras */}
+      {/* render gender-filtered extras */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {availableExtras.map((p: Pack) => (
           <div
@@ -100,22 +115,20 @@ const availableExtras = sourceList.filter((p) => {
             }`}
           >
             <img
-  src={p.exampleImg}
-  alt={p.name}
-  className="w-full h-100 object-cover"
-/>
+              src={p.exampleImg}
+              alt={p.name}
+              className="w-full h-100 object-cover"
+            />
 
-            {/* price badge in top-right */}
+            {/* price badge */}
             <div className="absolute top-2 right-2 bg-warm-gray text-white text-xs font-semibold px-2 py-1 rounded text-right">
-      <div className="line-through text-[10px]">
-        ${originalPrice.toFixed(2)}
-      </div>
-      <div>
-        ${discountedPrice.toFixed(2)}
-      </div>
-    </div>
+              <div className="line-through text-[10px]">
+                ${originalPrice.toFixed(2)}
+              </div>
+              <div>${discountedPrice.toFixed(2)}</div>
+            </div>
             <div className="absolute inset-x-0 bottom-0 bg-muted-gold text-white text-center font-semibold py-2">
-            {p.name}
+              {p.name}
             </div>
           </div>
         ))}
