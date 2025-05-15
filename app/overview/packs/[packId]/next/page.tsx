@@ -85,6 +85,7 @@ export default function UploadPage() {
       : [];
 
     const resp = await fetch("/api/create-checkout-session", {
+      
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -94,6 +95,7 @@ export default function UploadPage() {
         packId,
         extras: extrasPriceIds,
       }),
+      
     });
     if (!resp.ok) {
       console.error("❌ create-checkout-session error:", await resp.text());

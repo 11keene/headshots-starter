@@ -1,22 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import type { Pack } from "@/data/packs";
-import { themedPacks } from "@/data/packs";
+import { themedPacks, type Pack } from "@/data/packs";
 
 export default function ThemedSelection() {
   const searchParams = useSearchParams();
   const gender = (searchParams?.get("gender") as "woman" | "man") || "all";
   const router = useRouter();
 
-  // only show the placeholders (and later real themes) for that gender
+  // Filter by gender: show packs for this gender or "all"
   const available = themedPacks.filter(
-    (p: Pack) => p.forGender === gender
+    (p: Pack) => p.forGender === gender || p.forGender === "all"
   );
 
   const handleClick = (packId: string) => {
-    // go straight to your upsell page, carrying gender
+    // Redirect to upsell page, keeping gender in query
     router.push(`/overview/packs/${packId}/upsell?gender=${gender}`);
   };
 
@@ -29,24 +27,30 @@ export default function ThemedSelection() {
         Pick Your Themed Pack
       </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {available.map((p: Pack) => (
-          <div
-            key={p.id}
-            onClick={() => handleClick(p.id)}
-            className="cursor-pointer border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-          >
-            <img
-              src={p.exampleImg}
-              alt={p.name}
-              className="w-full h-48 object-cover"
-            />
-            <div className="bg-muted-gold text-white text-center font-semibold py-2">
-              {p.name}
+      {available.length === 0 ? (
+        <p className="text-center text-muted-foreground">
+          No themed packs are available yet for this gender.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {available.map((p: Pack) => (
+            <div
+              key={p.id}
+              onClick={() => handleClick(p.id)}
+              className="cursor-pointer border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+            >
+              <img
+                src={p.exampleImg}
+                alt={p.name}
+                className="w-full h-100 object-cover"
+              />
+              <div className="bg-muted-gold text-white text-center font-semibold py-2">
+                {p.name}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

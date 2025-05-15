@@ -6,6 +6,8 @@ import OpenAI from "openai";
 import { supabaseAdmin } from "@/lib/supabaseClient";
 import { generateImagesFromPrompts } from "@/lib/generateImagesFromPrompts";
 import { sendHeadshotReadyEmail } from "@/lib/sendEmail";
+import { createTune } from "@/utils/createTune"; // this should hit Astria's /tunes endpoint
+
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -25,10 +27,33 @@ export async function POST(req: Request) {
     }
 
     // 2️⃣ Decide which model to use
-    const modelId = user?.astria_model_id || process.env.ASTRIA_DEFAULT_MODEL_ID!;
-    console.log(
-      `[generate-prompts] user_id=${user_id} | astria_model_id=${user?.astria_model_id || "<none>"} | using modelId=${modelId}`
-    );
+    // 2️⃣ Create a new Tune for this user using uploaded photos
+const uploadedImages = answers.uploadedImages || []; // array of image URLs from your intake flow
+
+if (!Array.isArray(uploadedImages) || uploadedImages.length < 3) {
+  return NextResponse.json({ error: "At least 3 uploaded images are required to train a model." }, { status: 400 });
+}
+
+// Choose class_name based on your logic. This can be 'man' or 'woman'.
+const className = answers.gender === "male" ? "man" : "woman";
+
+// You’ll need the pack ID that this prompt pack is based on.
+// This assumes you’ve hardcoded the real private Astria pack ID per themed pack:
+const packIdMap: Record<string, string> = {
+  "fitness-pack": "1234", // replace with your real Astria private pack ID for each
+  "ceo-pack": "5678"
+};
+
+const packId = packIdMap[pack];
+if (!packId) {
+  return NextResponse.json({ error: `Pack ID not found for ${pack}` }, { status: 400 });
+}
+
+// Train a new model
+const tune = await createTune(packId, uploadedImages, className);
+const modelId = tune.id;
+console.log(`[generate-prompts] user_id=${user_id} | trained new tuneId=${modelId}`);
+
 
 // 3️⃣ Pull prompts directly from local promptPacks
 const prompts = promptPacks[pack];
@@ -40,6 +65,8 @@ if (!prompts || prompts.length === 0) {
     // 4️⃣ Generate images from those prompts
     const fineTunedFaceId = `ft-${Date.now()}`;
     const generation = await generateImagesFromPack(modelId, pack);
+    console.log("⚠️ Full generation response:", generation);
+
 const imageUrls = generation.results.map((result: any) => result.image_url);
 
 
