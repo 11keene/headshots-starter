@@ -74,16 +74,7 @@ export default function HeadshotUpsell() {
       >
         {/* Back button for non-custom flows */}
         {!isCustom && (
-          <button
-            onClick={() => {
-              if (isStarter) {
-                // Starter: back to dashboard
-                router.push("/overview");
-              } else {
-                // Themed: back to themed packs
-                router.push(`/overview/packs/themed-selection?gender=${gender}`);
-              }
-            }}
+          <button onClick={() => router.back()} 
             className="px-4 py-2 bg-muted-gold text-white rounded-md text-sm sm:text-base"
           >
             Back
