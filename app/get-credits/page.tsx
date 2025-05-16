@@ -27,13 +27,13 @@ const PLANS: Plan[] = [
     id: "themed",
     name: "Themed Packs",
     description: "15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds",
-    price: "$59.99",
+    price: "$42.99",
   },
   {
     id: "custom",
     name: "Custom Pack",
     description: "15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds",
-    price: "$74.99",
+    price: "$69.99",
   },
 ];
 
@@ -62,7 +62,7 @@ export default function PricingPage() {
         {PLANS.map((plan) => (
           <Card
             key={plan.id}
-            className="p-6 border-2 border-warm-gray rounded-lg transition hover:shadow-lg flex flex-col"
+            className="p-6 border-2 border-charcoal rounded-lg transition hover:shadow-lg flex flex-col"
           >
             <h2 className="text-xl font-semibold mb-2">{plan.name}</h2>
             <p className="text-gray-600 mb-4">{plan.description}</p>
@@ -74,7 +74,7 @@ export default function PricingPage() {
                 onClick={() => choosePlan(plan.id)}
                 className="bg-dusty-coral hover:bg-sage-green text-white px-4 py-2 rounded-md text-sm"
               >
-                Choose Plan
+                Choose Pack
               </Button>
             </div>
           </Card>

@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
+import { Cloud } from "lucide-react";
 
-
-type Option = { label: string; value: string; img: string };
+type Option = { label: string; value: string; img: string; color?: string };
 type Question = {
   key: string;
   type: "images" | "multi" | "select";
@@ -51,7 +51,9 @@ const WOMEN_QUESTIONS: Question[] = [
       { label: "Straight", value: "straight", img: "https://via.placeholder.com/300x200?text=Straight" },
       { label: "Wavy", value: "wavy", img: "https://via.placeholder.com/300x200?text=Wavy" },
       { label: "Curly", value: "curly", img: "https://via.placeholder.com/300x200?text=Curly" },
-      { label: "Coily", value: "coily", img: "https://via.placeholder.com/300x200?text=Coily" }
+      { label: "Coily", value: "coily", img: "https://via.placeholder.com/300x200?text=Coily" },
+      { label: "Dreadlocks", value: "dreadlocks", img: "https://via.placeholder.com/300x200?text=Curly" },
+
     ]
   },
   {
@@ -74,10 +76,11 @@ const WOMEN_QUESTIONS: Question[] = [
     title: "What is your body type?",
     options: [
       { label: "Slim", value: "slim", img: "" },
-      { label: "Regular", value: "regular", img: "" },
+      { label: "Athletic", value: "athletic", img: "" },
       { label: "Curvy", value: "curvy", img: "" },
+      { label: "Full-figured", value: "full figured", img: "" },
       { label: "Plus Size", value: "plus size", img: "" },
-      { label: "Athletic", value: "athletic", img: "" }
+      
     ]
   },
   {
@@ -122,14 +125,18 @@ const WOMEN_QUESTIONS: Question[] = [
       { label: "Beige", value: "beige", img: "" },
       { label: "Blush Pink", value: "blush pink", img: "" },
       { label: "Forest Green", value: "forest green", img: "" },
+      { label: "Red", value: "red", img: "" },
       { label: "Cobalt Blue", value: "cobalt blue", img: "" },
+      { label: "Orange", value: "orange", img: "" },
       { label: "Gold", value: "gold", img: "" },
-      { label: "Silver", value: "silver", img: "" }
+      { label: "Silver", value: "silver", img: "" },
+      { label: "Other", value: "other", img: "" }
     ]
   },
   {
     key: "industry",
-    type: "select",
+    type: "multi",
+    multi: true, 
     title: "What industry or profession are you in?",
     options: [
       { label: "Marketing", value: "marketing", img: "" },
@@ -155,15 +162,7 @@ const WOMEN_QUESTIONS: Question[] = [
       { label: "Social Media", value: "social", img: "" }
     ]
   },
-  {
-    key: "creativeFlair",
-    type: "select",
-    title: "Would you like us to include a few creative, artsy prompts in your set?",
-    options: [
-      { label: "Yes", value: "yes", img: "" },
-      { label: "No", value: "no", img: "" }
-    ]
-  }
+
 ];
 
 
@@ -173,6 +172,7 @@ const MEN_QUESTIONS: Question[] = [
     type: "images",
     title: "What is your hair length?",
     options: [
+      { label: "Bald", value: "bald", img: "" },
       { label: "Buzz Cut", value: "buzz", img: "" },
       { label: "Short", value: "short", img: "" },
       { label: "Medium", value: "medium", img: "" },
@@ -200,8 +200,11 @@ const MEN_QUESTIONS: Question[] = [
     options: [
       { label: "Slim", value: "slim", img: "" },
       { label: "Average", value: "average", img: "" },
+      { label: "Athletic", value: "athletic", img: "" },
       { label: "Muscular", value: "muscular", img: "" },
-      { label: "Stocky", value: "stocky", img: "" }
+      { label: "Medium Large", value: "muedium large", img: "" },
+      { label: "Large", value: "large", img: "" },
+      { label: "Plus Size", value: "plus size", img: "" }
     ]
   },
   {
@@ -242,17 +245,23 @@ const MEN_QUESTIONS: Question[] = [
     optional: true,
     options: [
       { label: "Black", value: "black", img: "" },
-      { label: "White", value: "white", img: "" },
-      { label: "Beige", value: "beige", img: "" },
-      { label: "Forest Green", value: "forest green", img: "" },
-      { label: "Navy Blue", value: "navy blue", img: "" },
-      { label: "Charcoal Gray", value: "charcoal", img: "" },
-      { label: "Silver", value: "silver", img: "" }
+      { label: "White", value: "white", img: ""},
+      { label: "Beige", value: "beige", img: ""},
+      { label: "Forest Green", value: "forest green", img: ""},
+      { label: "Navy Blue", value: "navy blue", img: ""},
+      { label: "Cobalt Blue", value: "cobalt blue", img: ""},
+      { label: "Gold", value: "gold", img: ""},
+      { label: "Red", value: "red", img: ""},
+      { label: "Silver", value: "silver", img: ""},
+      { label: "Other", value: "other", img: "" }
+
+      
     ]
   },
   {
     key: "industry",
-    type: "select",
+    type: "multi",
+    multi: true, 
     title: "What industry or profession are you in?",
     options: [
       { label: "Marketing", value: "marketing", img: "" },
@@ -278,15 +287,7 @@ const MEN_QUESTIONS: Question[] = [
       { label: "Social Media", value: "social", img: "" }
     ]
   },
-  {
-    key: "creativeFlair",
-    type: "select",
-    title: "Would you like us to include a few creative, artsy prompts in your set?",
-    options: [
-      { label: "Yes", value: "yes", img: "" },
-      { label: "No", value: "no", img: "" }
-    ]
-  }
+
 ];
 
 
@@ -298,11 +299,12 @@ type IntakeFormProps = {
 export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Normalize both “woman”/“female” → “female”, else “male”
   const rawGender = searchParams?.get("gender") || "woman";
   const gender = rawGender === "man" || rawGender === "male" ? "male" : "female";
+
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
+
   useEffect(() => {
     const saved = localStorage.getItem(`intake-${pack}`);
     if (saved) setAnswers(JSON.parse(saved));
@@ -312,11 +314,10 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
     localStorage.setItem(`intake-${pack}`, JSON.stringify(answers));
   }, [answers, pack]);
 
-// we already know gender from ?gender=…, so only show that gender’s questions
-  const questionSet = useMemo(() => {
-      return gender === "female" ? WOMEN_QUESTIONS : MEN_QUESTIONS;
-    }, [gender]);
-
+  const questionSet = useMemo(
+    () => (gender === "female" ? WOMEN_QUESTIONS : MEN_QUESTIONS),
+    [gender]
+  );
   const question = questionSet[step];
 
   const choose = (val: any) => {
@@ -328,53 +329,62 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
       setAnswers((a) => ({ ...a, [question.key]: updated }));
     } else {
       setAnswers((a) => ({ ...a, [question.key]: val }));
-      // ✅ Auto-advance to next step after a short delay
-      setTimeout(() => {
-        next();
-      }, 300); // You can adjust this delay if needed
+      setTimeout(next, 300);
     }
   };
-  
 
   const next = () => {
-        if (step < questionSet.length - 1) {
-          setStep(step + 1);
-        } else {
-          if (onComplete) {
-            onComplete();
-          } else {
-            // once the intake is done, go straight to upload (preserving gender)
-            router.push(`/overview/packs/${pack}/next?gender=${gender}`);
-          }
-        }
-      };
+    if (step < questionSet.length - 1) {
+      setStep(step + 1);
+    } else {
+      onComplete
+        ? onComplete()
+        : router.push(`/overview/packs/${pack}/next?gender=${gender}`);
+    }
+  };
 
   const back = () => {
     if (step > 0) setStep(step - 1);
     else router.back();
   };
 
-
-
   return (
-    <div className="max-w-lg mx-auto p-6 space-y-6">
-      <div className="w-full bg-warm-gray h-2 rounded-full overflow-hidden">
+    <div className="relative min-h-screen max-w-lg mx-auto pt-20 pb-24 px-6 text-charcoal">
+      {/* 1️⃣ BACK BUTTON fixed top-left */}
+      <div className="absolute top-4 left-1">
+      <Button
+  onClick={back}
+  className="bg-warm-gray text-white hover:bg-warm-gray"
+>
+  Back
+</Button>
+
+      </div>
+
+      {/* 2️⃣ STEP CIRCLE */}
+      <div className="flex justify-center mb-4">
+        <div className="w-8 h-8 rounded-full bg-dusty-coral flex text-white items-center justify-center text-sm font-medium">
+          {step + 1}
+        </div>
+      </div>
+
+      {/* 3️⃣ PROGRESS BAR */}
+      <div className="w-full bg-white h-2 rounded-full overflow-hidden mb-6">
         <div
           className="h-2 bg-gradient-to-r from-sage-green to-sage-green transition-all"
           style={{ width: `${((step + 1) / questionSet.length) * 100}%` }}
         />
       </div>
 
-      <h2 className="text-2xl font-bold text-center">{question.title}</h2>
-{question.subtitle && (
-  <p className="text-center text-sm text-muted-foreground -mt-2">
-    {question.subtitle}
-  </p>
-)}
+      {/* 4️⃣ QUESTION TITLE & SUBTITLE */}
+      <h2 className="text-2xl font-bold text-center mb-2">{question.title}</h2>
+      {question.subtitle && (
+        <p className="text-center text-sm mb-6">{question.subtitle}</p>
+      )}
 
-      <div className="space-y-6">
+      {/* 5️⃣ OPTIONS */}
+      <div className="mt-6 space-y-6">
         {question.type === "images" && (
-          
           <div className="grid grid-cols-2 gap-4">
             {question.options.map((o) => (
               <motion.button
@@ -382,7 +392,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
                 onClick={() => choose(o.value)}
                 whileHover={{ scale: 1.02 }}
                 className={`border-2 rounded-lg overflow-hidden flex flex-col items-center transition-shadow ${
-                  (question.multi || question.type === "multi")
+                  question.multi
                     ? (answers[question.key] || []).includes(o.value)
                       ? "border-dusty-coral shadow-lg"
                       : "border-warm-gray hover:shadow-md"
@@ -398,71 +408,129 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
           </div>
         )}
 
-    {question.type === "multi" && (
-      <>
-        {question.multi && (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              {question.options.map((o) => {
-                const isSelected = (answers[question.key] || []).includes(o.value);
-                return (
-                  <motion.button
-                    key={o.value}
-                    onClick={() => choose(o.value)}
-                    whileHover={{ scale: 1.02 }}
-                    className={`border-2 rounded-lg flex flex-col items-center p-4 transition-shadow ${
-                      isSelected
-                        ? "border-dusty-coral shadow-lg"
-                        : "border-warm-gray hover:shadow-md"
-                    }`}
-                  >
-                    {o.img && (
-                      <img
-                        src={o.img}
-                        alt={o.label}
-                        className="w-full h-24 object-cover mb-2"
-                      />
-                    )}
-                    <span>{o.label}</span>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </>
-    )}
+{question.type === "multi" && question.multi && (
+  <div className="flex flex-col space-y-4">
+    {question.options.map((o) => {
+      const isSelected = (answers[question.key] || []).includes(o.value);
+
+      // map each value to a real CSS colour
+      const colorMap: Record<string,string> = {
+        black:          "#000000",
+        white:          "#FFFFFF",
+        beige:          "#F5F5DC",
+        "blush pink":   "#FFC0CB",
+        "forest green": "#228B22",
+        "navy blue":    "#000080",
+        charcoal:       "#36454F",
+        red:            "#FF0000",
+        "cobalt blue":  "#0047AB",
+        orange:         "#FFA500",
+        gold:           "#FFD700",
+        silver:         "#C0C0C0",
+       
+      };
+      
+      const circleColor = colorMap[o.value.toLowerCase()] || "transparent";
+
+      // detect brandColors → other
+      const isBrandColorsOther =
+        question.key === "brandColors" &&
+        o.value.toLowerCase() === "other";
+
+      // conic-gradient for brandColors.other
+      const gradient = `conic-gradient(
+        #000000 0% 11%,
+        #FFFFFF 11% 22%,
+        #F5F5DC 22% 33%,
+        #FFC0CB 33% 44%,
+        #228B22 44% 55%,
+        #0047AB 55% 66%,
+        #FFA500 66% 77%,
+        #FFD700 77% 88%,
+        #C0C0C0 88% 100%
+      )`;
+
+      return (
+        <motion.button
+          key={o.value}
+          onClick={() => {
+            choose(o.value);
+            // for the industry question (one-click advance)
+            if (question.key === "industry") next();
+          }}
+          whileHover={{ scale: 1.02 }}
+          className={`
+            w-full
+            border-2 rounded-lg flex items-center justify-between p-4 transition-shadow
+            ${isSelected
+              ? "border-dusty-coral shadow-lg"
+              : "border-warm-gray hover:shadow-md"}
+          `}
+        >
+          {/* left colour dot */}
+          <span
+            className="w-4 h-4 rounded-full flex-shrink-0"
+            style={
+              isBrandColorsOther
+                ? { background: gradient }
+                : { backgroundColor: circleColor }
+            }
+          />
+
+          {/* label */}
+          <span className="flex-1 text-center">{o.label}</span>
+
+          {/* right selected indicator */}
+          <span
+            className={`
+              w-4 h-4 rounded-full flex-shrink-0
+              ${isSelected
+                ? "bg-dusty-coral"
+                : "border-2 border-warm-gray"}
+            `}
+          />
+        </motion.button>
+      );
+    })}
+  </div>
+)}
+
+
+
+
+
+
+
 
         {question.type === "select" && (
-          <div>
-            <label htmlFor={`select-${question.key}`} className="sr-only">
-              {question.title}
-            </label>
-            <select
-              id={`select-${question.key}`}
-              className="w-full p-3 border rounded-lg focus:border-dusty-coral"
-              value={answers[question.key] || ""}
-              onChange={(e) => choose(e.target.value)}
-            >
-              <option value="">Choose…</option>
-              {question.options.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            id={`select-${question.key}`}
+            className="w-full p-3 border rounded-lg focus:border-dusty-coral"
+            value={answers[question.key] || ""}
+            onChange={(e) => choose(e.target.value)}
+          >
+            <option value="">Choose…</option>
+            {question.options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
         )}
       </div>
 
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={back} disabled={step === 0}>
-          Back
-        </Button>
-        <Button onClick={next} disabled={!answers[question.key] && !question.optional}>
-          {step === questionSet.length - 1 ? "Submit" : "Next"}
-        </Button>
-      </div>
+      {/* 6️⃣ CONTINUE BUTTON fixed bottom */}
+      {/* 6️⃣ CONTINUE BUTTON as a fixed footer bar */}
+<div className="fixed bottom-0 left-0 w-full flex items-center bg-warm-gray border-t py-4 px-6">
+  <Button
+    onClick={next}
+    disabled={!answers[question.key] && !question.optional}
+    className="w-full md:w-1/3 md:mx-auto bg-dusty-coral text-white"
+  >
+    {step === questionSet.length - 1 ? "Submit" : "Next"}
+  </Button>
+</div>
+
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ClientSideModelsList from "@/components/realtime/ClientSideModelsList";
 import { starterPacks, themedPacks } from "@/data/packs";  // adjust the path as needed
-
+import PromoHandler from "@/components/PromoHandler";
 
 type Tab = "starter" | "themed" | "custom";
 
@@ -56,17 +56,23 @@ export default function OverviewClient({
   }, [tabParam]);
 
   return (
-        <div
-          className="min-h-screen flex flex-col w-full"
-          style={{
-            // env(safe-area-inset-bottom) handles the home-indicator;
-            // + 44px (approx) makes room for the Safari toolbar
-            paddingBottom: "calc(env(safe-area-inset-bottom) + 44px)"
-          }}
-        >
+    <>
+    {/* one-time welcome promo for new users */}
+    <PromoHandler />
+    <div
+        className="min-h-screen flex flex-col w-full pb-16" // fallback padding for URL bar
+        style={{
+          // env(safe-area-inset-bottom) handles the home-indicator;
+          // + 44px (approx) makes room for the Safari toolbar
+          paddingBottom: `max(env(safe-area-inset-bottom), 16px) + 44px`,
+        }}
+      >
       {/* ─── Top: warm-gray, centered ─── */}
       <div className="bg-warm-gray flex flex-col items-center w-full px-4 py-8">
-        {/* Tabs */}
+      {/* ⚡ Delivery banner */}
+      <div className="text-center mb-6 font-bold text-2xl text-charcoal">
+        ⚡ Lightning-fast delivery – your headshots arrive in under an hour.
+      </div>        {/* Tabs */}
         <div className="mt-8 mb-8 w-full max-w-lg grid grid-cols-3 gap-6">
           <button
             onClick={() => setActiveTab("starter")}
@@ -100,51 +106,65 @@ export default function OverviewClient({
           </button>
         </div>
 
-        {/* Starter Pack */}
-        {activeTab === "starter" && (
-         <div className="bg-ivory w-full max-w-xl p-6 rounded-lg shadow-md mb-20">
-            <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
-              Starter Pack
-            </h2>
-            <p className="text-charcoal text-sm text-center mb-6">
-              A curated mini-shoot designed to deliver polished, professional
-              images — fast. Ideal for updating your LinkedIn, profile picture,
-              or personal brand.
-            </p>
-            <div className="grid grid-cols-2 gap-6">
-              <Link
-                href="/overview/packs/starter/upsell?gender=woman"
-                className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
-              >
-                <div className="overflow-hidden rounded-lg">
-                <img
-  src={starterPacks[0]?.exampleImg || ""}
-  alt={starterPacks[0]?.name || ""}
-  className="block w-full"
-/>
-                  <div className="bg-charcoal h-6 flex items-center justify-center">
-                    <span className="text-ivory text-sm">For Woman</span>
-                  </div>
-                </div>
-              </Link>
-              <Link
-                href="/overview/packs/starter/upsell?gender=man"
-                className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
-              >
-                <div className="overflow-hidden rounded-lg">
-                  <img
-                      src={starterPacks[1]?.exampleImg || ""}
-                      alt={starterPacks[1]?.name || ""}
-                      className="block w-full"
-                  />
-                  <div className="bg-charcoal h-6 flex items-center justify-center">
-                    <span className="text-ivory text-sm">For Man</span>
-                  </div>
-                </div>
-              </Link>
+{/* Starter Pack */}
+{activeTab === "starter" && (
+  <div className="bg-ivory w-full max-w-xl p-6 rounded-lg shadow-md mb-20">
+    <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
+      Starter Pack
+    </h2>
+    <p className="text-charcoal text-sm text-center mb-6">
+      A curated mini-shoot designed to deliver polished, professional
+      images — fast. Ideal for updating your LinkedIn, profile picture,
+      or personal brand.
+    </p>
+
+    {/*
+      Instead of hard-coding indexes, pick out the correct
+      man/woman pack by its `forGender` field.
+    */}
+    {(() => {
+      const womanPack = starterPacks.find((p) => p.forGender === "woman");
+      const manPack   = starterPacks.find((p) => p.forGender === "man");
+      if (!womanPack || !manPack) return null;
+
+      return (
+        <div className="grid grid-cols-2 gap-6">
+          <Link
+            href={`/overview/packs/${womanPack.id}/upsell?gender=woman`}
+            className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
+          >
+            <div className="overflow-hidden rounded-lg">
+              <img
+                src={womanPack.exampleImg}
+                alt={womanPack.name}
+                className="block w-full"
+              />
+              <div className="bg-charcoal h-6 flex items-center justify-center">
+                <span className="text-ivory text-sm">For Woman</span>
+              </div>
             </div>
-          </div>
-        )}
+          </Link>
+          <Link
+            href={`/overview/packs/${manPack.id}/upsell?gender=man`}
+            className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
+          >
+            <div className="overflow-hidden rounded-lg">
+              <img
+                src={manPack.exampleImg}
+                alt={manPack.name}
+                className="block w-full"
+              />
+              <div className="bg-charcoal h-6 flex items-center justify-center">
+                <span className="text-ivory text-sm">For Man</span>
+              </div>
+            </div>
+          </Link>
+        </div>
+      );
+    })()}
+  </div>
+)}
+
 
         {/* Themed Packs — pick your gender first */}
         {activeTab === "themed" && (
@@ -263,5 +283,6 @@ export default function OverviewClient({
         </div>
       </div>
     </div>
+    </>
   );
 }

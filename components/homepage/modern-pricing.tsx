@@ -38,7 +38,7 @@ export default function ModernPricing() {
   const tiers: PricingTier[] = [
     {
       title: "Starter Pack",
-      originalPrice: "$39.99",
+      originalPrice: "$37.49",
       price: "$29.99",
       description:
         "Ideal for updating your LinkedIn, profile picture, or personal brand with clean, natural looks that build instant credibility.",
@@ -53,8 +53,8 @@ export default function ModernPricing() {
     },
     {
       title: "Themed Packs",
-      originalPrice: "$72.99",
-      price: "$59.99",
+      originalPrice: "$53.74",
+      price: "$42.99",
       description:
         "Each pack is built around a powerful theme. You’ll receive a full visual collection tailored to your industry’s tone and aesthetic.",
       features: [
@@ -68,8 +68,8 @@ export default function ModernPricing() {
     },
     {
       title: "Custom Pack",
-      originalPrice: "$99.99",
-      price: "$74.99",
+      originalPrice: "$87.49",
+      price: "$69.99",
       description:
         "Your personalized photoshoot — We use your style preferences, mood, industry, and brand voice to generate a completely customized set of professional images.",
       features: [

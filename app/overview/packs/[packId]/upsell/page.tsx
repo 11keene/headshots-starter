@@ -19,11 +19,14 @@ export default function HeadshotUpsell() {
 
   // detect custom flow
   const isCustom = packId === "defaultPack";
-  const isStarter = packId === "starterPack"; // Define isStarter based on your logic
+  // treat the Starter Pack slug as gender‐specific too
+  const isStarter = packId === "ceo-confidence-pack";
 
   // price calculation
-  const originalPrice = 59.99;
-  const discountedPrice = parseFloat((originalPrice * 0.8).toFixed(2));
+// price calculation for themed-pack upsell
+const originalPrice = 42.99;
+const discountedPrice = parseFloat((originalPrice * 0.9).toFixed(2)); // 10% off
+
 
   // determine if themed flow
   const isThemed = themedPacks.some(
@@ -33,10 +36,16 @@ export default function HeadshotUpsell() {
   // choose source list
   const sourceList = isThemed ? themedPacks : packs;
 
-  // filter out the chosen pack
+  // filter out the chosen pack, and for themed or starter flows only show matching genders
   const availableExtras = sourceList.filter((p) => {
     if (p.id === packId || p.slug === packId) return false;
-    return isThemed ? p.forGender === gender || p.forGender === "all" : true;
+
+    if (isThemed || isStarter) {
+      return p.forGender === gender || p.forGender === "all";
+    }
+
+    // for custom or other flows, show all remaining packs
+    return true;
   });
 
   // selection state
@@ -74,7 +83,8 @@ export default function HeadshotUpsell() {
       >
         {/* Back button for non-custom flows */}
         {!isCustom && (
-          <button onClick={() => router.back()} 
+          <button
+            onClick={() => router.back()}
             className="px-4 py-2 bg-muted-gold text-white rounded-md text-sm sm:text-base"
           >
             Back
@@ -118,6 +128,7 @@ export default function HeadshotUpsell() {
               </div>
               <div>${discountedPrice.toFixed(2)}</div>
             </div>
+
             <div className="absolute inset-x-0 bottom-0 bg-muted-gold text-white text-center font-semibold py-2">
               {p.name}
             </div>

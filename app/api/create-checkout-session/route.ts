@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { headers } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
-import { themedPacks } from "@/data/packs";
+import { starterPacks, themedPacks } from "@/data/packs";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil",
@@ -18,17 +18,15 @@ export async function POST(req: Request) {
       user_id,
       user_email,
       packId,
-      extras = [],
+      extras: extrasRaw = [],           // allow array or CSV
     } = (await req.json()) as {
       user_id?: string;
       user_email?: string;
       packId?: string;
-      extras?: string[]; // these are slugs of extra packs
+      extras?: string[] | string;
     };
-    console.log(
-      "[create-checkout-session] incoming body:",
-      JSON.stringify({ user_id, user_email, packId, extras }, null, 2)
-    );
+
+    console.log("[checkout] extrasRaw:", extrasRaw);
 
     if (!user_id || !user_email || !packId) {
       return NextResponse.json(
@@ -42,9 +40,16 @@ export async function POST(req: Request) {
       .from("users")
       .upsert({ id: user_id, email: user_email }, { onConflict: "id" });
 
+    // fetch their claimed promo code
+    const { data: userPromo } = await supabaseAdmin
+      .from("users")
+      .select("current_promo_code")
+      .eq("id", user_id)
+      .single();
+
     const origin = headers().get("origin") ?? process.env.NEXT_PUBLIC_APP_URL!;
 
-    // 1️⃣ Lookup the main pack’s Stripe price ID
+    // 1️⃣ Main pack lookup
     const mainPack = themedPacks.find(
       (p) => p.slug === packId || p.id === packId
     );
@@ -55,24 +60,58 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2️⃣ Lookup each extra pack’s Stripe price ID
-    const extraLineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
-      extras
-        .map((slug) => themedPacks.find((p) => p.slug === slug || p.id === slug))
-        .filter((p): p is typeof mainPack => Boolean(p))
-        .map((p) => ({ price: p.stripePriceId, quantity: 1 }));
+    // ─── Normalize extras to a trimmed string array ───
+    const extras = Array.isArray(extrasRaw)
+      ? extrasRaw
+      : typeof extrasRaw === "string"
+      ? extrasRaw
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
 
-    // 3️⃣ Build the final line items array
+    console.log("[checkout] normalized extras:", extras);
+
+    // ─── Combine all pack definitions ───
+    const allPacks = [...starterPacks, ...themedPacks];
+
+    // 2️⃣ Extras → line items (lookup in allPacks)
+    const extraLineItems = extras
+      .map((key) =>
+        allPacks.find(
+          (p) =>
+            p.slug === key ||
+            p.id === key ||
+            p.stripePriceId === key
+        )
+      )
+      .filter((p): p is typeof mainPack => Boolean(p))
+      .map((p) => ({ price: p.stripePriceId, quantity: 1 }));
+
+    console.log("[checkout] extraLineItems:", extraLineItems);
+
+    // 3️⃣ Final line items
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
       { price: mainPack.stripePriceId, quantity: 1 },
       ...extraLineItems,
     ];
+    console.log("[checkout] final lineItems:", lineItems);
+
+    // Discounts (unchanged)
+    const discounts = userPromo?.current_promo_code
+      ? [{ coupon: userPromo.current_promo_code }]
+      : undefined;
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
+      discounts: discounts && discounts.length ? discounts : undefined,
       client_reference_id: user_id,
-      metadata: { packId, extras: extras.join(",") },
+      metadata: {
+        packId,
+        extras: extras.join(","),
+        promo_code: userPromo?.current_promo_code ?? "",
+      },
       success_url: `${origin}/overview/packs/${mainPack.slug}/generate?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/overview/packs/${mainPack.slug}/next?extraPacks=${extras.join(
         ","
@@ -80,7 +119,7 @@ export async function POST(req: Request) {
       mode: "payment",
     } as Stripe.Checkout.SessionCreateParams);
 
-    // record a pending order
+    // record pending order (unchanged)
     await supabaseAdmin.from("orders").insert({
       user_id,
       pack_id: packId,
@@ -89,10 +128,6 @@ export async function POST(req: Request) {
       extras: extras.join(","),
       status: "pending",
       created_at: new Date().toISOString(),
-    });
-    console.log("[create-checkout-session] order inserted:", {
-      packId,
-      sessionId: session.id,
     });
 
     return NextResponse.json({ url: session.url });
