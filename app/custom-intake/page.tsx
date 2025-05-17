@@ -7,12 +7,13 @@ import CustomIntakeClient from "./CustomIntakeClient";
 interface PageProps {
   searchParams: {
     packId?: string;
+    gender?: "man" | "woman";
   };
 }
 
 export default function Page({ searchParams }: PageProps) {
-  // Read packId from the URL (?packId=…) or fall back
-  const packId = searchParams.packId ?? "defaultPack";
+  const gender = (searchParams.gender as "man" | "woman") || "man";
+  const packId = `custom-intake-${gender}`;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-warm-gray p-4">

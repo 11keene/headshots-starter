@@ -1,7 +1,7 @@
 // File: components/Navbar.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -15,8 +15,6 @@ import {
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { HamburgerMenuIcon } from "@radix-ui/react-icons";
-import { FiGlobe } from "react-icons/fi";
-import LoginDropdown from "./LoginDropdown";
 import { ThemeToggle } from "@/components/homepage/theme-toggle";
 
 export default function Navbar() {
@@ -24,78 +22,52 @@ export default function Navbar() {
   const router = useRouter();
   const supabase = useSupabaseClient();
   const session = useSession();
-
-  const isBackend = Boolean(session?.user);
-  const packsIsEnabled = process.env.NEXT_PUBLIC_TUNE_TYPE === "packs";
-
-  // Supported locales for the homepage language switcher
-  const locales = [
-    { code: "en", label: "English" },
-    { code: "de", label: "Deutsch" },
-    { code: "fr", label: "Français" },
-    { code: "pt", label: "Português" },
-    { code: "es", label: "Español" },
-  ];
+  const isLoggedIn = Boolean(session?.user);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* Logo always visible */}
-        <Link
-          href="/"
-          className="flex items-center gap-1 text-charcoal font-semibold text-small"
-        >
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-1 text-charcoal font-semibold">
           <Image
             src="/newlogo.png"
             alt="AI Maven Logo"
             width={25}
             height={35}
-            className="rounded-full text-charcoal"
+            className="rounded-full"
           />
           <span>AI Maven</span>
         </Link>
 
-        {/* Show "Home / Pricing" links only when logged-in AND not on the public "/" */}
-        {/* Show "Home / Packs / Pricing" links only when logged-in AND not on the public "/" */}
-{isBackend && pathname !== "/" && (
-  <nav className="relative flex gap-3 -left-5 text-charcoal text-sm font-semibold">
-    <Link
-      href="/overview"
-      className="hover:text-primary transition-colors"
-    >
-      Home
-    </Link>
-    <Link
-      href="/overview/packs"
-      className="hover:text-primary transition-colors"
-    >
-      Packs
-    </Link>
-    <Link
-      href="/get-credits"
-      className="hover:text-primary transition-colors"
-    >
-      Pricing
-    </Link>
-  </nav>
-)}
+        {/* Signed-in nav links */}
+        {isLoggedIn && pathname !== "/" && (
+          <nav className="flex gap-6 text-charcoal font-semibold">
+            <Link href="/overview" className="hover:text-primary">
+              Home
+            </Link>
+            <Link href="/overview/packs" className="hover:text-primary">
+              Packs
+            </Link>
+            <Link href="/get-credits" className="hover:text-primary">
+              Pricing
+            </Link>
+          </nav>
+        )}
 
+        {/* Hamburger menu (always present) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
+              <HamburgerMenuIcon className="h-6 w-6 text-charcoal" />
+            </Button>
+          </DropdownMenuTrigger>
 
-        <div className="flex items-center gap-4">
-          {/* Dashboard menu when logged in & not on "/" */}
-          {isBackend && pathname !== "/" ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
-                  <HamburgerMenuIcon className="h-6 w-6 text-primary" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-48 z-50">
-                {packsIsEnabled && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/overview/packs">Packs</Link>
-                  </DropdownMenuItem>
-                )}
+          <DropdownMenuContent className="w-48 z-50">
+            {isLoggedIn ? (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href="/overview/packs">Packs</Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/overview">Create Photos</Link>
                 </DropdownMenuItem>
@@ -115,73 +87,24 @@ export default function Navbar() {
                     Log out
                   </Button>
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : pathname === "/" ? (
-            // Public homepage menu: language + theme + contact + login
-            <>
-              {/* Language picker */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                    <FiGlobe className="h-5 w-5 text-charcoal" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  side="bottom"
-                  align="start"
-                  className="w-40"
-                >
-                  {locales.map(({ code, label }) => (
-                    <DropdownMenuItem asChild key={code}>
-                      <Link href={pathname} locale={code} replace>
-                        {label}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Additional homepage dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                    <HamburgerMenuIcon className="h-6 w-6 text-charcoal" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  side="bottom"
-                  align="center"
-                  className="w-40 bg-ivory/100 text-charcoal shadow-lg"
-                >
-                  <DropdownMenuItem className="flex justify-center py-2">
-                    <ThemeToggle />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="mailto:support@aimavenstudio.com">Contact</a>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="border-white/50" />
-                  <DropdownMenuItem asChild>
-                    <Link href="/login">
-                      <Button
-                        variant="ghost"
-                        className="w-full text-left text-charcoal hover:bg-sage-green"
-                      >
-                        Log in
-                      </Button>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          ) : pathname === "/login" ? (
-            // On the login page, show just the theme toggle
-            <ThemeToggle />
-          ) : (
-            // On any other unauthenticated route, show the standard login dropdown
-            <LoginDropdown />
-          )}
-        </div>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem className="flex justify-center py-2">
+                  <ThemeToggle />
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/login">
+                    <Button variant="ghost" className="w-full text-left">
+                      Log in
+                    </Button>
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

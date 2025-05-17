@@ -2,12 +2,10 @@
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import ClientSideModel from "@/components/realtime/ClientSideModel";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "@/components/icons";
-import { FaArrowLeft } from "react-icons/fa";
+import BackButton from "@/components/BackButton";
 
 export const dynamic = "force-dynamic";
 
@@ -35,12 +33,7 @@ export default async function ModelPage({
   return (
     <div id="train-model-container" className="w-full h-full p-4">
       <div className="flex items-center gap-4 pb-4">
-        <Link href="/overview">
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
-            <FaArrowLeft />
-            Go Back
-          </Button>
-        </Link>
+        <BackButton className="flex items-center gap-2">Go Back</BackButton>
         <h1 className="text-xl font-semibold">{model.name}</h1>
         <Badge
           variant={model.status === "finished" ? "default" : "secondary"}

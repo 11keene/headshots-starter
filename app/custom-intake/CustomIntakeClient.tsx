@@ -8,13 +8,14 @@ export default function CustomIntakeClient({ packId }: { packId: string }) {
   const params = useSearchParams();
   const from = params?.get("from") ?? ""; // "headshot" or "custom", defaults to empt
   const handleComplete = () => {
+    const gender = params?.get("gender") ?? "unknown"; // Default to "unknown" if gender is not provided
     if (from === "headshot") {
       // user came from headshot upsell → go straight to upload
       router.push(`/overview/packs/${packId}/next`);
     } else {
       // user started from custom → return to upsell headshot tab
       router.push(
-        `/overview/packs/${packId}/upsell?tab=headshot`
+        `/overview/packs/${packId}/upsell?tab=headshot&gender=${gender}`
       );
     }
   };

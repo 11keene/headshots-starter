@@ -1,5 +1,3 @@
-// File: data/packs.ts
-
 export interface Pack {
   id: string;              // Astria Pack ID or internal slug
   name: string;            // Display name for the pack
@@ -7,7 +5,7 @@ export interface Pack {
   prompt_template?: string;
   forGender: "woman" | "man" | "all";
   slug?: string;
-  stripePriceId?: string; // Optional Stripe price ID for the pack
+  stripePriceId?: string;  // Optional Stripe price ID for the pack
 }
 
 // ───── PLACEHOLDER PACKS ─────
@@ -123,7 +121,7 @@ export const themedPacks: Pack[] = [
     id: "2103",
     name: "CEO / Entrepreneur Pack",
     slug: "ceo-entrepreneur-pack-woman",
-    exampleImg: "https://sdbooth2-production.s3.amazonaws.com/5e93txwt1omwn26b2zti91aw95rg",
+    exampleImg: "https://sdbooth2-production.s3.amazonaws.com/5e93txwt1omwn26zti91aw95rg",
     forGender: "woman",
     stripePriceId: "price_1RPSLO4RnIZz7j08juzjgLQD"
   },
@@ -135,8 +133,7 @@ export const starterPacks: Pack[] = [
     id: "2033-man",
     slug: "starter-pack-man",
     name: "Starter Pack",
-    exampleImg:
-      "https://sdbooth2-production.s3.amazonaws.com/fdnkr2p8ws03s0kn7387wqrt0uva",
+    exampleImg: "https://sdbooth2-production.s3.amazonaws.com/fdnkr2p8ws03s0kn7387wqrt0uva",
     forGender: "man",
     stripePriceId: "price_1ROLak4RnIZz7j08sUmtURum"
   },
@@ -144,14 +141,42 @@ export const starterPacks: Pack[] = [
     id: "2033-woman",
     slug: "starter-pack-woman",
     name: "Starter Pack",
-    exampleImg:
-      "https://sdbooth2-production.s3.amazonaws.com/q71pphcd2z80wrz6cotqao8jl294",
+    exampleImg: "https://sdbooth2-production.s3.amazonaws.com/q71pphcd2z80wrz6cotqao8jl294",
     forGender: "woman",
     stripePriceId: "price_1ROLak4RnIZz7j08sUmtURum"
   },
 ];
 
-// ───── DEV-ONLY TEST PACK ─────
+// ───── CUSTOM PACK (Standalone) ─────
+export const customPacks: Pack[] = [
+  {
+    id: "custom-intake-man",
+    slug: "custom-intake-man",
+    name: "Custom Pack",
+    exampleImg: "",           // add your man‐pack image URL here
+    forGender: "man",
+    stripePriceId: "price_1RPSMg4RnIZz7j08lS1rZllC"
+  },
+  {
+    id: "custom-intake-woman",
+    slug: "custom-intake-woman",
+    name: "Custom Pack",
+    exampleImg: "",           // add your woman‐pack image URL here
+    forGender: "woman",
+    stripePriceId: "price_1RPSMg4RnIZz7j08lS1rZllC"
+  }
+];
+
+// ───── EXTRA ADD-ON: one extra headshot ─────
+export const extrasPacks: Pack[] = [
+    {
+      id: "extra-headshot",
+      name: "Additional Photo",
+      exampleImg: "/images/extra-photo.png",
+      forGender: "all",
+      stripePriceId: "price_1RPV3C4RnIZz7j08faR6KeJW"
+    }
+  ];
 
 
 // ───── BASE PACKS ─────

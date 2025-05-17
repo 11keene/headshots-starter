@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -28,19 +28,17 @@ export default function TrainModelFlow({
 }) {
   // false = show form, true = show upload
   const [showUpload, setShowUpload] = useState(false);
+  const router = useRouter();
 
   return (
     <div className="max-w-2xl mx-auto p-4">
       {/* Back button */}
-      <Link
-        href={packsIsEnabled ? "/overview/packs" : "/overview"}
-        className="inline-block mb-4"
-      >
-        <Button variant="outline">
+      <div className="inline-block mb-4">
+        <Button variant="outline" onClick={() => router.back()}>
           <FaArrowLeft className="mr-2" />
           Go Back
         </Button>
-      </Link>
+      </div>
 
       {/* Card wrapper */}
       <Card>

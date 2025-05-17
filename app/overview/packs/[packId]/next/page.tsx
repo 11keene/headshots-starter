@@ -80,9 +80,12 @@ export default function UploadPage() {
     const stripePriceId = PRICE_IDS_CLIENT[
       packId.startsWith("starter") ? "starter" : packId.startsWith("themed") ? "themed" : "custom"
     ];
+
     const extrasPriceIds = extraPacks
       ? extraPacks.split(",").map(() => process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_EXTRA_HEADSHOT!).filter(Boolean)
       : [];
+      console.log("🚀 Sending extras to checkout:", extrasPriceIds);
+
 
     const resp = await fetch("/api/create-checkout-session", {
       

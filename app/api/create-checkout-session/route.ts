@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { headers } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
-import { starterPacks, themedPacks } from "@/data/packs";
+import { starterPacks, themedPacks, customPacks } from "@/data/packs";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil",
@@ -18,14 +18,14 @@ export async function POST(req: Request) {
       user_id,
       user_email,
       packId,
-      extras: extrasRaw = [],           // allow array or CSV
+      extras: extrasRaw = [], // allow array or CSV
     } = (await req.json()) as {
       user_id?: string;
       user_email?: string;
       packId?: string;
       extras?: string[] | string;
     };
-
+    console.log("[checkout] payload:", { user_id, user_email, packId, extras: extrasRaw });
     console.log("[checkout] extrasRaw:", extrasRaw);
 
     if (!user_id || !user_email || !packId) {
@@ -40,19 +40,16 @@ export async function POST(req: Request) {
       .from("users")
       .upsert({ id: user_id, email: user_email }, { onConflict: "id" });
 
-    // fetch their claimed promo code
-    const { data: userPromo } = await supabaseAdmin
-      .from("users")
-      .select("current_promo_code")
-      .eq("id", user_id)
-      .single();
-
     const origin = headers().get("origin") ?? process.env.NEXT_PUBLIC_APP_URL!;
 
+    // ─── Combine all pack definitions ───
+    const allPacks = [...starterPacks, ...themedPacks, ...customPacks];
+
     // 1️⃣ Main pack lookup
-    const mainPack = themedPacks.find(
+    const mainPack = allPacks.find(
       (p) => p.slug === packId || p.id === packId
     );
+
     if (!mainPack) {
       return NextResponse.json(
         { error: `Unknown pack: ${packId}` },
@@ -64,53 +61,35 @@ export async function POST(req: Request) {
     const extras = Array.isArray(extrasRaw)
       ? extrasRaw
       : typeof extrasRaw === "string"
-      ? extrasRaw
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
+      ? extrasRaw.split(",").map((s) => s.trim()).filter(Boolean)
       : [];
 
     console.log("[checkout] normalized extras:", extras);
 
-    // ─── Combine all pack definitions ───
-    const allPacks = [...starterPacks, ...themedPacks];
-
-    // 2️⃣ Extras → line items (lookup in allPacks)
-    const extraLineItems = extras
-      .map((key) =>
-        allPacks.find(
-          (p) =>
-            p.slug === key ||
-            p.id === key ||
-            p.stripePriceId === key
-        )
-      )
-      .filter((p): p is typeof mainPack => Boolean(p))
-      .map((p) => ({ price: p.stripePriceId, quantity: 1 }));
+    // 2️⃣ Extras → line items
+    const extraLineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
+      extras.map((priceId) => ({ price: priceId, quantity: 1 }));
 
     console.log("[checkout] extraLineItems:", extraLineItems);
 
     // 3️⃣ Final line items
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-      { price: mainPack.stripePriceId, quantity: 1 },
+      { price: mainPack.stripePriceId!, quantity: 1 },
       ...extraLineItems,
     ];
     console.log("[checkout] final lineItems:", lineItems);
 
-    // Discounts (unchanged)
-    const discounts = userPromo?.current_promo_code
-      ? [{ coupon: userPromo.current_promo_code }]
-      : undefined;
-
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
-      discounts: discounts && discounts.length ? discounts : undefined,
+        // ─── APPLY THE UPSELL COUPON HERE ──────────────────────────────────
+    discounts: [
+      { coupon: process.env.STRIPE_COUPON_UPSELL_10! }  // <- set to "10OFF_UPSELL"
+      ],
       client_reference_id: user_id,
       metadata: {
         packId,
         extras: extras.join(","),
-        promo_code: userPromo?.current_promo_code ?? "",
       },
       success_url: `${origin}/overview/packs/${mainPack.slug}/generate?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/overview/packs/${mainPack.slug}/next?extraPacks=${extras.join(
@@ -119,7 +98,7 @@ export async function POST(req: Request) {
       mode: "payment",
     } as Stripe.Checkout.SessionCreateParams);
 
-    // record pending order (unchanged)
+    // record pending order
     await supabaseAdmin.from("orders").insert({
       user_id,
       pack_id: packId,

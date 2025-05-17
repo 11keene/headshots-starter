@@ -6,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ClientSideModelsList from "@/components/realtime/ClientSideModelsList";
 import { starterPacks, themedPacks } from "@/data/packs";  // adjust the path as needed
-import PromoHandler from "@/components/PromoHandler";
 
 type Tab = "starter" | "themed" | "custom";
 
@@ -57,8 +56,7 @@ export default function OverviewClient({
 
   return (
     <>
-    {/* one-time welcome promo for new users */}
-    <PromoHandler />
+ 
     <div
         className="min-h-screen flex flex-col w-full pb-16" // fallback padding for URL bar
         style={{
@@ -72,7 +70,9 @@ export default function OverviewClient({
       {/* ⚡ Delivery banner */}
       <div className="text-center mb-6 font-bold text-2xl text-charcoal">
         ⚡ Lightning-fast delivery – your headshots arrive in under an hour.
-      </div>        {/* Tabs */}
+      </div>        
+      
+      {/* Tabs */}
         <div className="mt-8 mb-8 w-full max-w-lg grid grid-cols-3 gap-6">
           <button
             onClick={() => setActiveTab("starter")}

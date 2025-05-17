@@ -10,7 +10,7 @@ export default function PacksPage() {
     <div className="p-8 max-w-5xl mx-auto">
       <div className="mb-4">
         <button
-          onClick={() => router.push("/overview")}
+          onClick={() => router.back()}
           className="px-4 py-2 bg-muted-gold/70 rounded-md"
         >
           Back
