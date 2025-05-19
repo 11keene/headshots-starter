@@ -26,7 +26,6 @@ export async function POST(req: Request) {
       extras?: string[] | string;
     };
     console.log("[checkout] payload:", { user_id, user_email, packId, extras: extrasRaw });
-    console.log("[checkout] extrasRaw:", extrasRaw);
 
     if (!user_id || !user_email || !packId) {
       return NextResponse.json(
@@ -79,22 +78,21 @@ export async function POST(req: Request) {
     ];
     console.log("[checkout] final lineItems:", lineItems);
 
+    const gender = "default"; // Replace with logic as needed
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
-        // ─── APPLY THE UPSELL COUPON HERE ──────────────────────────────────
-    discounts: [
-      { coupon: process.env.STRIPE_COUPON_UPSELL_10! }  // <- set to "10OFF_UPSELL"
+      discounts: [
+        { coupon: process.env.STRIPE_COUPON_UPSELL_10! }
       ],
       client_reference_id: user_id,
       metadata: {
         packId,
         extras: extras.join(","),
       },
-      success_url: `${origin}/overview/packs/${mainPack.slug}/generate?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/overview/packs/${mainPack.slug}/next?extraPacks=${extras.join(
-        ","
-      )}`,
+      success_url: `${origin}/overview/packs/${packId}/generate?session_id={CHECKOUT_SESSION_ID}&extraPacks=${extras}&gender=${gender}`,
+      cancel_url: `${origin}/overview/packs/${mainPack.slug}/next?extraPacks=${extras.join(",")}`,
       mode: "payment",
     } as Stripe.Checkout.SessionCreateParams);
 
@@ -109,7 +107,8 @@ export async function POST(req: Request) {
       created_at: new Date().toISOString(),
     });
 
-    return NextResponse.json({ url: session.url });
+    // Return the session ID for faster client-side redirect
+    return NextResponse.json({ sessionId: session.id });
   } catch (err: any) {
     console.error("🔥 create-checkout-session error:", err);
     return NextResponse.json(

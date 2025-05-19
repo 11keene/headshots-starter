@@ -10,7 +10,7 @@ const supabaseAdmin = createClient(
 );
 
 // — Astria config from env —
-const ASTRIA_API_URL = process.env.ASTRIA_API_URL!;
+const ASTRIA_API_URL = "https://api.astria.ai";
 const ASTRIA_API_KEY = process.env.ASTRIA_API_KEY!;
 
 export async function POST(request: Request) {

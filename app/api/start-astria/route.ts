@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
   for (const { inputs, numOutputs } of packs) {
     console.log("[start-astria] calling Astria API with inputs:", inputs);
-    const res = await fetch(`${process.env.ASTRIA_API_URL}/v1/generate`, {
+    const res = await fetch(`https://api.astria.ai/v1/generate`, {
       method: "POST",
       headers: { "x-api-key": process.env.ASTRIA_API_KEY! },
       body: JSON.stringify({

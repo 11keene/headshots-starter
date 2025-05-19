@@ -13,9 +13,9 @@ export default function ThemedSelection() {
     (p: Pack) => p.forGender === gender || p.forGender === "all"
   );
 
-  const handleClick = (packId: string) => {
+  const handleClick = (slug: string) => {
     // Redirect to upsell page, keeping gender in query
-    router.push(`/overview/packs/${packId}/upsell?gender=${gender}`);
+    router.push(`/overview/packs/${slug}/upsell?gender=${gender}`);
   };
 
   return (
@@ -35,8 +35,8 @@ export default function ThemedSelection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {available.map((p: Pack) => (
             <div
-              key={p.id}
-              onClick={() => handleClick(p.id)}
+              key={p.slug}
+              onClick={() => handleClick(p.slug ?? "")}
               className="cursor-pointer border rounded-lg overflow-hidden hover:shadow-md transition-shadow"
             >
               <img

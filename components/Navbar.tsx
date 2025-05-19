@@ -37,11 +37,11 @@ export default function Navbar() {
             className="rounded-full"
           />
           <span>AI Maven</span>
-        </Link>
 
+        </Link>
         {/* Signed-in nav links */}
         {isLoggedIn && pathname !== "/" && (
-          <nav className="flex gap-6 text-charcoal font-semibold">
+          <nav className="flex items-center space-x-5 text-charcoal font-semibold">
             <Link href="/overview" className="hover:text-primary">
               Home
             </Link>

@@ -30,7 +30,7 @@ export const themedPacks: Pack[] = [
     stripePriceId: "price_1RPSLO4RnIZz7j08juzjgLQD"
   },
   {
-    id: "2121",
+    id: "podcaster-pack-woman",
     name: "Podcaster Pack",
     slug: "podcaster-pack-woman",
     exampleImg: "https://sdbooth2-production.s3.amazonaws.com/vdla0ebpv3k3q0dustaw9kylwyjc",
@@ -38,7 +38,7 @@ export const themedPacks: Pack[] = [
     stripePriceId: "price_1RPSLO4RnIZz7j08juzjgLQD"
   },
   {
-    id: "2121",
+    id: "podcaster-pack",
     name: "Podcaster Pack",
     slug: "podcaster-pack-man",
     exampleImg: "https://sdbooth2-production.s3.amazonaws.com/5venzqre5k4t7thgpt5341h3i651",
@@ -130,7 +130,7 @@ export const themedPacks: Pack[] = [
 // ───── STARTER PACK (Standalone, not shown in themed list) ─────
 export const starterPacks: Pack[] = [
   {
-    id: "2033-man",
+    id: "starter-pack-man",
     slug: "starter-pack-man",
     name: "Starter Pack",
     exampleImg: "https://sdbooth2-production.s3.amazonaws.com/fdnkr2p8ws03s0kn7387wqrt0uva",
@@ -138,7 +138,7 @@ export const starterPacks: Pack[] = [
     stripePriceId: "price_1ROLak4RnIZz7j08sUmtURum"
   },
   {
-    id: "2033-woman",
+    id: "starter-pack-woman",
     slug: "starter-pack-woman",
     name: "Starter Pack",
     exampleImg: "https://sdbooth2-production.s3.amazonaws.com/q71pphcd2z80wrz6cotqao8jl294",
