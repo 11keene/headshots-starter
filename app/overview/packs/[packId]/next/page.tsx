@@ -13,7 +13,6 @@ import { loadStripe } from "@stripe/stripe-js";
 const supabase = createClientComponentClient();
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-// exposed to the client via NEXT_PUBLIC_ env vars
 const PRICE_IDS_CLIENT: Record<string, string> = {
   starter: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STARTER_PACK!,
   themed: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_THEMED_PACKS!,
@@ -22,6 +21,8 @@ const PRICE_IDS_CLIENT: Record<string, string> = {
 
 export default function UploadPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
   const paramsObj = useParams();
   const packId = Array.isArray(paramsObj?.packId)
     ? paramsObj.packId[0]
@@ -37,22 +38,29 @@ export default function UploadPage() {
   const { previewUrls, setPreviewUrls } = useUploadContext();
   const [files, setFiles] = useState<File[]>([]);
 
-  // hydrate files from previewUrls once
-  useEffect(() => {
-    if (!packId) return;
-  }, [packId, previewUrls]);
-
-  // rebuild previewUrls on files change
+  // rebuild previewUrls when files change
   useEffect(() => {
     const urls = files.map((f) => URL.createObjectURL(f));
     setPreviewUrls(urls);
   }, [files, setPreviewUrls]);
 
+  // on file select: set files and start background upload
   const onFiles = useCallback((fList: FileList | null) => {
     if (!fList) return;
-    const arr = Array.from(fList);
-    setFiles((prev) => [...prev, ...arr].slice(0, 10));
-  }, []);
+    const arr = Array.from(fList).slice(0, 10);
+    setFiles(arr);
+
+    if (!userId || !packId) return;
+    setUploading(true);
+    Promise.all(
+      arr.map((file) => {
+        const path = `${userId}/${packId}/${file.name}`;
+        return supabase.storage.from("user-uploads").upload(path, file, { upsert: true });
+      })
+    )
+      .catch((err) => console.error("❌ Fire-and-forget upload error:", err))
+      .finally(() => setUploading(false));
+  }, [userId, packId]);
 
   const removeFile = useCallback((index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
@@ -66,26 +74,20 @@ export default function UploadPage() {
     [onFiles]
   );
 
-  // Step 6: upload first, then Stripe
+  // upload only Stripe session and redirect
   const goNext = async () => {
     if (!userId) {
       router.push("/login");
       return;
     }
+    setIsLoading(true);
 
-    // 1) create Stripe Checkout Session
+    // create Checkout session
     const stripePriceId = PRICE_IDS_CLIENT[
-      packId.startsWith("starter")
-        ? "starter"
-        : packId.startsWith("themed")
-        ? "themed"
-        : "custom"
+      packId.startsWith("starter") ? "starter" : packId.startsWith("themed") ? "themed" : "custom"
     ];
     const extrasPriceIds = extraPacks
-      ? extraPacks
-          .split(",")
-          .map(() => process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_EXTRA_HEADSHOT!)
-          .filter(Boolean)
+      ? extraPacks.split(",").map(() => process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_EXTRA_HEADSHOT!).filter(Boolean)
       : [];
 
     const resp = await fetch("/api/create-checkout-session", {
@@ -101,59 +103,32 @@ export default function UploadPage() {
     });
     if (!resp.ok) {
       console.error("❌ create-checkout-session error:", await resp.text());
+      setIsLoading(false);
       return;
     }
     const { url } = await resp.json();
     if (!url) {
       console.error("❌ No session URL returned from Stripe");
+      setIsLoading(false);
       return;
     }
 
-    // 2) **upload all files first** and wait for completion
-    try {
-      await Promise.all(
-        files.map((file) => {
-          const path = `${userId}/${packId}/${file.name}`;
-          return supabase
-            .storage
-            .from("user-uploads")
-            .upload(path, file, { upsert: true });
-        })
-      );
-    } catch (uploadErr) {
-      console.error("❌ Error uploading files before checkout:", uploadErr);
-      // optionally, you can return here instead of redirecting
-    }
-
-    // 3) trigger Astria tune creation
-    await fetch('/api/astria/create-tune', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, packId })
-    });
-
-    // 4) redirect to Stripe checkout
-    setIsLoading(true);
+    // redirect to Stripe Checkout
     window.location.href = url;
   };
 
   return (
     <div className="p-6 sm:p-8 max-w-3xl mx-auto">
       <button
-        onClick={() =>
-          router.push(`/overview/packs/${packId}/upsell?gender=${gender}`)
-        }
+        onClick={() => router.push(`/overview/packs/${packId}/upsell?gender=${gender}`)}
         className="inline-flex items-center mb-6 text-gray-700 hover:text-sage-green"
       >
         <FiArrowLeft className="mr-2" /> Back to Extras
       </button>
 
-      <h1 className="text-2xl text-charcoal font-bold mb-2">
-        Upload your photos
-      </h1>
+      <h1 className="text-2xl text-charcoal font-bold mb-2">Upload your photos</h1>
       <p className="text-gray-600 mb-6">
-        Select at least <span className="font-semibold">6</span> photos (max 10). Mix
-        close-ups, selfies &amp; mid-range shots to help the AI learn you best.
+        Select at least <span className="font-semibold">6</span> photos (max 10).
       </p>
 
       <div
@@ -171,7 +146,7 @@ export default function UploadPage() {
         <FiUploadCloud className="mx-auto mb-4 text-4xl text-dusty-coral" />
         <Button variant="outline">Browse files</Button>
         <p className="mt-2 text-sm text-gray-500">
-          or drag &amp; drop your photos here (PNG, JPG, WEBP up to 120 MB)
+          or drag & drop your photos here (PNG, JPG, WEBP up to 120 MB)
         </p>
       </div>
 
@@ -182,20 +157,16 @@ export default function UploadPage() {
               <button
                 onClick={() => removeFile(i)}
                 className="absolute top-1 right-1 z-10 bg-ivory rounded-full p-1 text-dusty-coral hover:text-sage-green shadow"
-                title="Remove this photo"
               >
                 <FiTrash2 size={16} />
               </button>
-              <img
-                src={url}
-                alt={`Upload ${i + 1}`}
-                className="w-full h-full object-cover rounded-lg"
-              />
+              <img src={url} alt={`Upload ${i + 1}`} className="w-full h-full object-cover rounded-lg" />
             </div>
           ))}
         </div>
       )}
 
+      {/* Retain the instructions cards below */}
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
         {[
           { title: "Selfies", desc: "Frontal, well-lit at eye-level", img: "/placeholders/selfie.png" },
@@ -219,17 +190,14 @@ export default function UploadPage() {
 
       <div className="fixed bottom-0 left-0 right-0 bg-ivory border-t p-4 flex justify-end">
         <span className="self-center mr-auto text-sm text-warm-gray">
-          {previewUrls.length} of 6 required
+          {previewUrls.length} of 6 required{uploading ? " (uploading...)" : ""}
         </span>
         <Button
           disabled={previewUrls.length < 6 || isLoading}
           onClick={goNext}
-          className="inline-flex items-center"
-        >
+          className={`inline-flex items-center ${isLoading ? "bg-warm-gray text-white" : ""}`}>
           {isLoading ? (
-            <>
-              <FiLoader className="animate-spin mr-2" /> Starting…
-            </>
+            <><FiLoader className="animate-spin mr-2" /> Starting…</>
           ) : (
             "Continue"
           )}
