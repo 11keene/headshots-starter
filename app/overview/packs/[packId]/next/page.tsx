@@ -128,7 +128,7 @@ export default function UploadPage() {
 
       <h1 className="text-2xl text-charcoal font-bold mb-2">Upload your photos</h1>
       <p className="text-gray-600 mb-6">
-        Select at least <span className="font-semibold">6</span> photos (max 10).
+        Select at least <span className="font-semibold">4-6</span> photos (max 10).
       </p>
 
       <div
@@ -190,10 +190,10 @@ export default function UploadPage() {
 
       <div className="fixed bottom-0 left-0 right-0 bg-ivory border-t p-4 flex justify-end">
         <span className="self-center mr-auto text-sm text-warm-gray">
-          {previewUrls.length} of 6 required{uploading ? " (uploading...)" : ""}
+          {previewUrls.length} of 4 required{uploading ? " (uploading...)" : ""}
         </span>
         <Button
-          disabled={previewUrls.length < 6 || isLoading}
+          disabled={previewUrls.length < 4 || isLoading}
           onClick={goNext}
           className={`inline-flex items-center ${isLoading ? "bg-warm-gray text-white" : ""}`}>
           {isLoading ? (

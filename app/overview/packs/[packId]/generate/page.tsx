@@ -7,7 +7,8 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useSession } from "@supabase/auth-helpers-react";
 
 export default function GeneratePage() {
-  const { packId: rawPackId } = useParams();
+  const params = useParams();
+  const rawPackId = params?.packId;
   const packSlug = Array.isArray(rawPackId) ? rawPackId[0] : rawPackId || "";
   const session = useSession();
   const userId = session?.user.id;

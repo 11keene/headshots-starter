@@ -35,12 +35,12 @@ const WOMEN_QUESTIONS: Question[] = [
     type: "images",
     title: "What is your hair length?",
     options: [
-      { label: "Pixie Cut", value: "pixie", img: "https://via.placeholder.com/300x200?text=Pixie+Cut" },
-      { label: "Bob Cut", value: "bob", img: "https://via.placeholder.com/300x200?text=Bob+Cut" },
-      { label: "Shoulder", value: "shoulder", img: "https://via.placeholder.com/300x200?text=Shoulder" },
-      { label: "Past Shoulder", value: "past-shoulder", img: "https://via.placeholder.com/300x200?text=Past+Shoulder" },
-      { label: "Midback", value: "midback", img: "https://via.placeholder.com/300x200?text=Midback" },
-      { label: "Long", value: "long", img: "https://via.placeholder.com/300x200?text=Long" }
+      { label: "Pixie Cut", value: "pixie", img: "/pixiecut.png" },
+      { label: "Bob Cut", value: "bob", img: "/bobcut.png" },
+      { label: "Shoulder", value: "shoulder", img: "/shoulder.png" },
+      { label: "Past Shoulder", value: "past-shoulder", img: "/pastshoulder.png" },
+      { label: "Midback", value: "midback", img: "/midback.png" },
+      { label: "Long", value: "long", img: "/longg.png" }
     ]
   },
   {
@@ -48,10 +48,10 @@ const WOMEN_QUESTIONS: Question[] = [
     type: "images",
     title: "What is your hair texture?",
     options: [
-      { label: "Straight", value: "straight", img: "https://via.placeholder.com/300x200?text=Straight" },
-      { label: "Wavy", value: "wavy", img: "https://via.placeholder.com/300x200?text=Wavy" },
-      { label: "Curly", value: "curly", img: "https://via.placeholder.com/300x200?text=Curly" },
-      { label: "Coily", value: "coily", img: "https://via.placeholder.com/300x200?text=Coily" },
+      { label: "Straight", value: "straight", img: "/straight.png" },
+      { label: "Wavy", value: "wavy", img: "/wavy.png" },
+      { label: "Curly", value: "curly", img: "/curly.png" },
+      { label: "Coily", value: "coily", img: "/coily.png" },
       { label: "Dreadlocks", value: "dreadlocks", img: "https://via.placeholder.com/300x200?text=Curly" },
 
     ]
@@ -63,11 +63,11 @@ const WOMEN_QUESTIONS: Question[] = [
     title: "What will you wear?",
     subtitle: "You can select more than one option.",
     options: [
-      { label: "Business Professional", value: "business professional", img: "" },
-      { label: "Business Casual", value: "business casual", img: "" },
-      { label: "Smart Casual", value: "smart casual", img: "" },
-      { label: "Creative/Trendy", value: "creative", img: "" },
-      { label: "Formal", value: "formal", img: "" }
+      { label: "Business Professional", value: "business professional", img: "/Businessprofessional.png" },
+      { label: "Business Casual", value: "business casual", img: "/BusinessCasual.png" },
+      { label: "Smart Casual", value: "smart casual", img: "/smartcasual.png" },
+      { label: "Creative/Trendy", value: "creative", img: "/creativetrendy.png" },
+      { label: "Formal", value: "formal", img: "/formal.png" }
     ]
   },
   {
@@ -90,11 +90,11 @@ const WOMEN_QUESTIONS: Question[] = [
     title: "Choose a setting",
     subtitle: "You can select more than one option.",
     options: [
-      { label: "Studio", value: "studio", img: "" },
-      { label: "Office", value: "office", img: "" },
-      { label: "City", value: "city", img: "" },
-      { label: "Nature", value: "nature", img: "" },
-      { label: "Minimalist Indoors", value: "minimalist", img: "" }
+      { label: "Studio", value: "studio", img: "studio.png" },
+      { label: "Office", value: "office", img: "office.png" },
+      { label: "City", value: "city", img: "city.png" },
+      { label: "Nature", value: "nature", img: "nature.png" },
+      { label: "Minimalist Indoors", value: "minimalist", img: "minimalisticindoors.png" }
     ]
   },
   {
@@ -172,11 +172,11 @@ const MEN_QUESTIONS: Question[] = [
     type: "images",
     title: "What is your hair length?",
     options: [
-      { label: "Bald", value: "bald", img: "" },
-      { label: "Buzz Cut", value: "buzz", img: "" },
-      { label: "Short", value: "short", img: "" },
-      { label: "Medium", value: "medium", img: "" },
-      { label: "Long", value: "long", img: "" }
+      { label: "Bald", value: "bald", img: "bald.png" },
+      { label: "Buzz Cut", value: "buzz", img: "buzzcut.png" },
+      { label: "Short", value: "short", img: "short.png" },
+      { label: "Medium", value: "medium", img: "mediumlength.png" },
+      { label: "Long", value: "long", img: "longhair.png" }
     ]
   },
   {
@@ -186,11 +186,11 @@ const MEN_QUESTIONS: Question[] = [
     subtitle: "You can select more than one option.",
     multi: true,
     options: [
-      { label: "Business Professional", value: "business professional", img: "" },
-      { label: "Business Casual", value: "business casual", img: "" },
-      { label: "Smart Casual", value: "smart casual", img: "" },
-      { label: "Creative/Modern", value: "creative", img: "" },
-      { label: "Formal", value: "formal", img: "" }
+      { label: "Business Professional", value: "business professional", img: "businessprofessionalm.png" },
+      { label: "Business Casual", value: "business casual", img: "businesscasualm.png" },
+      { label: "Smart Casual", value: "smart casual", img: "smartcasualm.png" },
+      { label: "Creative/Modern", value: "creative", img: "creativetrendym.png" },
+      { label: "Formal", value: "formal", img: "formalm.png" }
     ]
   },
   {
@@ -214,11 +214,11 @@ const MEN_QUESTIONS: Question[] = [
     subtitle: "You can select more than one option.",
     multi: true,
     options: [
-      { label: "Studio", value: "studio", img: "" },
-      { label: "Office", value: "office", img: "" },
-      { label: "City", value: "city", img: "" },
-      { label: "Nature", value: "nature", img: "" },
-      { label: "Minimalist Indoors", value: "minimalist", img: "" }
+      { label: "Studio", value: "studio", img: "studiom.png" },
+      { label: "Office", value: "office", img: "officem.png" },
+      { label: "City", value: "city", img: "citym.png" },
+      { label: "Nature", value: "nature", img: "naturem.png" },
+      { label: "Minimalist Indoors", value: "minimalist", img: "minimalisticindoorsm.png" }
     ]
   },
   {
@@ -386,25 +386,38 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
       <div className="mt-6 space-y-6">
         {question.type === "images" && (
           <div className="grid grid-cols-2 gap-4">
-            {question.options.map((o) => (
-              <motion.button
-                key={o.value}
-                onClick={() => choose(o.value)}
-                whileHover={{ scale: 1.02 }}
-                className={`border-2 rounded-lg overflow-hidden flex flex-col items-center transition-shadow ${
-                  question.multi
-                    ? (answers[question.key] || []).includes(o.value)
-                      ? "border-dusty-coral shadow-lg"
-                      : "border-warm-gray hover:shadow-md"
-                    : answers[question.key] === o.value
-                    ? "border-dusty-coral shadow-lg"
-                    : "border-warm-gray hover:shadow-md"
-                }`}
-              >
-                <img src={o.img} alt={o.label} className="w-full h-32 object-cover" />
-                <span className="p-2">{o.label}</span>
-              </motion.button>
-            ))}
+   {question.options.map((o) => (
+  <motion.button
+    key={o.value}
+    onClick={() => choose(o.value)}
+    whileHover={{ scale: 1.02 }}
+    className={`border-2 rounded-lg overflow-hidden flex flex-col transition-shadow ${
+      question.multi
+        ? (answers[question.key] || []).includes(o.value)
+          ? "border-dusty-coral shadow-lg"
+          : "border-warm-gray hover:shadow-md"
+        : answers[question.key] === o.value
+        ? "border-dusty-coral shadow-lg"
+        : "border-warm-gray hover:shadow-md"
+    }`}
+  >
+    {/* IMAGE AREA */}
+    <div className="relative w-full aspect-[3/4.5] bg-charcoal">
+      <img
+        src={o.img}
+        alt={o.label}
+        className="absolute inset-0 w-full h-full object-cover object-center"
+      />
+    </div>
+
+    {/* LABEL FOOTER */}
+    <div className="bg-ivory py-2 text-center">
+      <span className="font-semibold text-charcoal">{o.label}</span>
+    </div>
+  </motion.button>
+))}
+
+
           </div>
         )}
 
