@@ -134,7 +134,7 @@ export default function UploadPage() {
       <div
         onDrop={onDrop}
         onDragOver={(e) => e.preventDefault()}
-        className="relative border-2 border-dashed border-dusty-coral rounded-xl p-8 text-center hover:border-sage-green transition cursor-pointer"
+        className="relative border-2 border-dashed border-muted-gold rounded-xl p-8 text-center hover:border-sage-green transition cursor-pointer"
       >
         <input
           type="file"
@@ -143,7 +143,7 @@ export default function UploadPage() {
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           onChange={(e) => onFiles(e.target.files)}
         />
-        <FiUploadCloud className="mx-auto mb-4 text-4xl text-dusty-coral" />
+        <FiUploadCloud className="mx-auto mb-4 text-4xl text-muted-gold" />
         <Button variant="outline">Browse files</Button>
         <p className="mt-2 text-sm text-gray-500">
           or drag & drop your photos here (PNG, JPG, WEBP up to 120 MB)
@@ -156,7 +156,7 @@ export default function UploadPage() {
             <div key={i} className="relative w-full h-24">
               <button
                 onClick={() => removeFile(i)}
-                className="absolute top-1 right-1 z-10 bg-ivory rounded-full p-1 text-dusty-coral hover:text-sage-green shadow"
+                className="absolute top-1 right-1 z-10 bg-charcoal rounded-full p-1 text-muted-gold hover:text-sage-green shadow"
               >
                 <FiTrash2 size={16} />
               </button>
@@ -188,8 +188,8 @@ export default function UploadPage() {
         ))}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-ivory border-t p-4 flex justify-end">
-        <span className="self-center mr-auto text-sm text-warm-gray">
+      <div className="fixed bottom-0 left-0 right-0 bg-charcoal border-t p-4 flex justify-end">
+        <span className="self-center mr-auto text-sm text-ivory">
           {previewUrls.length} of 4 required{uploading ? " (uploading...)" : ""}
         </span>
         <Button

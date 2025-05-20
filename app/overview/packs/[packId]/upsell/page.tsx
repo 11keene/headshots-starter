@@ -114,8 +114,8 @@ console.log("⚙️ packId:", packId);
           onClick={goContinue}
           className={`px-4 py-2 rounded-md text-sm sm:text-base transition ${
             isSkip
-              ? "bg-warm-gray/70 text-gray-800 hover:bg-warm-gray"
-              : "bg-dusty-coral hover:bg-dusty-coral text-white"
+              ? "bg-warm-gray/70 text-white hover:bg-warm-gray"
+              : "bg-muted-gold hover:bg-muted-gold text-white"
           }`}
         >
           {isSkip ? "No Thanks" : "Continue"}

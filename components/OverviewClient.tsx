@@ -108,11 +108,11 @@ export default function OverviewClient({
 
 {/* Starter Pack */}
 {activeTab === "starter" && (
-  <div className="bg-ivory w-full max-w-xl p-6 rounded-lg shadow-md mb-20">
-    <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
+  <div className="bg-charcoal w-full max-w-xl p-6 rounded-lg shadow-md mb-20">
+    <h2 className="text-2xl text-muted-gold font-bold mb-2 text-center">
       Starter Pack
     </h2>
-    <p className="text-charcoal text-sm text-center mb-6">
+    <p className="text-ivory text-xs text-center mb-6">
       A curated mini-shoot designed to deliver polished, professional
       images — fast. Ideal for updating your LinkedIn, profile picture,
       or personal brand.
@@ -139,7 +139,7 @@ export default function OverviewClient({
                 alt={womanPack.name}
                 className="block w-full"
               />
-              <div className="bg-charcoal h-6 flex items-center justify-center">
+              <div className="bg-muted-gold h-6 flex items-center justify-center">
                 <span className="text-ivory text-sm">For Woman</span>
               </div>
             </div>
@@ -154,7 +154,7 @@ export default function OverviewClient({
                 alt={manPack.name}
                 className="block w-full"
               />
-              <div className="bg-charcoal h-6 flex items-center justify-center">
+              <div className="bg-muted-gold h-6 flex items-center justify-center">
                 <span className="text-ivory text-sm">For Man</span>
               </div>
             </div>
@@ -168,11 +168,11 @@ export default function OverviewClient({
 
         {/* Themed Packs — pick your gender first */}
         {activeTab === "themed" && (
-          <div className="bg-ivory w-full max-w-xl p-6 rounded-lg shadow-md mb-20">
-            <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
+          <div className="bg-charcoal w-full max-w-xl p-6 rounded-lg shadow-md mb-20">
+            <h2 className="text-2xl text-muted-gold font-bold mb-2 text-center">
               Themed Packs
             </h2>
-            <p className="text-charcoal text-sm text-center mb-6">
+            <p className="text-ivory text-sm text-center mb-6">
               First, choose whether you’re a woman or a man—then we’ll show you
               just your gender’s themes.
             </p>
@@ -187,7 +187,7 @@ export default function OverviewClient({
                       alt={themedPacks[2]?.name || ""}
                       className="block w-full"
                   />
-                  <div className="bg-charcoal h-6 flex items-center justify-center">
+                  <div className="bg-muted-gold h-6 flex items-center justify-center">
                     <span className="text-ivory text-sm">For Woman</span>
                   </div>
                 </div>
@@ -202,7 +202,7 @@ export default function OverviewClient({
                   alt={themedPacks[4]?.name || ""}
                   className="block w-full"
                   />
-                  <div className="bg-charcoal h-6 flex items-center justify-center">
+                  <div className="bg-muted-gold h-6 flex items-center justify-center">
                     <span className="text-ivory text-sm">For Man</span>
                   </div>
                 </div>
@@ -213,11 +213,11 @@ export default function OverviewClient({
 
         {/* Custom Pack */}
         {activeTab === "custom" && (
-           <div className="bg-ivory w-full max-w-xl p-6 rounded-lg shadow-md mb-20">
-            <h2 className="text-2xl text-charcoal font-bold mb-2 text-center">
+           <div className="bg-charcoal w-full max-w-xl p-6 rounded-lg shadow-md mb-20">
+            <h2 className="text-2xl text-muted-gold font-bold mb-2 text-center">
               Custom Pack
             </h2>
-            <p className="text-charcoal text-sm text-center mb-8">
+            <p className="text-ivory text-sm text-center mb-8">
               Answer a few quick questions and get a fully bespoke photoshoot
               experience, crafted to your exact brand voice and vision.
             </p>
@@ -232,7 +232,7 @@ export default function OverviewClient({
                     alt="Custom Pack for Woman"
                     className="block w-full"
                   />
-                  <div className="bg-charcoal h-6 flex items-center justify-center">
+                  <div className="bg-muted-gold h-6 flex items-center justify-center">
                     <span className="text-ivory text-sm">For Woman</span>
                   </div>
                 </div>
@@ -247,8 +247,8 @@ export default function OverviewClient({
                     alt="Custom Pack for Man"
                     className="block w-full"
                   />
-                  <div className="bg-charcoal h-6 flex items-center justify-center">
-                    <span className="text-ivory text-sm">For Man</span>
+                  <div className="bg-muted-gold h-6 flex items-center justify-center">
+                    <span className="text-charcoaltext-sm">For Man</span>
                   </div>
                 </div>
               </Link>
@@ -261,7 +261,7 @@ export default function OverviewClient({
       <div className="bg-charcoal flex-1 w-full px-4 py-8 -mt-8 md:mt-0">
 {/* === Preview Images === */}
 <div className="max-w-6xl mx-auto mt-8">
-  <h3 className="text-ivory font-semibold mb-8 text-center text-xl">
+  <h3 className="text-muted-gold font-semibold mb-8 text-center text-xl">
     Preview Images
   </h3>
 
@@ -269,7 +269,7 @@ export default function OverviewClient({
     {previewImages[activeTab].map((src, i) => (
       <div
         key={i}
-        className="relative overflow-hidden rounded-2xl shadow-xl pb-[150%] bg-black"
+        className="relative overflow-hidden rounded-2xl shadow-xl pb-[150%] bg-charcoal"
       >
         <img
           src={src}

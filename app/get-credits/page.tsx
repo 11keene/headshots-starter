@@ -56,8 +56,8 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ivory p-8">
-      <h1 className="text-3xl font-bold mb-6">Pick Your Pack</h1>
+    <div className="min-h-screen bg-charcoal p-8">
+      <h1 className="text-3xl text-ivory font-bold mb-6">Pick Your Pack</h1>
       <div className="grid gap-6 md:grid-cols-3">
         {PLANS.map((plan) => (
           <Card
@@ -67,12 +67,12 @@ export default function PricingPage() {
             <h2 className="text-xl font-semibold mb-2">{plan.name}</h2>
             <p className="text-gray-600 mb-4">{plan.description}</p>
             <div className="mt-auto flex items-center justify-between">
-              <span className="text-4xl font-extrabold text-dusty-coral">
+              <span className="text-4xl font-extrabold text-muted-gold">
                 {plan.price}
               </span>
               <Button
                 onClick={() => choosePlan(plan.id)}
-                className="bg-dusty-coral hover:bg-sage-green text-white px-4 py-2 rounded-md text-sm"
+                className="bg-muted-gold hover:bg-sage-green text-white px-4 py-2 rounded-md text-sm"
               >
                 Choose Pack
               </Button>

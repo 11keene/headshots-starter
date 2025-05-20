@@ -41,8 +41,8 @@ export default function Navbar() {
         </Link>
         {/* Signed-in nav links */}
         {isLoggedIn && pathname !== "/" && (
-          <nav className="flex items-center space-x-5 text-charcoal font-semibold">
-            <Link href="/overview" className="hover:text-primary">
+          <nav className="flex justify-start items-center gap-4 text-charcoal font-semibold -ml-4">
+          <Link href="/overview" className="hover:text-primary">
               Home
             </Link>
             <Link href="/overview/packs" className="hover:text-primary">
@@ -58,7 +58,7 @@ export default function Navbar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
-              <HamburgerMenuIcon className="h-6 w-6 text-charcoal" />
+              <HamburgerMenuIcon className="h-6 w-6 text-muted-gold" />
             </Button>
           </DropdownMenuTrigger>
 

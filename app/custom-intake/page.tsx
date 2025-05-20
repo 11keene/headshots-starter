@@ -18,9 +18,9 @@ export default function Page({ searchParams }: PageProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-warm-gray p-4">
       {/* You can wrap in a container for styling */}
-      <div className="w-full max-w-2xl bg-ivory rounded-xl shadow-lg overflow-hidden">
+      <div className="w-full max-w-2xl bg-charcoal rounded-xl shadow-lg overflow-hidden">
         <header className="px-6 py-4 border-b">
-          <h1 className="text-2xl font-semibold">Custom Photoshoot Intake</h1>
+          <h1 className="text-2xl text-muted-gold font-semibold">Custom Photoshoot Intake</h1>
         </header>
         <main className="p-6">
           {/* Pass packId down to your client component */}

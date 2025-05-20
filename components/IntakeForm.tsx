@@ -349,7 +349,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   };
 
   return (
-    <div className="relative min-h-screen max-w-lg mx-auto pt-20 pb-24 px-6 text-charcoal">
+    <div className="relative min-h-screen max-w-lg mx-auto pt-20 pb-24 px-6 text-white">
       {/* 1️⃣ BACK BUTTON fixed top-left */}
       <div className="absolute top-4 left-1">
       <Button
@@ -363,7 +363,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
 
       {/* 2️⃣ STEP CIRCLE */}
       <div className="flex justify-center mb-4">
-        <div className="w-8 h-8 rounded-full bg-dusty-coral flex text-white items-center justify-center text-sm font-medium">
+        <div className="w-8 h-8 rounded-full bg-muted-gold flex text-white items-center justify-center text-sm font-medium">
           {step + 1}
         </div>
       </div>
@@ -391,18 +391,18 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
     key={o.value}
     onClick={() => choose(o.value)}
     whileHover={{ scale: 1.02 }}
-    className={`border-2 rounded-lg overflow-hidden flex flex-col transition-shadow ${
+    className={`border-2 bg-warm-gray rounded-lg overflow-hidden flex flex-col transition-shadow ${
       question.multi
         ? (answers[question.key] || []).includes(o.value)
-          ? "border-dusty-coral shadow-lg"
+          ? "border-muted-gold shadow-lg"
           : "border-warm-gray hover:shadow-md"
         : answers[question.key] === o.value
-        ? "border-dusty-coral shadow-lg"
+        ? "border-muted-gold shadow-lg"
         : "border-warm-gray hover:shadow-md"
     }`}
   >
     {/* IMAGE AREA */}
-    <div className="relative w-full aspect-[3/4.5] bg-charcoal">
+    <div className="relative w-full aspect-[3/4.5] bg-warm-gray">
       <img
         src={o.img}
         alt={o.label}
@@ -411,8 +411,8 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
     </div>
 
     {/* LABEL FOOTER */}
-    <div className="bg-ivory py-2 text-center">
-      <span className="font-semibold text-charcoal">{o.label}</span>
+    <div className="bg-muted-gold py-2 text-center">
+      <span className="font-semibold text-ivory">{o.label}</span>
     </div>
   </motion.button>
 ))}
@@ -474,9 +474,9 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
           whileHover={{ scale: 1.02 }}
           className={`
             w-full
-            border-2 rounded-lg flex items-center justify-between p-4 transition-shadow
+            border-2 bg-warm-gray text-white rounded-lg flex items-center justify-between p-4 transition-shadow
             ${isSelected
-              ? "border-dusty-coral shadow-lg"
+              ? "border-muted-gold shadow-lg"
               : "border-warm-gray hover:shadow-md"}
           `}
         >
@@ -498,7 +498,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
             className={`
               w-4 h-4 rounded-full flex-shrink-0
               ${isSelected
-                ? "bg-dusty-coral"
+                ? "bg-muted-gold"
                 : "border-2 border-warm-gray"}
             `}
           />
@@ -508,17 +508,10 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   </div>
 )}
 
-
-
-
-
-
-
-
         {question.type === "select" && (
           <select
             id={`select-${question.key}`}
-            className="w-full p-3 border rounded-lg focus:border-dusty-coral"
+            className="w-full p-3 border rounded-lg focus:border-muted-gold"
             value={answers[question.key] || ""}
             onChange={(e) => choose(e.target.value)}
           >
@@ -534,11 +527,11 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
 
       {/* 6️⃣ CONTINUE BUTTON fixed bottom */}
       {/* 6️⃣ CONTINUE BUTTON as a fixed footer bar */}
-<div className="fixed bottom-0 left-0 w-full flex items-center bg-warm-gray border-t py-4 px-6">
+<div className="fixed bottom-0 left-0 w-full flex items-center bg-charcoal border-t py-4 px-6">
   <Button
     onClick={next}
     disabled={!answers[question.key] && !question.optional}
-    className="w-full md:w-1/3 md:mx-auto bg-dusty-coral text-white"
+    className="w-full md:w-1/3 md:mx-auto bg-muted-gold text-white"
   >
     {step === questionSet.length - 1 ? "Submit" : "Next"}
   </Button>
