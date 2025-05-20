@@ -11,16 +11,16 @@ type Tab = "starter" | "themed" | "custom";
 
 const previewImages: Record<Tab, string[]> = {
   starter: [
-    "/images/preview-starter-1.png",
-    "/images/preview-starter-2.png",
-    "/images/preview-starter-3.png",
-    "/images/preview-starter-4.png",
+    "https://sdbooth2-production.s3.amazonaws.com/lrb9lvlbjgizje1x7n34e8g3jp04",
+    "https://sdbooth2-production.s3.amazonaws.com/77ku35w88wheco08w6nrt88ivwur",
+    "https://sdbooth2-production.s3.amazonaws.com/muto4bff9dbtumlry5kklhxryili",
+    "https://sdbooth2-production.s3.amazonaws.com/qofmoq4oi5q5j9z0z4qloxjr2934",
   ],
   themed: [
-    "/images/preview-themed-1.png",
-    "/images/preview-themed-2.png",
-    "/images/preview-themed-3.png",
-    "/images/preview-themed-4.png",
+    "https://sdbooth2-production.s3.amazonaws.com/lmem6kdn8sdllu4yhuyfgddbo84p",
+    "https://sdbooth2-production.s3.amazonaws.com/vmr1fsliv2rkz7rp8dogi0qu392l",
+    "https://sdbooth2-production.s3.amazonaws.com/bem7gfdekphucxwnulbavb8phbq5",
+    "https://sdbooth2-production.s3.amazonaws.com/hry9rxrc68kxcjz0zno6tfgewxpa",
   ],
   custom: [
     "/images/preview-custom-1.png",
@@ -259,23 +259,28 @@ export default function OverviewClient({
 
       {/* ─── Bottom: charcoal full-width ─── */}
       <div className="bg-charcoal flex-1 w-full px-4 py-8 -mt-8 md:mt-0">
-        {/* === Preview Images === */}
-        <div className="max-w-lg mx-auto p-4 rounded-lg">
-          <h3 className="text-ivory font-semibold mb-4 text-center">
-            Preview Images
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {previewImages[activeTab].map((src, i) => (
-              <div key={i} className="rounded overflow-hidden">
-                <img
-                  src={src}
-                  alt={`${activeTab} preview ${i + 1}`}
-                  className="w-full h-24 object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
+{/* === Preview Images === */}
+<div className="max-w-6xl mx-auto mt-8">
+  <h3 className="text-ivory font-semibold mb-8 text-center text-xl">
+    Preview Images
+  </h3>
+
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+    {previewImages[activeTab].map((src, i) => (
+      <div
+        key={i}
+        className="relative overflow-hidden rounded-2xl shadow-xl pb-[150%] bg-black"
+      >
+        <img
+          src={src}
+          alt={`${activeTab} preview ${i + 1}`}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      </div>
+    ))}
+  </div>
+</div>
+
 
         {/* === Models List === */}
         <div className="max-w-6xl mx-auto mt-8">

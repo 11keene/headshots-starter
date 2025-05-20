@@ -17,7 +17,7 @@ export const themedPacks: Pack[] = [
     id: "2123",
     name: "Fitness Pack",
     slug: "fitness-pack-man",
-    exampleImg: "https://images.unsplash.com/photo-1599058917212-d750089bc4e3",
+    exampleImg: "https://sdbooth2-production.s3.amazonaws.com/i0me7mgbj67l7zdjmfertsgjfox6",
     forGender: "man",
     stripePriceId: "price_1RPSLO4RnIZz7j08juzjgLQD"
   },
@@ -25,7 +25,7 @@ export const themedPacks: Pack[] = [
     id: "2123",
     name: "Fitness Pack",
     slug: "fitness-pack-woman",
-    exampleImg: "https://images.unsplash.com/photo-1599058917212-d750089bc4e3",
+    exampleImg: "/CEO.pn",
     forGender: "woman",
     stripePriceId: "price_1RPSLO4RnIZz7j08juzjgLQD"
   },
@@ -121,7 +121,7 @@ export const themedPacks: Pack[] = [
     id: "2103",
     name: "CEO / Entrepreneur Pack",
     slug: "ceo-entrepreneur-pack-woman",
-    exampleImg: "https://sdbooth2-production.s3.amazonaws.com/5e93txwt1omwn26zti91aw95rg",
+    exampleImg: "/CEO.png",
     forGender: "woman",
     stripePriceId: "price_1RPSLO4RnIZz7j08juzjgLQD"
   },
