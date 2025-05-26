@@ -13,7 +13,7 @@ type Question = {
   key: string;
   type: "images" | "multi" | "select";
   title: string;
-  subtitle?: string; 
+  subtitle?: string;
   multi?: boolean;
   options: Option[];
   optional?: boolean;
@@ -40,7 +40,9 @@ const WOMEN_QUESTIONS: Question[] = [
       { label: "Shoulder", value: "shoulder", img: "/shoulder.png" },
       { label: "Past Shoulder", value: "past-shoulder", img: "/pastshoulder.png" },
       { label: "Midback", value: "midback", img: "/midback.png" },
-      { label: "Long", value: "long", img: "/longg.png" }
+      { label: "Long", value: "long", img: "/longg.png" },
+      { label: "Dreads", value: "dreads", img: "/dreads.png" },
+
     ]
   },
   {
@@ -52,7 +54,6 @@ const WOMEN_QUESTIONS: Question[] = [
       { label: "Wavy", value: "wavy", img: "/wavy.png" },
       { label: "Curly", value: "curly", img: "/curly.png" },
       { label: "Coily", value: "coily", img: "/coily.png" },
-      { label: "Dreadlocks", value: "dreadlocks", img: "https://via.placeholder.com/300x200?text=Curly" },
 
     ]
   },
@@ -60,14 +61,19 @@ const WOMEN_QUESTIONS: Question[] = [
     key: "attire",
     type: "images",
     multi: true,
-    title: "What will you wear?",
+    title: "What will you wear in your photos?",
     subtitle: "You can select more than one option.",
     options: [
-      { label: "Business Professional", value: "business professional", img: "/Businessprofessional.png" },
-      { label: "Business Casual", value: "business casual", img: "/BusinessCasual.png" },
-      { label: "Smart Casual", value: "smart casual", img: "/smartcasual.png" },
-      { label: "Creative/Trendy", value: "creative", img: "/creativetrendy.png" },
-      { label: "Formal", value: "formal", img: "/formal.png" }
+      { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "blazer.png" },
+      { label: "Casual Everyday Outfit", value: "Casual everyday outfit", img: "/casualwoman.png" },
+      { label: "Bold Fashion Statement", value: "bold fashion statement", img: "/Boldfashionwoman.png" },
+      { label: "Dress or Skirt Set", value: "dress or skirt set", img: "/dressskirt.png" },
+      { label: "Athleisure or Fitness Wear", value: "athleisure or fitness wear", img: "/athleisurewoman.png" },
+      { label: "Professional Uniform", value: "professional uniform", img: "/profuniformwoman3.png" },
+      { label: "Other", value: "other", img: "/otherwoman.png" }
+
+
+
     ]
   },
   {
@@ -75,11 +81,11 @@ const WOMEN_QUESTIONS: Question[] = [
     type: "images",
     title: "What is your body type?",
     options: [
-      { label: "Slim", value: "slim", img: "" },
-      { label: "Athletic", value: "athletic", img: "" },
-      { label: "Curvy", value: "curvy", img: "" },
-      { label: "Full-figured", value: "full figured", img: "" },
-      { label: "Plus Size", value: "plus size", img: "" },
+      { label: "Slim", value: "slim", img: "/Slimwoman.png" },
+      { label: "Athletic", value: "athletic", img: "/athleticwoman.png" },
+      { label: "Average", value: "average", img: "/averagewoman.png" },
+      { label: "Curvy", value: "curvy", img: "/curvywoman.png" },
+      { label: "Plus Size", value: "plus size", img: "/plussize.png" },
       
     ]
   },
@@ -121,7 +127,7 @@ const WOMEN_QUESTIONS: Question[] = [
     optional: true,
     options: [
       { label: "Black", value: "black", img: "" },
-      { label: "White", value: "white", img: "" },
+      { label: "White", value: "white", img: "/swatches/white.png" },
       { label: "Beige", value: "beige", img: "" },
       { label: "Blush Pink", value: "blush pink", img: "" },
       { label: "Forest Green", value: "forest green", img: "" },
@@ -304,6 +310,26 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
 
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [uniformText, setUniformText] = useState("");
+  const [otherText, setOtherText] = useState("");
+  const otherRef = React.useRef<HTMLDivElement | null>(null);
+  const uniformRef = React.useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const attire = answers.attire as string[] | undefined;
+    if (attire?.includes("professional uniform") && uniformRef.current) {
+      setTimeout(() => {
+        uniformRef.current!.scrollIntoView({ behavior: "smooth", block: "center" });
+        uniformRef.current!.querySelector("input")?.focus();
+      }, 200);
+    }
+    if (attire?.includes("other") && otherRef.current) {
+      setTimeout(() => {
+        otherRef.current!.scrollIntoView({ behavior: "smooth", block: "center" });
+        otherRef.current!.querySelector("input")?.focus();
+      }, 200);
+    }
+  }, [answers.attire]);
 
   useEffect(() => {
     const saved = localStorage.getItem(`intake-${pack}`);
@@ -320,19 +346,6 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   );
   const question = questionSet[step];
 
-  const choose = (val: any) => {
-    if (question.multi) {
-      const current = answers[question.key] || [];
-      const updated = current.includes(val)
-        ? current.filter((v: any) => v !== val)
-        : [...current, val];
-      setAnswers((a) => ({ ...a, [question.key]: updated }));
-    } else {
-      setAnswers((a) => ({ ...a, [question.key]: val }));
-      setTimeout(next, 300);
-    }
-  };
-
   const next = () => {
     if (step < questionSet.length - 1) {
       setStep(step + 1);
@@ -348,22 +361,31 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
     else router.back();
   };
 
+  const choose = (val: any) => {
+    if (question.multi) {
+      const current = answers[question.key] || [];
+      const updated = current.includes(val)
+        ? current.filter((v: any) => v !== val)
+        : [...current, val];
+      setAnswers((a) => ({ ...a, [question.key]: updated }));
+    } else {
+      setAnswers((a) => ({ ...a, [question.key]: val }));
+      setTimeout(next, 300);
+    }
+  };
+
   return (
     <div className="relative min-h-screen max-w-lg mx-auto pt-20 pb-24 px-6 text-white">
-      {/* 1️⃣ BACK BUTTON fixed top-left */}
+      {/* 1️⃣ BACK BUTTON */}
       <div className="absolute top-4 left-1">
-      <Button
-  onClick={back}
-  className="bg-warm-gray text-white hover:bg-warm-gray"
->
-  Back
-</Button>
-
+        <Button onClick={back} className="bg-warm-gray text-white hover:bg-warm-gray">
+          Back
+        </Button>
       </div>
 
       {/* 2️⃣ STEP CIRCLE */}
       <div className="flex justify-center mb-4">
-        <div className="w-8 h-8 rounded-full bg-muted-gold flex text-white items-center justify-center text-sm font-medium">
+        <div className="w-8 h-8 rounded-full bg-muted-gold flex items-center justify-center text-white text-sm font-medium">
           {step + 1}
         </div>
       </div>
@@ -376,7 +398,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
         />
       </div>
 
-      {/* 4️⃣ QUESTION TITLE & SUBTITLE */}
+      {/* 4️⃣ TITLE & SUBTITLE */}
       <h2 className="text-2xl font-bold text-center mb-2">{question.title}</h2>
       {question.subtitle && (
         <p className="text-center text-sm mb-6">{question.subtitle}</p>
@@ -385,48 +407,107 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
       {/* 5️⃣ OPTIONS */}
       <div className="mt-6 space-y-6">
         {question.type === "images" && (
-          <div className="grid grid-cols-2 gap-4">
-   {question.options.map((o) => (
-  <motion.button
-    key={o.value}
-    onClick={() => choose(o.value)}
-    whileHover={{ scale: 1.02 }}
-    className={`border-2 bg-warm-gray rounded-lg overflow-hidden flex flex-col transition-shadow ${
-      question.multi
-        ? (answers[question.key] || []).includes(o.value)
-          ? "border-muted-gold shadow-lg"
-          : "border-warm-gray hover:shadow-md"
-        : answers[question.key] === o.value
-        ? "border-muted-gold shadow-lg"
-        : "border-warm-gray hover:shadow-md"
-    }`}
-  >
-    {/* IMAGE AREA */}
-    <div className="relative w-full aspect-[3/4.5] bg-warm-gray">
-      <img
-        src={o.img}
-        alt={o.label}
-        className="absolute inset-0 w-full h-full object-cover object-center"
-      />
-    </div>
-
-    {/* LABEL FOOTER */}
-    <div className="bg-muted-gold py-2 text-center">
-      <span className="font-semibold text-ivory">{o.label}</span>
-    </div>
-  </motion.button>
-))}
+          <>
+            {/* Image grid */}
+            <div className="grid grid-cols-2 gap-4">
+              {question.options
+              .filter(o => o.img)
+              .map((o) => (
+                <motion.button
+                  key={o.value}
+                  onClick={() => choose(o.value)}
+                  whileHover={{ scale: 1.02 }}
+                  className={`border-2 bg-warm-gray rounded-lg overflow-hidden flex flex-col transition-shadow ${
+                    question.multi
+                      ? (answers[question.key] || []).includes(o.value)
+                        ? "border-sage-green shadow-lg"
+                        : "border-white hover:shadow-md"
+                      : answers[question.key] === o.value
+                      ? "border-muted-gold shadow-lg"
+                      : "border-warm-gray hover:shadow-md"
+                  }`}
+                >
+           {/* ─── IMAGE AREA ─── */}
+           <div className="relative w-full aspect-[3/5] bg-warm-gray border-2 rounded-lg overflow-hidden">
+  <img
+    src={o.img}
+    alt={o.label}
+    className="absolute inset-0 w-full h-full object-cover object-center"
+  />
+</div>
 
 
-          </div>
-        )}
+
+                  <div className="bg-muted-gold py-2 text-center">
+                    <span className="font-semibold text-ivory">{o.label}</span>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+
+    
+          {/* PROFESSIONAL UNIFORM */}
+          {question.key === "attire" &&
+            Array.isArray(answers.attire) &&
+            answers.attire.includes("professional uniform") && (
+              <div
+                ref={uniformRef}
+                className="mt-4 p-2 rounded ring-1 ring-muted-gold transition"
+              >
+                <label
+                  htmlFor="uniformText"
+                  className="block text-sm font-medium text-white"
+                >
+                  Please specify your exact uniform and industry
+                </label>
+                <input
+                  type="text"
+                  id="uniformText"
+                  value={uniformText}
+                  onChange={(e) => setUniformText(e.target.value)}
+                  placeholder="e.g. firefighter, nurse, chef"
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
+                />
+              </div>
+            )}
+
+          {/* OTHER */}
+          {question.key === "attire" &&
+            Array.isArray(answers.attire) &&
+            answers.attire.includes("other") && (
+              <div
+                ref={otherRef}
+                className="mt-4 p-2 rounded ring-1 ring-muted-gold transition"
+              >
+                <label
+                  htmlFor="otherText"
+                  className="block text-sm font-medium text-white"
+                >
+                  Describe your outfit
+                </label>
+                <input
+                  type="text"
+                  id="otherText"
+                  value={otherText}
+                  onChange={(e) => setOtherText(e.target.value)}
+                  placeholder={
+                    gender === "female"
+                      ? "e.g. red blouse, black pants, black shoes"
+                      : "e.g. black collared shirt, black pants, black shoes"
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
+                />
+              </div>
+            )}
+        </>
+      )}
 
 {question.type === "multi" && question.multi && (
   <div className="flex flex-col space-y-4">
     {question.options.map((o) => {
       const isSelected = (answers[question.key] || []).includes(o.value);
 
-      // map each value to a real CSS colour
+      // 1️⃣ build your color map as before
       const colorMap: Record<string,string> = {
         black:          "#000000",
         white:          "#FFFFFF",
@@ -434,33 +515,29 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
         "blush pink":   "#FFC0CB",
         "forest green": "#228B22",
         "navy blue":    "#000080",
-        charcoal:       "#36454F",
-        red:            "#FF0000",
         "cobalt blue":  "#0047AB",
+        red:            "#FF0000",
         orange:         "#FFA500",
         gold:           "#FFD700",
         silver:         "#C0C0C0",
-       
       };
-      
       const circleColor = colorMap[o.value.toLowerCase()] || "transparent";
 
-      // detect brandColors → other
+      // 2️⃣ detect the special "other" case on the brandColors question
       const isBrandColorsOther =
-        question.key === "brandColors" &&
-        o.value.toLowerCase() === "other";
+        question.key === "brandColors" && o.value.toLowerCase() === "other";
 
-      // conic-gradient for brandColors.other
+      // 3️⃣ define your gradient slice
       const gradient = `conic-gradient(
         #000000 0% 11%,
         #FFFFFF 11% 22%,
         #F5F5DC 22% 33%,
         #FFC0CB 33% 44%,
         #228B22 44% 55%,
-        #0047AB 55% 66%,
-        #FFA500 66% 77%,
-        #FFD700 77% 88%,
-        #C0C0C0 88% 100%
+        #000080 55% 66%,
+        #0047AB 66% 77%,
+        #FF0000 77% 88%,
+        #FFD700 88% 100%
       )`;
 
       return (
@@ -468,32 +545,33 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
           key={o.value}
           onClick={() => {
             choose(o.value);
-            // for the industry question (one-click advance)
             if (question.key === "industry") next();
           }}
           whileHover={{ scale: 1.02 }}
           className={`
-            w-full
-            border-2 bg-warm-gray text-white rounded-lg flex items-center justify-between p-4 transition-shadow
+            w-full bg-warm-gray rounded-lg overflow-hidden flex flex-col transition-shadow
+            ring-2 ring-white
             ${isSelected
-              ? "border-muted-gold shadow-lg"
+              ? "border-muted-gold shadow-lg ring-2 ring-ivory"
               : "border-warm-gray hover:shadow-md"}
           `}
         >
-          {/* left colour dot */}
+          {/* ● Color dot */}
           <span
             className="w-4 h-4 rounded-full flex-shrink-0"
             style={
               isBrandColorsOther
-                ? { background: gradient }
-                : { backgroundColor: circleColor }
+                ? { background: gradient }              // ← pie-chart for "Other"
+                : { backgroundColor: circleColor }      // ← normal solid dot
             }
           />
 
-          {/* label */}
-          <span className="flex-1 text-center">{o.label}</span>
+          {/* Label */}
+          <span className="flex-1 text-center">
+            {o.label}
+          </span>
 
-          {/* right selected indicator */}
+          {/* ✔︎ Indicator */}
           <span
             className={`
               w-4 h-4 rounded-full flex-shrink-0
@@ -507,6 +585,8 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
     })}
   </div>
 )}
+
+
 
         {question.type === "select" && (
           <select
@@ -525,18 +605,16 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
         )}
       </div>
 
-      {/* 6️⃣ CONTINUE BUTTON fixed bottom */}
-      {/* 6️⃣ CONTINUE BUTTON as a fixed footer bar */}
-<div className="fixed bottom-0 left-0 w-full flex items-center bg-charcoal border-t py-4 px-6">
-  <Button
-    onClick={next}
-    disabled={!answers[question.key] && !question.optional}
-    className="w-full md:w-1/3 md:mx-auto bg-muted-gold text-white"
-  >
-    {step === questionSet.length - 1 ? "Submit" : "Next"}
-  </Button>
-</div>
-
+      {/* 6️⃣ CONTINUE BUTTON */}
+      <div className="fixed bottom-0 left-0 w-full flex items-center bg-charcoal border-t py-4 px-6">
+        <Button
+          onClick={next}
+          disabled={!answers[question.key] && !question.optional}
+          className="w-full md:w-1/3 md:mx-auto bg-muted-gold text-white"
+        >
+          {step === questionSet.length - 1 ? "Submit" : "Next"}
+        </Button>
+      </div>
     </div>
   );
 }
