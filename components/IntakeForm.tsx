@@ -8,10 +8,11 @@ import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { Cloud } from "lucide-react";
 
+
 type Option = { label: string; value: string; img: string; color?: string };
 type Question = {
   key: string;
-  type: "images" | "multi" | "select";
+  type: "images" | "multi" | "select" | "text";
   title: string;
   subtitle?: string;
   multi?: boolean;
@@ -31,6 +32,25 @@ const GENDER_QUESTION: Question = {
 
 const WOMEN_QUESTIONS: Question[] = [
   {
+    key: "age",
+    type: "multi",
+    multi: true,
+    title: "What is your age?",
+    subtitle: "Our service is intended for adults only. We do not provide services to individuals under the age of 18.",
+    optional: true,
+    options: [
+      { label: "18-20", value: "18-20", img: "" },
+      { label: "21-24", value: "21-24", img: "" },
+      { label: "25-29", value: "25-29", img: "" },
+      { label: "30-40", value: "30-40", img: "" },
+      { label: "41-50", value: "41-50", img: "" },
+      { label: "51-65", value: "51-65", img: "" },
+      { label: "65+", value: "65+", img: "" },
+    
+    ]
+  },
+  
+  {
     key: "hairLength",
     type: "images",
     title: "What is your hair length?",
@@ -45,6 +65,8 @@ const WOMEN_QUESTIONS: Question[] = [
 
     ]
   },
+
+
   {
     key: "hairTexture",
     type: "images",
@@ -54,25 +76,6 @@ const WOMEN_QUESTIONS: Question[] = [
       { label: "Wavy", value: "wavy", img: "/wavy.png" },
       { label: "Curly", value: "curly", img: "/curly.png" },
       { label: "Coily", value: "coily", img: "/coily.png" },
-
-    ]
-  },
-  {
-    key: "attire",
-    type: "images",
-    multi: true,
-    title: "What will you wear in your photos?",
-    subtitle: "You can select more than one option.",
-    options: [
-      { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "blazer.png" },
-      { label: "Casual Everyday Outfit", value: "Casual everyday outfit", img: "/casualwoman.png" },
-      { label: "Bold Fashion Statement", value: "bold fashion statement", img: "/Boldfashionwoman.png" },
-      { label: "Dress or Skirt Set", value: "dress or skirt set", img: "/dressskirt.png" },
-      { label: "Athleisure or Fitness Wear", value: "athleisure or fitness wear", img: "/athleisurewoman.png" },
-      { label: "Professional Uniform", value: "professional uniform", img: "/profuniformwoman3.png" },
-      { label: "Other", value: "other", img: "/otherwoman.png" }
-
-
 
     ]
   },
@@ -90,17 +93,38 @@ const WOMEN_QUESTIONS: Question[] = [
     ]
   },
   {
+    key: "attire",
+    type: "images",
+    multi: true,
+    title: "What will you wear in your photos?",
+    subtitle: "You can select more than one option.",
+    options: [
+      { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "blazer.png" },
+      { label: "Casual Everyday Outfit", value: "Casual everyday outfit", img: "/casualwoman.png" },
+      { label: "Bold Fashion Statement", value: "bold fashion statement", img: "/Boldfashionwoman.png" },
+      { label: "Dress or Skirt Set", value: "dress or skirt set", img: "/dressskirt.png" },
+      { label: "Athleisure or Fitness Wear", value: "athleisure or fitness wear", img: "/athleisurewoman.png" },
+      { label: "Professional Uniform", value: "professional uniform", img: "/professionalnurselady.png" },
+
+
+
+    ]
+  },
+  
+  {
     key: "setting",
     type: "images",
     multi: true,
-    title: "Choose a setting",
+    title: "What is your preferred setting? ",
     subtitle: "You can select more than one option.",
     options: [
-      { label: "Studio", value: "studio", img: "studio.png" },
-      { label: "Office", value: "office", img: "office.png" },
-      { label: "City", value: "city", img: "city.png" },
-      { label: "Nature", value: "nature", img: "nature.png" },
-      { label: "Minimalist Indoors", value: "minimalist", img: "minimalisticindoors.png" }
+      { label: "Cozy Indoor Space", value: "cozy inddor space", img: "/Cozyindoor.png" },
+      { label: "Natural Outdoor", value: "natural outdoor", img: "/naturaloutdoor.png" },
+      { label: "Office", value: "office", img: "/Womanoffice.png" },
+      { label: "Studio", value: "studio", img: "/Womanstudio.png" },
+      { label: "Urban", value: "urban", img: "/Womanurban.png" },
+      { label: "Conceptual", value: "conceptual", img: "/Conceptualwoman.png" }
+      
     ]
   },
   {
@@ -110,20 +134,24 @@ const WOMEN_QUESTIONS: Question[] = [
     title: "Select your mood or vibe",
     subtitle: "You can select more than one option.",
     options: [
-      { label: "Confident", value: "confident", img: "" },
-      { label: "Relaxed", value: "relaxed", img: "" },
-      { label: "Bold", value: "bold", img: "" },
       { label: "Approachable", value: "approachable", img: "" },
-      { label: "Empowered", value: "empowered", img: "" },
-      { label: "Creative", value: "creative", img: "" }
+      { label: "Bold", value: "bold", img: "" },
+      { label: "Warm", value: "warm", img: "" },
+      { label: "Creative", value: "creative", img: "" },
+      { label: "Peaceful", value: "peaceful", img: "" },
+      { label: "Joyful", value: "joyful", img: "" },
+      { label: "Mysterious", value: "mysterious", img: "" },
+      { label: "Focused", value: "focused", img: "" },
+      { label: "Fun", value: "fun", img: "" }
+
     ]
   },
   {
     key: "brandColors",
     type: "multi",
     multi: true,
-    title: "Do you want us to subtly include your brand colors?",
-    subtitle: "You can select more than one option.",
+    title: "Do you have brand colors you'd like subtly included in your shoot?",
+    subtitle: "You can select more than one option. (Optional)",
     optional: true,
     options: [
       { label: "Black", value: "black", img: "" },
@@ -139,6 +167,17 @@ const WOMEN_QUESTIONS: Question[] = [
       { label: "Other", value: "other", img: "" }
     ]
   },
+  {
+    key: "avoid",
+    type: "text",           // new text-entry question
+    title: "Anything to avoid?",
+    subtitle:
+      "Let us know any colors, styles, or props you’d like us to steer clear of. (Optional)",
+    optional: true,
+    options: [],            // ← satisfy the Question type
+  },
+
+  
   {
     key: "industry",
     type: "multi",
@@ -169,10 +208,39 @@ const WOMEN_QUESTIONS: Question[] = [
     ]
   },
 
+  {
+    key: "personalized",
+    type: "text",           // new text-entry question
+    title: "Is there anything else you'd like us to know to help personalize your images? ",
+    subtitle: "(Optional)",
+
+    optional: true,
+    options: [],            // ← satisfy the Question type
+  },
+
 ];
 
 
 const MEN_QUESTIONS: Question[] = [
+  {
+    key: "age",
+    type: "multi",
+    multi: true,
+    title: "What is your age?",
+    subtitle: "Our service is intended for adults only. We do not provide services to individuals under the age of 18.",
+    optional: true,
+    options: [
+      { label: "18-20", value: "18-20", img: "" },
+      { label: "21-24", value: "21-24", img: "" },
+      { label: "25-29", value: "25-29", img: "" },
+      { label: "30-40", value: "30-40", img: "" },
+      { label: "41-50", value: "41-50", img: "" },
+      { label: "51-65", value: "51-65", img: "" },
+      { label: "65+", value: "65+", img: "" },
+    
+    ]
+  },
+  
   {
     key: "hairLength",
     type: "images",
@@ -186,66 +254,73 @@ const MEN_QUESTIONS: Question[] = [
     ]
   },
   {
-    key: "attire",
-    type: "images",
-    title: "What will you wear?",
-    subtitle: "You can select more than one option.",
-    multi: true,
-    options: [
-      { label: "Business Professional", value: "business professional", img: "businessprofessionalm.png" },
-      { label: "Business Casual", value: "business casual", img: "businesscasualm.png" },
-      { label: "Smart Casual", value: "smart casual", img: "smartcasualm.png" },
-      { label: "Creative/Modern", value: "creative", img: "creativetrendym.png" },
-      { label: "Formal", value: "formal", img: "formalm.png" }
-    ]
-  },
-  {
     key: "bodyType",
     type: "images",
     title: "What is your body type?",
     options: [
-      { label: "Slim", value: "slim", img: "" },
-      { label: "Average", value: "average", img: "" },
-      { label: "Athletic", value: "athletic", img: "" },
-      { label: "Muscular", value: "muscular", img: "" },
-      { label: "Medium Large", value: "muedium large", img: "" },
-      { label: "Large", value: "large", img: "" },
-      { label: "Plus Size", value: "plus size", img: "" }
+      { label: "Slim", value: "slim", img: "Slimmale.png" },
+      { label: "Average", value: "average", img: "averageman.png" },
+      { label: "Athletic", value: "athletic", img: "athleticman.png" },
+      { label: "Muscular", value: "muscular", img: "muscularman.png" },
+      { label: "Broad", value: "broad", img: "broadman.png" },
+   
     ]
   },
+
   {
-    key: "setting",
+    key: "attire",
     type: "images",
-    title: "Choose a setting",
+    title: "What will you wear in your photos?",
     subtitle: "You can select more than one option.",
     multi: true,
     options: [
-      { label: "Studio", value: "studio", img: "studiom.png" },
-      { label: "Office", value: "office", img: "officem.png" },
-      { label: "City", value: "city", img: "citym.png" },
-      { label: "Nature", value: "nature", img: "naturem.png" },
-      { label: "Minimalist Indoors", value: "minimalist", img: "minimalisticindoorsm.png" }
+      { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "blazersuitman.png" },
+      { label: "Casual Everyday Outfit", value: "Casual everyday outfit", img: "/casualman.png" },
+      { label: "Bold Fashion Statement", value: "bold fashion statement", img: "/boldfashionmen.png" },
+      { label: "Athleisure or Fitness Wear", value: "athleisure or fitness wear", img: "/athleisureman.png" },
+      { label: "Professional Uniform", value: "professional uniform", img: "/professionalnurseman.png" },
+    ]
+  },
+
+  {
+    key: "setting",
+    type: "images",
+    multi: true,
+    title: "What is your preferred setting? ",
+    subtitle: "You can select more than one option.",
+    options: [
+      { label: "Cozy Indoor Space", value: "cozy indoor space", img: "/cozy indoor man.png" },
+      { label: "Natural Outdoor", value: "natural outdoor", img: "/man natural outdoor.png" },
+      { label: "Office", value: "office", img: "/man office.png" },
+      { label: "Studio", value: "studio", img: "/man studio.png" },
+      { label: "Urban", value: "urban", img: "/men urban.png" },
+      { label: "Conceptual", value: "conceptual", img: "/Conceptual man.png" }
+      
     ]
   },
   {
     key: "mood",
     type: "multi",
+    multi: true,
     title: "Select your mood or vibe",
     subtitle: "You can select more than one option.",
-    multi: true,
     options: [
-      { label: "Confident", value: "confident", img: "" },
-      { label: "Relaxed", value: "relaxed", img: "" },
-      { label: "Bold", value: "bold", img: "" },
       { label: "Approachable", value: "approachable", img: "" },
-      { label: "Empowered", value: "empowered", img: "" },
-      { label: "Creative", value: "creative", img: "" }
+      { label: "Bold", value: "bold", img: "" },
+      { label: "Warm", value: "warm", img: "" },
+      { label: "Creative", value: "creative", img: "" },
+      { label: "Peaceful", value: "peaceful", img: "" },
+      { label: "Joyful", value: "joyful", img: "" },
+      { label: "Mysterious", value: "mysterious", img: "" },
+      { label: "Focused", value: "focused", img: "" },
+      { label: "Fun", value: "fun", img: "" }
+
     ]
   },
   {
     key: "brandColors",
     type: "multi",
-    title: "Do you want us to subtly include your brand colors?",
+    title: "Do you have brand colors you'd like subtly included in your shoot?",
     subtitle: "You can select more than one option.",
     multi: true,
     optional: true,
@@ -265,6 +340,16 @@ const MEN_QUESTIONS: Question[] = [
     ]
   },
   {
+    key: "avoid",
+    type: "text",           // new text-entry question
+    title: "Anything to avoid?",
+    subtitle:
+      "Let us know any colors, styles, or props you’d like us to steer clear of. (Optional)",
+    optional: true,
+    options: [],            // ← satisfy the Question type
+  },
+
+  {
     key: "industry",
     type: "multi",
     multi: true, 
@@ -293,6 +378,16 @@ const MEN_QUESTIONS: Question[] = [
       { label: "Social Media", value: "social", img: "" }
     ]
   },
+  {
+    key: "personalized",
+    type: "text",           // new text-entry question
+    title: "Is there anything else you'd like us to know to help personalize your images? ",
+    subtitle: "(Optional)",
+
+    optional: true,
+    options: [],            // ← satisfy the Question type
+  },
+
 
 ];
 
@@ -308,12 +403,15 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   const rawGender = searchParams?.get("gender") || "woman";
   const gender = rawGender === "man" || rawGender === "male" ? "male" : "female";
 
+
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [uniformText, setUniformText] = useState("");
   const [otherText, setOtherText] = useState("");
   const otherRef = React.useRef<HTMLDivElement | null>(null);
   const uniformRef = React.useRef<HTMLDivElement | null>(null);
+  const [brandColorOther, setBrandColorOther] = useState("");
+
 
   useEffect(() => {
     const attire = answers.attire as string[] | undefined;
@@ -375,6 +473,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   };
 
   return (
+    
     <div className="relative min-h-screen max-w-lg mx-auto pt-20 pb-24 px-6 text-white">
       {/* 1️⃣ BACK BUTTON */}
       <div className="absolute top-4 left-1">
@@ -382,14 +481,14 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
           Back
         </Button>
       </div>
-
+  
       {/* 2️⃣ STEP CIRCLE */}
       <div className="flex justify-center mb-4">
         <div className="w-8 h-8 rounded-full bg-muted-gold flex items-center justify-center text-white text-sm font-medium">
           {step + 1}
         </div>
       </div>
-
+  
       {/* 3️⃣ PROGRESS BAR */}
       <div className="w-full bg-white h-2 rounded-full overflow-hidden mb-6">
         <div
@@ -397,197 +496,181 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
           style={{ width: `${((step + 1) / questionSet.length) * 100}%` }}
         />
       </div>
-
+  
       {/* 4️⃣ TITLE & SUBTITLE */}
       <h2 className="text-2xl font-bold text-center mb-2">{question.title}</h2>
       {question.subtitle && (
         <p className="text-center text-sm mb-6">{question.subtitle}</p>
       )}
-
+  
       {/* 5️⃣ OPTIONS */}
       <div className="mt-6 space-y-6">
+        {/* — Images grid & conditional textboxes — */}
         {question.type === "images" && (
-          <>
-            {/* Image grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {question.options
-              .filter(o => o.img)
-              .map((o) => (
-                <motion.button
-                  key={o.value}
-                  onClick={() => choose(o.value)}
-                  whileHover={{ scale: 1.02 }}
-                  className={`border-2 bg-warm-gray rounded-lg overflow-hidden flex flex-col transition-shadow ${
-                    question.multi
-                      ? (answers[question.key] || []).includes(o.value)
-                        ? "border-sage-green shadow-lg"
-                        : "border-white hover:shadow-md"
-                      : answers[question.key] === o.value
-                      ? "border-muted-gold shadow-lg"
-                      : "border-warm-gray hover:shadow-md"
-                  }`}
-                >
-           {/* ─── IMAGE AREA ─── */}
-           <div className="relative w-full aspect-[3/5] bg-warm-gray border-2 rounded-lg overflow-hidden">
-  <img
-    src={o.img}
-    alt={o.label}
-    className="absolute inset-0 w-full h-full object-cover object-center"
-  />
-</div>
-
-
-
-                  <div className="bg-muted-gold py-2 text-center">
-                    <span className="font-semibold text-ivory">{o.label}</span>
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-
-    
-          {/* PROFESSIONAL UNIFORM */}
-          {question.key === "attire" &&
-            Array.isArray(answers.attire) &&
-            answers.attire.includes("professional uniform") && (
-              <div
-                ref={uniformRef}
-                className="mt-4 p-2 rounded ring-1 ring-muted-gold transition"
-              >
-                <label
-                  htmlFor="uniformText"
-                  className="block text-sm font-medium text-white"
-                >
-                  Please specify your exact uniform and industry
-                </label>
-                <input
-                  type="text"
-                  id="uniformText"
-                  value={uniformText}
-                  onChange={(e) => setUniformText(e.target.value)}
-                  placeholder="e.g. firefighter, nurse, chef"
-                  className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
-                />
-              </div>
-            )}
-
-          {/* OTHER */}
-          {question.key === "attire" &&
-            Array.isArray(answers.attire) &&
-            answers.attire.includes("other") && (
-              <div
-                ref={otherRef}
-                className="mt-4 p-2 rounded ring-1 ring-muted-gold transition"
-              >
-                <label
-                  htmlFor="otherText"
-                  className="block text-sm font-medium text-white"
-                >
-                  Describe your outfit
-                </label>
-                <input
-                  type="text"
-                  id="otherText"
-                  value={otherText}
-                  onChange={(e) => setOtherText(e.target.value)}
-                  placeholder={
-                    gender === "female"
-                      ? "e.g. red blouse, black pants, black shoes"
-                      : "e.g. black collared shirt, black pants, black shoes"
-                  }
-                  className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
-                />
-              </div>
-            )}
-        </>
-      )}
-
-{question.type === "multi" && question.multi && (
-  <div className="flex flex-col space-y-4">
-    {question.options.map((o) => {
-      const isSelected = (answers[question.key] || []).includes(o.value);
-
-      // 1️⃣ build your color map as before
-      const colorMap: Record<string,string> = {
-        black:          "#000000",
-        white:          "#FFFFFF",
-        beige:          "#F5F5DC",
-        "blush pink":   "#FFC0CB",
-        "forest green": "#228B22",
-        "navy blue":    "#000080",
-        "cobalt blue":  "#0047AB",
-        red:            "#FF0000",
-        orange:         "#FFA500",
-        gold:           "#FFD700",
-        silver:         "#C0C0C0",
-      };
-      const circleColor = colorMap[o.value.toLowerCase()] || "transparent";
-
-      // 2️⃣ detect the special "other" case on the brandColors question
-      const isBrandColorsOther =
-        question.key === "brandColors" && o.value.toLowerCase() === "other";
-
-      // 3️⃣ define your gradient slice
-      const gradient = `conic-gradient(
-        #000000 0% 11%,
-        #FFFFFF 11% 22%,
-        #F5F5DC 22% 33%,
-        #FFC0CB 33% 44%,
-        #228B22 44% 55%,
-        #000080 55% 66%,
-        #0047AB 66% 77%,
-        #FF0000 77% 88%,
-        #FFD700 88% 100%
-      )`;
-
-      return (
+  <>
+    {/* ─── IMAGE GRID ─── */}
+    <div className="grid grid-cols-2 gap-4">
+      {question.options.filter(o => o.img).map(o => (
         <motion.button
           key={o.value}
-          onClick={() => {
-            choose(o.value);
-            if (question.key === "industry") next();
-          }}
+          onClick={() => choose(o.value)}
           whileHover={{ scale: 1.02 }}
           className={`
-            w-full bg-warm-gray rounded-lg overflow-hidden flex flex-col transition-shadow
-            ring-2 ring-white
-            ${isSelected
-              ? "border-muted-gold shadow-lg ring-2 ring-ivory"
-              : "border-warm-gray hover:shadow-md"}
+            border-2 bg-warm-gray rounded-lg overflow-hidden flex flex-col transition-shadow
+            ${
+              question.multi
+                ? (answers[question.key] || []).includes(o.value)
+                  ? "border-muted-gold shadow-lg"
+                  : "border-warm-gray hover:shadow-md"
+                : answers[question.key] === o.value
+                ? "border-muted-gold shadow-lg"
+                : "border-warm-gray hover:shadow-md"
+            }
           `}
         >
-          {/* ● Color dot */}
-          <span
-            className="w-4 h-4 rounded-full flex-shrink-0"
-            style={
-              isBrandColorsOther
-                ? { background: gradient }              // ← pie-chart for "Other"
-                : { backgroundColor: circleColor }      // ← normal solid dot
-            }
-          />
-
-          {/* Label */}
-          <span className="flex-1 text-center">
-            {o.label}
-          </span>
-
-          {/* ✔︎ Indicator */}
-          <span
-            className={`
-              w-4 h-4 rounded-full flex-shrink-0
-              ${isSelected
-                ? "bg-muted-gold"
-                : "border-2 border-warm-gray"}
-            `}
-          />
+          <div className="relative w-full aspect-[3/4.25] bg-warm-gray">
+            <img
+              src={o.img}
+              alt={o.label}
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
+          </div>
+          <div className="bg-muted-gold py-2 text-center">
+            <span className="font-semibold text-ivory">{o.label}</span>
+          </div>
         </motion.button>
-      );
-    })}
+      ))}
+    </div>
+
+    {/* ─── PROFESSIONAL UNIFORM TEXTBOX ─── */}
+    {question.key === "attire" &&
+      Array.isArray(answers.attire) &&
+      answers.attire.includes("professional uniform") && (
+        <div
+          ref={uniformRef}
+          className="mt-4 p-2 rounded ring-1 ring-muted-gold transition"
+        >
+          <label
+            htmlFor="uniformText"
+            className="block text-sm font-medium text-white"
+          >
+            Please specify your exact uniform and industry
+          </label>
+          <input
+            type="text"
+            id="uniformText"
+            value={uniformText}
+            onChange={(e) => setUniformText(e.target.value)}
+            placeholder="e.g. firefighter, nurse, chef"
+            className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
+          />
+        </div>
+    )}
+  </>
+)}
+
+{question.type === "text" && (
+  <div className="mb-6 space-y-2">
+    {/* Textarea input only — title/subtitle stay up in the header */}
+    <textarea
+      id={question.key}
+      rows={3}
+      value={answers[question.key] || ""}
+      onChange={(e) =>
+        setAnswers((a) => ({ ...a, [question.key]: e.target.value }))
+      }
+      placeholder="e.g. no neon colors or busy patterns"
+      className="w-full rounded-md border-gray-300 bg-white text-black p-2 shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
+    />
   </div>
 )}
 
 
 
+  
+        {/* — Fully expanded “multi” block — */}
+        {question.type === "multi" && question.multi && (
+          <div className="flex flex-col space-y-4">
+            {question.options.map((o) => {
+              const isSelected = (answers[question.key] || []).includes(o.value)
+  
+              // color map + gradient
+              const colorMap: Record<string,string> = {
+                black: "#000000", white: "#FFFFFF", beige: "#F5F5DC",
+                "blush pink": "#FFC0CB", "forest green": "#228B22",
+                "navy blue": "#000080", "cobalt blue": "#0047AB",
+                red: "#FF0000", orange: "#FFA500", gold: "#FFD700",
+                silver: "#C0C0C0"
+              }
+              const circleColor = colorMap[o.value.toLowerCase()] || "transparent"
+              const isBrandColorsOther =
+                question.key === "brandColors" && o.value.toLowerCase() === "other"
+              const gradient = `conic-gradient(
+                #000000 0% 11%, #FFFFFF 11% 22%, #F5F5DC 22% 33%,
+                #FFC0CB 33% 44%, #228B22 44% 55%, #000080 55% 66%,
+                #0047AB 66% 77%, #FF0000 77% 88%, #FFD700 88% 100%
+              )`
+  
+              return (
+                <React.Fragment key={o.value}>
+                  <motion.button
+                    onClick={() => {
+                      choose(o.value)
+                      if (question.key === "industry" || question.key === "age") next()
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    className={`
+                      relative w-full bg-warm-gray rounded-lg overflow-hidden
+                      transition-shadow ring-2 ring-white
+                      ${isSelected ? "border-muted-gold shadow-lg" : "border-warm-gray hover:shadow-md"}
+                      flex items-center px-4 py-3
+                    `}
+                  >
+                    {/* ● Color dot on left */}
+                    <span
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full"
+                      style={
+                        isBrandColorsOther
+                          ? { background: gradient }
+                          : { backgroundColor: circleColor }
+                      }
+                    />
+  
+                    {/* Centered label */}
+                    <span className="flex-1 text-center">{o.label}</span>
+  
+                    {/* ✔︎ Right indicator */}
+                    <span
+                      className={`
+                        w-4 h-4 rounded-full flex-shrink-0
+                        ${isSelected ? "bg-sage-green" : "border-2 border-white"}
+                      `}
+                    />
+                  </motion.button>
+  
+                  {/* Brand-colors “Other” textbox */}
+                  {question.key === "brandColors" && o.value === "other" && isSelected && (
+                    <div className="mt-4 p-2 rounded ring-1 ring-muted-gold">
+                      <label htmlFor="brandColorOther" className="block text-sm font-medium text-white">
+                        Describe your custom color
+                      </label>
+                      <input
+                        id="brandColorOther"
+                        type="text"
+                        value={brandColorOther}
+                        onChange={(e) => setBrandColorOther(e.target.value)}
+                        placeholder="e.g. teal, coral"
+                        className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
+                      />
+                    </div>
+                  )}
+                </React.Fragment>
+              )
+            })}
+          </div>
+        )}
+  
+        {/* — Select dropdown */}
         {question.type === "select" && (
           <select
             id={`select-${question.key}`}
@@ -604,8 +687,8 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
           </select>
         )}
       </div>
-
-      {/* 6️⃣ CONTINUE BUTTON */}
+  
+      {/* 6️⃣ CONTINUE BUTTON fixed bottom */}
       <div className="fixed bottom-0 left-0 w-full flex items-center bg-charcoal border-t py-4 px-6">
         <Button
           onClick={next}
@@ -615,6 +698,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
           {step === questionSet.length - 1 ? "Submit" : "Next"}
         </Button>
       </div>
-    </div>
-  );
-}
+      </div>
+    );
+  }
+  
