@@ -72,7 +72,7 @@ const WOMEN_QUESTIONS: Question[] = [
     type: "images",
     title: "What is your hair texture?",
     options: [
-      { label: "Straight", value: "straight", img: "/straight.png" },
+      { label: "Straight", value: "straight", img: "/Straight.png" },
       { label: "Wavy", value: "wavy", img: "/wavy.png" },
       { label: "Curly", value: "curly", img: "/curly.png" },
       { label: "Coily", value: "coily", img: "/coily.png" },
@@ -528,7 +528,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
             }
           `}
         >
-          <div className="relative w-full aspect-[3/4.25] bg-warm-gray">
+   <div className="relative w-full aspect-w-3 aspect-h-4 bg-warm-gray">
             <img
               src={o.img}
               alt={o.label}
