@@ -1,10 +1,11 @@
-// components/OverviewClient.tsx
+// File: components/OverviewClient.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ClientSideModelsList from "@/components/realtime/ClientSideModelsList";
+import { ArrowLeftIcon } from "@radix-ui/react-icons";
 
 type Tab = "custom";
 
@@ -27,9 +28,8 @@ export default function OverviewClient({
   serverCredits,
 }: OverviewClientProps) {
   const searchParams = useSearchParams();
-  // We only ever have one tab now
-  const tabParam = searchParams?.get("tab") as Tab | null;
-  const [activeTab, setActiveTab] = useState<Tab>(tabParam === "custom" ? "custom" : "custom");
+  const tabParam = (searchParams?.get("tab") as Tab) || "custom";
+  const [activeTab, setActiveTab] = useState<Tab>(tabParam);
 
   useEffect(() => {
     if (tabParam === "custom") {
@@ -44,6 +44,17 @@ export default function OverviewClient({
         paddingBottom: `max(env(safe-area-inset-bottom), 16px) + 44px`,
       }}
     >
+      {/* ─── Back Button ─── */}
+      <div className="px-4 pt-4">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 bg-muted-gold text-ivory px-3 py-1 rounded-full"
+        >
+          <ArrowLeftIcon className="w-5 h-5" />
+          Back
+        </Link>
+      </div>
+
       {/* ─── Header + single Tab button ─── */}
       <div className="bg-ivory flex flex-col items-center w-full px-4 py-8">
         <div className="text-center mb-6 font-bold text-2xl text-charcoal">
@@ -56,9 +67,11 @@ export default function OverviewClient({
             onClick={() => setActiveTab("custom")}
             className={`
               text-base sm:text-lg font-semibold px-1 py-2 rounded-md transition
-              ${activeTab === "custom"
-                ? "text-Charcoal translate-y-[-2px] border-b-4 border-charcoal"
-                : "text-muted-foreground hover:text-charcoal"}
+              ${
+                activeTab === "custom"
+                  ? "text-charcoal translate-y-[-2px] border-b-4 border-charcoal"
+                  : "text-muted-foreground hover:text-charcoal"
+              }
             `}
           >
             Custom Pack

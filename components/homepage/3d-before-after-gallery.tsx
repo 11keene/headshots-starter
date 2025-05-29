@@ -148,7 +148,7 @@ export default function ThreeDBeforeAfterGallery() {
           <div className="relative w-full max-w-3xl">
 
             {/* Main card container */}
-            <div className="relative flex h-[500px] md:h-[550px] rounded-xl bg-background/90 backdrop-blur-sm shadow-xl overflow-hidden">
+            <div className="relative flex h-[500px] md:h-[550px] rounded-xl bg-muted/30 backdrop-blur-sm shadow-xl overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`container-${activeIndex}`}
@@ -192,7 +192,7 @@ export default function ThreeDBeforeAfterGallery() {
                       <motion.div
                         initial={{ x: -20, opacity: 0 }}
                         animate={{ x: 0, opacity: 0.7 }}
-                        className="bg-primary/20 backdrop-blur-sm rounded-full p-3"
+                        className="bg-muted/30 backdrop-blur-sm rounded-full p-3"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -204,7 +204,7 @@ export default function ThreeDBeforeAfterGallery() {
                           strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          className="text-primary-foreground"
+                          className="text-muted-gold foreground"
                         >
                           <path d="M5 12h14"></path>
                           <path d="m12 5 7 7-7 7"></path>
@@ -215,7 +215,7 @@ export default function ThreeDBeforeAfterGallery() {
 
                   {/* After image */}
                   <div className="w-1/2 relative overflow-hidden">
-                    <div className="absolute top-2 right-2 z-10 bg-primary/80 text-primary-foreground backdrop-blur-sm text-xs px-2 py-1 rounded-full">
+                    <div className="absolute top-2 right-2 z-10 bg-muted-gold/70 text-primary-foreground backdrop-blur-sm text-xs px-2 py-1 rounded-full">
                       After
                     </div>
                     <motion.div
@@ -233,7 +233,7 @@ export default function ThreeDBeforeAfterGallery() {
                     </motion.div>
 
                     {/* AI Generated badge */}
-                    <div className="absolute bottom-2 right-2 rounded-full bg-primary px-3 py-1 text-xs text-white">
+                    <div className="absolute bottom-2 right-2 rounded-full bg-muted-gold/70 px-3 py-1 text-xs text-white">
                       <span className="flex items-center gap-1">
                         <span className="h-2 w-2 rounded-full bg-ivory"></span>
                         AI Generated
@@ -251,7 +251,7 @@ export default function ThreeDBeforeAfterGallery() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="absolute -bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg"
+              className="absolute -bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-muted-gold/90 px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg"
             >
               {galleryItems[activeIndex].label}
             </motion.div>
@@ -294,7 +294,7 @@ export default function ThreeDBeforeAfterGallery() {
               }, 600)
             }}
             className={`h-2 transition-all ${
-              index === activeIndex ? "w-8 bg-primary" : "w-2 bg-gray-300"
+              index === activeIndex ? "w-8 bg-muted-gold" : "w-2 bg-gray-300"
             } rounded-full`}
             aria-label={`Go to slide ${index + 1}`}
             disabled={isFlipping}

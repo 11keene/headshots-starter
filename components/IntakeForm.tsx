@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
-import { Cloud } from "lucide-react";
+import { Cloud, ArrowLeftIcon } from "lucide-react";
 import Image from "next/image"
 
 
@@ -480,13 +480,22 @@ router.push(
 
   return (
     
-    <div className="relative min-h-screen max-w-lg mx-auto pt-20 pb-24 px-6 text-white">
-      {/* 1️⃣ BACK BUTTON */}
-      <div className="absolute top-4 left-1">
-        <Button onClick={back} className="bg-warm-gray text-white hover:bg-warm-gray">
-          Back
-        </Button>
-      </div>
+ <div className="relative min-h-screen max-w-lg mx-auto pt-20 pb-24 px-6 text-white">
+  {/* 1️⃣ BACK BUTTON */}
+  <div className="absolute top-4 left-4">
+    <Button
+      onClick={back}
+      className="
+        inline-flex items-center gap-2
+        bg-muted-gold text-ivory
+        px-3 py-1 rounded-full
+        shadow-sm hover:shadow-md transition
+      "
+    >
+      <ArrowLeftIcon className="w-4 h-4" />
+      Back
+    </Button>
+  </div>
   
       {/* 2️⃣ STEP CIRCLE */}
       <div className="flex justify-center mb-4">
@@ -533,12 +542,12 @@ router.push(
               rounded-lg
               overflow-hidden
               transition-shadow
-              ${isSelected ? "border-muted-gold shadow-lg" : "border-warm-gray hover:shadow-md"}
+              ${isSelected ? "border-muted-gold shadow-lg" : "border-muted/30hover:shadow-md"}
             `}
             style={{ paddingBottom: "2rem" /* leave room for the label */ }}
           >
             {/* IMAGE */}
-            <div className="w-full aspect-[3/4] bg-warm-gray">
+            <div className="w-full aspect-[3/4] bg-muted/30">
               <Image
                 src={o.img}
                 alt={o.label}
@@ -652,9 +661,9 @@ router.push(
                     }}
                     whileHover={{ scale: 1.02 }}
                     className={`
-                      relative w-full bg-warm-gray rounded-lg overflow-hidden
+                      relative w-full bg-muted/100 rounded-lg overflow-hidden
                       transition-shadow ring-2 ring-white
-                      ${isSelected ? "border-muted-gold shadow-lg" : "border-warm-gray hover:shadow-md"}
+                      ${isSelected ? "border-muted-gold shadow-lg" : "border-muted/30 hover:shadow-md"}
                       flex items-center px-4 py-3
                     `}
                   >

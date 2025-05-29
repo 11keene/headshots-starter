@@ -144,26 +144,26 @@ export default function PricingClient({
                 h-[220px] flex flex-col justify-between
                 cursor-pointer rounded-lg border p-6 text-center transition-shadow
                 ${isActive
-                  ? "border-dusty-coral shadow-lg"
+                  ? "border-muted-gold shadow-lg"
                   : "border-black-500 hover:shadow-md"}
               `}
             >
               <div className="h-[24px] mb-2">
                 {tier.badge && (
-                  <span className="inline-block rounded-full bg-dusty-coral px-3 py-1 text-xs font-semibold">
+                  <span className="inline-block rounded-full bg-muted-gold px-3 py-1 text-xs font-semibold">
                     {tier.badge}
                   </span>
                 )}
               </div>
 
-              <h2 className="text-xl font-semibold mb-1 text-dusty-coral">
+              <h2 className="text-xl font-semibold mb-1 text-muted-gold">
                 {tier.title}
               </h2>
 
               <p className="text-gray-500 mb-4">{tier.subtitle}</p>
 
               {isActive && (
-                <div className="text-sm text-dusty-coral font-medium">Selected</div>
+                <div className="text-sm text-muted-gold font-medium">Selected</div>
               )}
             </div>
           );
@@ -172,7 +172,7 @@ export default function PricingClient({
 
       <div className="fixed bottom-0 left-0 right-0 bg-ivoryborder-t p-4 flex justify-center">
         <Button
-          className="w-full sm:w-auto bg-dusty-coral text-white"
+          className="w-full sm:w-auto bg-muted-gold text-white"
           disabled={!selected || loading}
           onClick={onContinue}
           isLoading={loading}

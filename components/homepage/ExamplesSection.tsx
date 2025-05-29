@@ -8,7 +8,7 @@ export default function ExamplesSection() {
     <section id="examples" className="border-t py-20 md:py-32 bg-muted/30">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center justify-center gap-4 text-center md:gap-8">
-          <Badge variant="outline" className="mb-2 border-dusty-coral text-dusty-coral">
+          <Badge variant="outline" className="mb-2 border-muted-gold text-charcoal">
             See the Results
           </Badge>
           <h2 className="text-3xl text-charcoal font-bold tracking-tighter sm:text-4xl md:text-5xl">Real People. Real Impact.</h2>
@@ -31,7 +31,7 @@ export default function ExamplesSection() {
                     fill
                     className="object-cover"
                   />
-                  <div className="absolute bottom-2 right-2 rounded-full bg-primary/80 px-2 py-1 text-xs text-white">
+                  <div className="absolute bottom-2 right-2 rounded-full bg-muted-gold/70 px-2 py-1 text-xs text-white">
                     <span className="flex items-center gap-1">
                       <span className="h-1.5 w-1.5 rounded-full bg-ivory"></span>
                       AI Generated

@@ -14,14 +14,14 @@ export default function CTASection() {
     <section className="py-20 md:py-32 bg-charcoal text-white">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center justify-center gap-4 text-center md:gap-8">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+          <h2 className="text-3xl font-bold text-muted-gold tracking-tighter sm:text-4xl md:text-5xl">
             Get your AI headshots today
           </h2>
           <p className="max-w-[700px] text-gray-300 text-lg">
             Join thousands of professionals who have elevated their online presence with our AI-generated headshots.
           </p>
           <Link href="/login" className="mt-4">
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-white">
+            <Button size="lg" className="bg-muted-gold hover:bg-muted-gold text-white">
               Create My Headshots Now
             </Button>
           </Link>

@@ -56,7 +56,7 @@ const config = {
 
         // ── BRAND PALETTE ───────────────────────────────────────────────────────
         ivory: "#F5F1E8",        // your “Ivory”
-        "warm-gray": "#B8B3AD",
+        "warm-gray": "#B2B3B4",
         charcoal: "#33312E",
         "dusty-coral": "#E29578",
         "sage-green": "#A3B18A",

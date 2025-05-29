@@ -92,15 +92,16 @@ export default function ModernPricing() {
             <div
               key={idx}
               className={cn(
-                "relative flex flex-col p-6 bg-ivory border rounded-lg shadow-md transition-all ease-in-out",
+                "group relative flex flex-col p-6 bg-charcoal/100 border rounded-lg shadow-md transition-all ease-in-out",
+                 tier.popular && "border-2 border-muted-gold",
                 "hover:scale-105 hover:shadow-xl",
-                "hover:border-dusty-coral/90 hover:bg-dusty-coral/10",
+                "hover:border-muted-gold hover:bg-charcoal/50",
                 "w-full",
                 tier.popular && "pricing-card-popular"
               )}
             >
               {tier.popular && (
-                <div className="absolute -top-4 right-6 bg-dusty-coral text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                <div className="absolute -top-4 right-6 bg-muted-gold text-white text-xs font-semibold px-3 py-1.5 rounded-full">
                   Most Popular
                 </div>
               )}
@@ -110,20 +111,20 @@ export default function ModernPricing() {
                 </div>
               )}
 
-              <h3 className="text-2xl text-charcoal font-bold">{tier.title}</h3>
+              <h3 className="text-2xl text-white font-bold">{tier.title}</h3>
 
               <div className="mt-2 relative">
                 {/* struck-through original price */}
-                <span className="absolute -top-2 right-12 md:right-1 text-lg line-through text-muted-foreground">
+                <span className="absolute -top-2 right-12 md:right-1 text-lg line-through text-white">
                   {tier.originalPrice}
                 </span>
                 {/* discounted price */}
-                <span className="text-5xl text-dusty-coral font-extrabold">
+                <span className="text-5xl text-sage-green font-extrabold">
                   {tier.price}
                 </span>
               </div>
 
-              <p className="mt-4 text-xs font-semibold text-charcoal text-muted-foreground">
+              <p className="mt-4 text-xs font-semibold text-ivory">
                 {tier.description}
               </p>
 
@@ -146,8 +147,8 @@ export default function ModernPricing() {
 
                   return (
                     <li key={i} className="flex items-center gap-2">
-                      <Icon className="h-5 w-5 text-primary" />
-                      <span className="text-xs leading-snug">{feat}</span>
+                      <Icon className="h-5 w-5 text-sage-green" />
+                      <span className="text-xs text-white leading-snug">{feat}</span>
                     </li>
                   );
                 })}
@@ -159,7 +160,7 @@ export default function ModernPricing() {
                   className="block w-full"
                   aria-label={`Select ${tier.title} plan`}
                 >
-                  <Button className="w-full bg-dusty-coral text-white hover:bg-sage-green">
+                  <Button className="w-full bg-muted/70 text-white transition group-hover:bg-sage-green group-hover:text-white">
                     {tier.buttonText}
                   </Button>
                 </Link>
@@ -170,7 +171,7 @@ export default function ModernPricing() {
 
         <p className="mt-4 text-center text-charcoal text-sm text-muted-foreground">
           Need a custom plan?{" "}
-          <Link href="mailto:support@aimavenstudio.com" className="text-primary hover:underline">
+          <Link href="mailto:support@aimavenstudio.com" className="text-muted-gold hover:underline">
             Contact us
           </Link>
         </p>

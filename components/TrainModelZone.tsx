@@ -302,7 +302,7 @@ export default function TrainModelZone({ packSlug }: { packSlug: string }) {
               Upload 4-10 images of the person you want to generate headshots
               for.
             </FormDescription>
-            <div className="outline-dashed outline-2 outline-gray-100 hover:outline-warm-gray w-full h-full rounded-md p-4 flex justify-center align-middle">
+            <div className="outline-dashed outline-2 outline-gray-100 hover:outline-warm-muted/30 w-full h-full rounded-md p-4 flex justify-center align-middle">
               <input {...getInputProps()} />
               {isDragActive ? (
                 <p className="self-center">Drop the files here ...</p>

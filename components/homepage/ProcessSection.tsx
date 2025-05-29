@@ -100,12 +100,12 @@ function ProcessStep({ step, isActive, index }: { step: typeof processSteps[0], 
       className={cn(
         "group flex flex-col items-center text-charcoal text-center",
         "rounded-2xl border bg-card p-6 shadow-sm transition-all duration-200 hover:shadow-md",
-        isActive && "border-primary"
+        isActive && "border-muted-gold"
       )}
     >
       <div className="mb-6 flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full text-charcoal bg-primary/10 text-primary ring-2 ring-primary/20">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full text-charcoal bg-primary text-primary-foreground">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full text-charcoal bg-muted-gold/50 text-primary ring-2 ring-primary/20">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full text-charcoal bg-muted-gold/80 text-primary-foreground">
             {step.number}
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function ProcessSection() {
     <section id="how-it-works" className="py-20 md:py-32">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center justify-center text-charcoal  gap-4 text-center md:gap-8">
-          <Badge variant="outline" className="mb-2 border-dusty-coral text-dusty-coral">
+          <Badge variant="outline" className="mb-2 border-muted-gold text-charcoal">
             Simple Process
           </Badge>
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-charcoal md:text-5xl">Your Signature Look, In 3 Simple Steps
