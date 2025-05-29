@@ -100,7 +100,7 @@ const WOMEN_QUESTIONS: Question[] = [
     title: "What will you wear in your photos?",
     subtitle: "You can select more than one option.",
     options: [
-      { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "blazer.png" },
+      { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "/blazer.png" },
       { label: "Casual Everyday Outfit", value: "Casual everyday outfit", img: "/casualwoman.png" },
       { label: "Bold Fashion Statement", value: "bold fashion statement", img: "/Boldfashionwoman.png" },
       { label: "Dress or Skirt Set", value: "dress or skirt set", img: "/dressskirt.png" },
@@ -247,11 +247,11 @@ const MEN_QUESTIONS: Question[] = [
     type: "images",
     title: "What is your hair length?",
     options: [
-      { label: "Bald", value: "bald", img: "bald.png" },
-      { label: "Buzz Cut", value: "buzz", img: "buzzcut.png" },
-      { label: "Short", value: "short", img: "short.png" },
-      { label: "Medium", value: "medium", img: "mediumlength.png" },
-      { label: "Long", value: "long", img: "longhair.png" }
+      { label: "Bald", value: "bald", img: "/bald.png" },
+      { label: "Buzz Cut", value: "buzz", img: "/buzzcut.png" },
+      { label: "Short", value: "short", img: "/short.png" },
+      { label: "Medium", value: "medium", img: "/mediumlength.png" },
+      { label: "Long", value: "long", img: "/longhair.png" }
     ]
   },
   {
@@ -259,11 +259,11 @@ const MEN_QUESTIONS: Question[] = [
     type: "images",
     title: "What is your body type?",
     options: [
-      { label: "Slim", value: "slim", img: "Slimmale.png" },
-      { label: "Average", value: "average", img: "averageman.png" },
-      { label: "Athletic", value: "athletic", img: "athleticman.png" },
-      { label: "Muscular", value: "muscular", img: "muscularman.png" },
-      { label: "Broad", value: "broad", img: "broadman.png" },
+      { label: "Slim", value: "slim", img: "/Slimmale.png" },
+      { label: "Average", value: "average", img: "/averageman.png" },
+      { label: "Athletic", value: "athletic", img: "/athleticman.png" },
+      { label: "Muscular", value: "muscular", img: "/muscularman.png" },
+      { label: "Broad", value: "broad", img: "/broadman.png" },
    
     ]
   },
@@ -275,7 +275,7 @@ const MEN_QUESTIONS: Question[] = [
     subtitle: "You can select more than one option.",
     multi: true,
     options: [
-      { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "blazersuitman.png" },
+      { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "/blazersuitman.png" },
       { label: "Casual Everyday Outfit", value: "Casual everyday outfit", img: "/casualman.png" },
       { label: "Bold Fashion Statement", value: "bold fashion statement", img: "/boldfashionmen.png" },
       { label: "Athleisure or Fitness Wear", value: "athleisure or fitness wear", img: "/athleisureman.png" },
@@ -506,10 +506,11 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   
       {/* 5️⃣ OPTIONS */}
       <div className="mt-6 space-y-6">
+       
+       
         {/* — Images grid & conditional textboxes — */}
-        {question.type === "images" && (
+       {question.type === "images" && (
   <>
-    {/* ─── IMAGE GRID ─── */}
     <div className="grid grid-cols-2 gap-4">
       {question.options.filter(o => o.img).map(o => (
         <motion.button
@@ -517,76 +518,64 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
           onClick={() => choose(o.value)}
           whileHover={{ scale: 1.02 }}
           className={`
-            border-2 bg-warm-gray rounded-lg overflow-hidden flex flex-col transition-shadow
-            ${
-              question.multi
-                ? (answers[question.key] || []).includes(o.value)
-                  ? "border-muted-gold shadow-lg"
-                  : "border-warm-gray hover:shadow-md"
-                : answers[question.key] === o.value
+            flex flex-col overflow-hidden rounded-lg border-2
+            bg-warm-gray transition-shadow
+            ${question.multi
+              ? (answers[question.key] || []).includes(o.value)
+                ? "border-muted-gold shadow-lg"
+                : "border-warm-gray hover:shadow-md"
+              : answers[question.key] === o.value
                 ? "border-muted-gold shadow-lg"
                 : "border-warm-gray hover:shadow-md"
             }
           `}
         >
-<div className="relative w-full aspect-[3/4] bg-warm-gray">
-            <Image
+          {/* —— IMAGE —— */}
+          <div className="w-full aspect-[3/4]">
+            <img
               src={o.img}
               alt={o.label}
-              fill
-              className="object-cover object-center"
-              priority={!question.multi}
+              className="w-full h-full object-contain object-center"
             />
           </div>
+
+          {/* —— LABEL BAR —— */}
           <div className="bg-muted-gold py-2 text-center">
-            <span className="font-semibold text-ivory">{o.label}</span>
+            <span className="font-semibold text-ivory">
+              {o.label}
+            </span>
           </div>
         </motion.button>
       ))}
     </div>
 
-    {/* ─── PROFESSIONAL UNIFORM TEXTBOX ─── */}
+    {/* PROFESSIONAL UNIFORM TEXTBOX */}
     {question.key === "attire" &&
       Array.isArray(answers.attire) &&
       answers.attire.includes("professional uniform") && (
-        <div
-          ref={uniformRef}
-          className="mt-4 p-2 rounded ring-1 ring-muted-gold transition"
+      <div
+        ref={uniformRef}
+        className="mt-4 p-2 rounded ring-1 ring-muted-gold transition"
+      >
+        <label
+          htmlFor="uniformText"
+          className="block text-sm font-medium text-white"
         >
-          <label
-            htmlFor="uniformText"
-            className="block text-sm font-medium text-white"
-          >
-            Please specify your exact uniform and industry
-          </label>
-          <input
-            type="text"
-            id="uniformText"
-            value={uniformText}
-            onChange={(e) => setUniformText(e.target.value)}
-            placeholder="e.g. firefighter, nurse, chef"
-            className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
-          />
-        </div>
+          Please specify your exact uniform and industry
+        </label>
+        <input
+          id="uniformText"
+          type="text"
+          value={uniformText}
+          onChange={e => setUniformText(e.target.value)}
+          placeholder="e.g. firefighter, nurse, chef"
+          className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
+        />
+      </div>
     )}
   </>
 )}
 
-{question.type === "text" && (
-  <div className="mb-6 space-y-2">
-    {/* Textarea input only — title/subtitle stay up in the header */}
-    <textarea
-      id={question.key}
-      rows={3}
-      value={answers[question.key] || ""}
-      onChange={(e) =>
-        setAnswers((a) => ({ ...a, [question.key]: e.target.value }))
-      }
-      placeholder="e.g. no neon colors or busy patterns"
-      className="w-full rounded-md border-gray-300 bg-white text-black p-2 shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
-    />
-  </div>
-)}
 
 
 
