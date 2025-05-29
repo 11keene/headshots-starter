@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { Cloud } from "lucide-react";
+import Image from "next/image"
 
 
 type Option = { label: string; value: string; img: string; color?: string };
@@ -528,11 +529,13 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
             }
           `}
         >
-   <div className="relative w-full aspect-[3/4.25] bg-warm-gray">
-            <img
+<div className="relative w-full aspect-[3/4] bg-warm-gray">
+            <Image
               src={o.img}
               alt={o.label}
-              className="absolute inset-0 w-full h-full object-cover object-center"
+              fill
+              className="object-cover object-center"
+              priority={!question.multi}
             />
           </div>
           <div className="bg-muted-gold py-2 text-center">
