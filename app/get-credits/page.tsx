@@ -17,18 +17,7 @@ interface Plan {
 }
 
 const PLANS: Plan[] = [
-  {
-    id: "starter",
-    name: "Starter Pack",
-    description: "6 Prompts • 18 Images • 6 Unique Outfits • 6 Unique Backgrounds",
-    price: "$29.99",
-  },
-  {
-    id: "themed",
-    name: "Themed Packs",
-    description: "15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds",
-    price: "$42.99",
-  },
+
   {
     id: "custom",
     name: "Custom Pack",

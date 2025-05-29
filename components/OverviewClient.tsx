@@ -45,7 +45,7 @@ export default function OverviewClient({
       }}
     >
       {/* ─── Header + single Tab button ─── */}
-      <div className="bg-warm-gray flex flex-col items-center w-full px-4 py-8">
+      <div className="bg-ivory flex flex-col items-center w-full px-4 py-8">
         <div className="text-center mb-6 font-bold text-2xl text-charcoal">
           ⚡ Lightning-fast delivery – your headshots arrive in under an hour.
         </div>
@@ -57,7 +57,7 @@ export default function OverviewClient({
             className={`
               text-base sm:text-lg font-semibold px-1 py-2 rounded-md transition
               ${activeTab === "custom"
-                ? "text-ivory translate-y-[-2px] border-b-4 border-charcoal"
+                ? "text-Charcoal translate-y-[-2px] border-b-4 border-charcoal"
                 : "text-muted-foreground hover:text-charcoal"}
             `}
           >

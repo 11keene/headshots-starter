@@ -25,7 +25,7 @@ export default function Navbar() {
   const isLoggedIn = Boolean(session?.user);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
+    <header className="sticky top-0 z-50 w-full border-b bg-charcoal backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-1 text-charcoal font-semibold">
@@ -37,18 +37,27 @@ export default function Navbar() {
             className="rounded-full"
           />
           <span>AI Maven</span>
-
         </Link>
+
         {/* Signed-in nav links */}
         {isLoggedIn && pathname !== "/" && (
-          <nav className="flex justify-start items-center gap-4 text-charcoal font-semibold -ml-4">
-          <Link href="/overview" className="hover:text-primary">
+          <nav className="flex justify-start items-center gap-4 -ml-4">
+            <Link
+              href="/overview"
+              className={`text-ivory font-semibold transition-colors hover:text-muted-gold`}
+            >
               Home
             </Link>
-            <Link href="/overview/packs" className="hover:text-primary">
+            <Link
+              href="/overview/packs"
+              className={`text-ivory font-semibold transition-colors hover:text-muted-gold`}
+            >
               Packs
             </Link>
-            <Link href="/get-credits" className="hover:text-primary">
+            <Link
+              href="/get-credits"
+              className={`text-ivory font-semibold transition-colors hover:text-muted-gold`}
+            >
               Pricing
             </Link>
           </nav>

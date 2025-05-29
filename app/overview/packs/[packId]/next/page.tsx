@@ -1,3 +1,4 @@
+// app/overview/packs/[packId]/next/page.tsx
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
@@ -5,13 +6,13 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FiUploadCloud, FiArrowLeft, FiTrash2, FiLoader } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
-import { useUploadContext } from "../UploadContext";
+import { useUploadContext } from "@/components/UploadContext";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useSession } from "@supabase/auth-helpers-react";
 
 const supabase = createClientComponentClient();
 
-// only custom pack remains
+// we only support the “custom” pack now
 const PRICE_IDS_CLIENT = {
   custom: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_CUSTOM_PACK!,
 };
@@ -28,12 +29,12 @@ export default function UploadPage() {
   const [uploading, setUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // rebuild preview URLs
+  // whenever `files` changes, rebuild the preview URLs
   useEffect(() => {
     setPreviewUrls(files.map((f) => URL.createObjectURL(f)));
   }, [files, setPreviewUrls]);
 
-  // fire-and-forget upload
+  // fire-and-forget supabase upload
   const onFiles = useCallback(
     (list: FileList | null) => {
       if (!list || !userId) return;
@@ -58,7 +59,7 @@ export default function UploadPage() {
     setFiles((prev) => prev.filter((_, idx) => idx !== i));
   }, []);
 
-  // Stripe checkout + redirect
+  // kick off a Stripe Checkout session and redirect
   const goNext = async () => {
     if (!userId) {
       router.push("/login");
@@ -67,7 +68,6 @@ export default function UploadPage() {
     setIsLoading(true);
 
     const stripePriceId = PRICE_IDS_CLIENT.custom;
-
     const resp = await fetch("/api/create-checkout-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -90,7 +90,7 @@ export default function UploadPage() {
 
   return (
     <div className="p-6 sm:p-8 max-w-3xl mx-auto">
-      {/* simple “back” now */}
+      {/* Back button */}
       <button
         onClick={() => router.back()}
         className="inline-flex items-center mb-6 text-gray-700 hover:text-sage-green"
@@ -100,7 +100,7 @@ export default function UploadPage() {
 
       <h1 className="text-2xl text-charcoal font-bold mb-2">Upload your photos</h1>
       <p className="text-gray-600 mb-6">
-        Select at least <span className="font-semibold">4-6</span> photos (max 10).
+        Select at least <span className="font-semibold">4–6</span> photos (max 10).
       </p>
 
       <div
@@ -127,7 +127,7 @@ export default function UploadPage() {
 
       {previewUrls.length > 0 && (
         <div className="mt-6 grid grid-cols-4 gap-4">
-          {previewUrls.map((url, i) => (
+          {previewUrls.map((url: string, i: number) => (
             <div key={i} className="relative w-full h-24">
               <button
                 onClick={() => removeFile(i)}
@@ -145,7 +145,7 @@ export default function UploadPage() {
         </div>
       )}
 
-      {/* instructions cards */}
+      {/* Instruction cards */}
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
         {[
           { title: "Selfies", desc: "Frontal, well-lit at eye-level", img: "/placeholders/selfie.png" },
@@ -169,14 +169,16 @@ export default function UploadPage() {
 
       <div className="fixed bottom-0 left-0 right-0 bg-charcoal border-t p-4 flex justify-end items-center">
         <span className="self-center mr-auto text-sm text-ivory">
-          {previewUrls.length} of 4 required{uploading ? " (uploading...)" : ""}
+          {previewUrls.length} of 4 required{uploading ? " (uploading…)" : ""}
         </span>
         <Button
           disabled={previewUrls.length < 4 || isLoading}
           onClick={goNext}
           className={isLoading ? "bg-warm-gray text-white" : ""}
         >
-          {isLoading ? <><FiLoader className="animate-spin mr-2" />Starting…</> : "Continue"}
+          {isLoading
+            ? <><FiLoader className="animate-spin mr-2"/> Starting…</>
+            : "Continue"}
         </Button>
       </div>
     </div>
