@@ -11,19 +11,22 @@ import React, {
 interface UploadState {
   previewUrls: string[];
   setPreviewUrls: React.Dispatch<React.SetStateAction<string[]>>;
+  packId: string;
 }
 
 const UploadCtx = createContext<UploadState | undefined>(undefined);
 
 export function UploadProvider({
   children,
+  packId,
 }: {
   children: ReactNode;
+  packId: string;
 }) {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
   return (
-    <UploadCtx.Provider value={{ previewUrls, setPreviewUrls }}>
+    <UploadCtx.Provider value={{ previewUrls, setPreviewUrls, packId }}>
       {children}
     </UploadCtx.Provider>
   );

@@ -10,6 +10,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { ThemeProvider } from "@/components/homepage/theme-provider";
 import { validateConfig } from "@/lib/config";
 import Navbar from "@/components/Navbar";
+import { UploadProvider } from "@/components/UploadContext";
 
 // ← NEW imports for server-side upsert
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -68,7 +69,9 @@ export default async function RootLayout({
             >
               <Navbar />
             </Suspense>
-            <main className="flex-1">{children}</main>
+           <UploadProvider packId={""}>
+             <main className="flex-1">{children}</main>
+            </UploadProvider>
             <Footer />
             <Toaster />
             <Analytics />
