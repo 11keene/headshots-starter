@@ -544,8 +544,8 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
             </div>
 
             {/* gold label bar */}
-            <div className="bg-muted-gold w-full h-6 flex items-center justify-center">
-              <span className="text-ivory text-sm">{o.label}</span>
+<div className="bg-muted-gold w-full flex items-center justify-center py-2">
+                <span className="text-ivory text-sm">{o.label}</span>
             </div>
           </motion.button>
         )
