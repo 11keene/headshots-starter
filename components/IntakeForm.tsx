@@ -508,74 +508,93 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
       <div className="mt-6 space-y-6">
        
        
-        {/* — Images grid & conditional textboxes — */}
-       {question.type === "images" && (
+       {/* — Images grid & conditional textboxes — */}
+{question.type === "images" && (
   <>
+    {/* ─── IMAGE GRID ─── */}
     <div className="grid grid-cols-2 gap-4">
-      {question.options.filter(o => o.img).map(o => (
-        <motion.button
-          key={o.value}
-          onClick={() => choose(o.value)}
-          whileHover={{ scale: 1.02 }}
-          className={`
-            flex flex-col overflow-hidden rounded-lg border-2
-            bg-warm-gray transition-shadow
-            ${question.multi
-              ? (answers[question.key] || []).includes(o.value)
-                ? "border-muted-gold shadow-lg"
-                : "border-warm-gray hover:shadow-md"
-              : answers[question.key] === o.value
-                ? "border-muted-gold shadow-lg"
-                : "border-warm-gray hover:shadow-md"
-            }
-          `}
-        >
-          {/* —— IMAGE —— */}
-          <div className="w-full aspect-[3/4]">
-            <img
-              src={o.img}
-              alt={o.label}
-              className="w-full h-full object-contain object-center"
-            />
-          </div>
+      {question.options.filter((o) => o.img).map((o) => {
+        const isSelected = question.multi
+          ? (answers[question.key] || []).includes(o.value)
+          : answers[question.key] === o.value
 
-          {/* —— LABEL BAR —— */}
-          <div className="bg-muted-gold py-2 text-center">
-            <span className="font-semibold text-ivory">
-              {o.label}
-            </span>
-          </div>
-        </motion.button>
-      ))}
+        return (
+          <motion.button
+            key={o.value}
+            onClick={() => choose(o.value)}
+            whileHover={{ scale: 1.02 }}
+            className={`
+              border-2 rounded-lg overflow-hidden flex flex-col transition-shadow
+              ${
+                isSelected
+                  ? "border-muted-gold shadow-lg"
+                  : "border-warm-gray hover:shadow-md"
+              }
+            `}
+          >
+            {/* image wrapper is now transparent */}
+            <div className="relative w-full aspect-[3/4]">
+              <Image
+                src={o.img}
+                alt={o.label}
+                fill
+                className="object-cover object-center"
+                priority={!question.multi}
+              />
+            </div>
+
+            {/* gold label bar */}
+            <div className="bg-muted-gold h-6 flex items-center justify-center">
+              <span className="text-ivory text-sm">{o.label}</span>
+            </div>
+          </motion.button>
+        )
+      })}
     </div>
 
-    {/* PROFESSIONAL UNIFORM TEXTBOX */}
+    {/* ─── PROFESSIONAL UNIFORM TEXTBOX ─── */}
     {question.key === "attire" &&
       Array.isArray(answers.attire) &&
       answers.attire.includes("professional uniform") && (
-      <div
-        ref={uniformRef}
-        className="mt-4 p-2 rounded ring-1 ring-muted-gold transition"
-      >
-        <label
-          htmlFor="uniformText"
-          className="block text-sm font-medium text-white"
+        <div
+          ref={uniformRef}
+          className="mt-4 p-2 rounded ring-1 ring-muted-gold transition"
         >
-          Please specify your exact uniform and industry
-        </label>
-        <input
-          id="uniformText"
-          type="text"
-          value={uniformText}
-          onChange={e => setUniformText(e.target.value)}
-          placeholder="e.g. firefighter, nurse, chef"
-          className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
-        />
-      </div>
+          <label
+            htmlFor="uniformText"
+            className="block text-sm font-medium text-white"
+          >
+            Please specify your exact uniform and industry
+          </label>
+          <input
+            type="text"
+            id="uniformText"
+            value={uniformText}
+            onChange={(e) => setUniformText(e.target.value)}
+            placeholder="e.g. firefighter, nurse, chef"
+            className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
+          />
+        </div>
     )}
   </>
 )}
 
+
+{question.type === "text" && (
+  <div className="mb-6 space-y-2">
+    {/* Textarea input only — title/subtitle stay up in the header */}
+    <textarea
+      id={question.key}
+      rows={3}
+      value={answers[question.key] || ""}
+      onChange={(e) =>
+        setAnswers((a) => ({ ...a, [question.key]: e.target.value }))
+      }
+      placeholder="e.g. no neon colors or busy patterns"
+      className="w-full rounded-md border-gray-300 bg-white text-black p-2 shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
+    />
+  </div>
+)}
 
 
 
