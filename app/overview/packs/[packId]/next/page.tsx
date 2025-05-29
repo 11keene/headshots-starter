@@ -1,80 +1,64 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FiUploadCloud, FiArrowLeft, FiTrash2, FiLoader } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { useUploadContext } from "../UploadContext";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useSession } from "@supabase/auth-helpers-react";
-import { loadStripe } from "@stripe/stripe-js";
 
 const supabase = createClientComponentClient();
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-const PRICE_IDS_CLIENT: Record<string, string> = {
-  starter: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_STARTER_PACK!,
-  themed: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_THEMED_PACKS!,
+// only custom pack remains
+const PRICE_IDS_CLIENT = {
   custom: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_CUSTOM_PACK!,
 };
 
 export default function UploadPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-
-  const paramsObj = useParams();
-  const packId = Array.isArray(paramsObj?.packId)
-    ? paramsObj.packId[0]
-    : paramsObj?.packId || "";
   const router = useRouter();
-  const params = useSearchParams();
-  const extraPacks = params?.get("extraPacks") || "";
-  const gender = params?.get("gender") || "";
-
+  const { packId: _packId } = useParams();
+  const packId = Array.isArray(_packId) ? _packId[0] : _packId || "";
   const session = useSession();
   const userId = session?.user.id;
 
   const { previewUrls, setPreviewUrls } = useUploadContext();
   const [files, setFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // rebuild previewUrls when files change
+  // rebuild preview URLs
   useEffect(() => {
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPreviewUrls(urls);
+    setPreviewUrls(files.map((f) => URL.createObjectURL(f)));
   }, [files, setPreviewUrls]);
 
-  // on file select: set files and start background upload
-  const onFiles = useCallback((fList: FileList | null) => {
-    if (!fList) return;
-    const arr = Array.from(fList).slice(0, 10);
-    setFiles(arr);
-
-    if (!userId || !packId) return;
-    setUploading(true);
-    Promise.all(
-      arr.map((file) => {
-        const path = `${userId}/${packId}/${file.name}`;
-        return supabase.storage.from("user-uploads").upload(path, file, { upsert: true });
-      })
-    )
-      .catch((err) => console.error("❌ Fire-and-forget upload error:", err))
-      .finally(() => setUploading(false));
-  }, [userId, packId]);
-
-  const removeFile = useCallback((index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  }, []);
-
-  const onDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      onFiles(e.dataTransfer.files);
+  // fire-and-forget upload
+  const onFiles = useCallback(
+    (list: FileList | null) => {
+      if (!list || !userId) return;
+      const arr = Array.from(list).slice(0, 10);
+      setFiles(arr);
+      setUploading(true);
+      Promise.all(
+        arr.map((file) =>
+          supabase
+            .storage
+            .from("user-uploads")
+            .upload(`${userId}/${packId}/${file.name}`, file, { upsert: true })
+        )
+      )
+        .catch(console.error)
+        .finally(() => setUploading(false));
     },
-    [onFiles]
+    [userId, packId]
   );
 
-  // upload only Stripe session and redirect
+  const removeFile = useCallback((i: number) => {
+    setFiles((prev) => prev.filter((_, idx) => idx !== i));
+  }, []);
+
+  // Stripe checkout + redirect
   const goNext = async () => {
     if (!userId) {
       router.push("/login");
@@ -82,13 +66,7 @@ export default function UploadPage() {
     }
     setIsLoading(true);
 
-    // create Checkout session
-    const stripePriceId = PRICE_IDS_CLIENT[
-      packId.startsWith("starter") ? "starter" : packId.startsWith("themed") ? "themed" : "custom"
-    ];
-    const extrasPriceIds = extraPacks
-      ? extraPacks.split(",").map(() => process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_EXTRA_HEADSHOT!).filter(Boolean)
-      : [];
+    const stripePriceId = PRICE_IDS_CLIENT.custom;
 
     const resp = await fetch("/api/create-checkout-session", {
       method: "POST",
@@ -98,32 +76,26 @@ export default function UploadPage() {
         user_id: userId,
         user_email: session.user?.email || "",
         packId,
-        extras: extrasPriceIds,
       }),
     });
+
     if (!resp.ok) {
-      console.error("❌ create-checkout-session error:", await resp.text());
+      console.error("create-checkout-session failed:", await resp.text());
       setIsLoading(false);
       return;
     }
     const { url } = await resp.json();
-    if (!url) {
-      console.error("❌ No session URL returned from Stripe");
-      setIsLoading(false);
-      return;
-    }
-
-    // redirect to Stripe Checkout
-    window.location.href = url;
+    if (url) window.location.href = url;
   };
 
   return (
     <div className="p-6 sm:p-8 max-w-3xl mx-auto">
+      {/* simple “back” now */}
       <button
-        onClick={() => router.push(`/overview/packs/${packId}/upsell?gender=${gender}`)}
+        onClick={() => router.back()}
         className="inline-flex items-center mb-6 text-gray-700 hover:text-sage-green"
       >
-        <FiArrowLeft className="mr-2" /> Back to Extras
+        <FiArrowLeft className="mr-2" /> Back
       </button>
 
       <h1 className="text-2xl text-charcoal font-bold mb-2">Upload your photos</h1>
@@ -132,7 +104,10 @@ export default function UploadPage() {
       </p>
 
       <div
-        onDrop={onDrop}
+        onDrop={(e) => {
+          e.preventDefault();
+          onFiles(e.dataTransfer.files);
+        }}
         onDragOver={(e) => e.preventDefault()}
         className="relative border-2 border-dashed border-muted-gold rounded-xl p-8 text-center hover:border-sage-green transition cursor-pointer"
       >
@@ -146,7 +121,7 @@ export default function UploadPage() {
         <FiUploadCloud className="mx-auto mb-4 text-4xl text-muted-gold" />
         <Button variant="outline">Browse files</Button>
         <p className="mt-2 text-sm text-gray-500">
-          or drag & drop your photos here (PNG, JPG, WEBP up to 120 MB)
+          or drag & drop your photos here
         </p>
       </div>
 
@@ -156,17 +131,21 @@ export default function UploadPage() {
             <div key={i} className="relative w-full h-24">
               <button
                 onClick={() => removeFile(i)}
-                className="absolute top-1 right-1 z-10 bg-charcoal rounded-full p-1 text-muted-gold hover:text-sage-green shadow"
+                className="absolute top-1 right-1 z-10 bg-charcoal rounded-full p-1 text-muted-gold hover:text-sage-green"
               >
                 <FiTrash2 size={16} />
               </button>
-              <img src={url} alt={`Upload ${i + 1}`} className="w-full h-full object-cover rounded-lg" />
+              <img
+                src={url}
+                alt={`Upload ${i + 1}`}
+                className="w-full h-full object-cover rounded-lg"
+              />
             </div>
           ))}
         </div>
       )}
 
-      {/* Retain the instructions cards below */}
+      {/* instructions cards */}
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
         {[
           { title: "Selfies", desc: "Frontal, well-lit at eye-level", img: "/placeholders/selfie.png" },
@@ -188,19 +167,16 @@ export default function UploadPage() {
         ))}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-charcoal border-t p-4 flex justify-end">
+      <div className="fixed bottom-0 left-0 right-0 bg-charcoal border-t p-4 flex justify-end items-center">
         <span className="self-center mr-auto text-sm text-ivory">
           {previewUrls.length} of 4 required{uploading ? " (uploading...)" : ""}
         </span>
         <Button
           disabled={previewUrls.length < 4 || isLoading}
           onClick={goNext}
-          className={`inline-flex items-center ${isLoading ? "bg-warm-gray text-white" : ""}`}>
-          {isLoading ? (
-            <><FiLoader className="animate-spin mr-2" /> Starting…</>
-          ) : (
-            "Continue"
-          )}
+          className={isLoading ? "bg-warm-gray text-white" : ""}
+        >
+          {isLoading ? <><FiLoader className="animate-spin mr-2" />Starting…</> : "Continue"}
         </Button>
       </div>
     </div>

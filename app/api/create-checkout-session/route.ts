@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { headers } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
-import { starterPacks, themedPacks, customPacks } from "@/data/packs";
+import { customPacks } from "@/data/packs";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil",
@@ -42,8 +42,8 @@ export async function POST(req: Request) {
     const origin = headers().get("origin") ?? process.env.NEXT_PUBLIC_APP_URL!;
 
     // Combine all pack definitions
-    const allPacks = [...starterPacks, ...themedPacks, ...customPacks];
-
+ const allPacks = [...customPacks];
+ 
     // Main pack lookup
     const mainPack = allPacks.find((p) => p.slug === packId || p.id === packId);
     if (!mainPack) {

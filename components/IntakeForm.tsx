@@ -278,7 +278,7 @@ const MEN_QUESTIONS: Question[] = [
       { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "/blazersuitman.png" },
       { label: "Casual Everyday Outfit", value: "Casual everyday outfit", img: "/casualman.png" },
       { label: "Bold Fashion Statement", value: "bold fashion statement", img: "/boldfashionmen.png" },
-      { label: "Athleisure or Fitness Wear", value: "athleisure or fitness wear", img: "/athleisureman.png" },
+      { label: "Athleisure or Fitness Wear", value: "athleisure or fitness wear", img: "/Athleisureman.png" },
       { label: "Professional Uniform", value: "professional uniform", img: "/professionalnurseman.png" },
     ]
   },
@@ -449,9 +449,14 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
     if (step < questionSet.length - 1) {
       setStep(step + 1);
     } else {
-      onComplete
-        ? onComplete()
-        : router.push(`/overview/packs/${pack}/next?gender=${gender}`);
+      if (onComplete) {
+        onComplete();
+      } else {
+        // redirect into your upload-images page instead of the old upsell
+router.push(
+  `/overview/packs/${pack}/next?gender=${gender}`
+);
+      }
     }
   };
 
@@ -508,45 +513,61 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
       <div className="mt-6 space-y-6">
        
        
-       {/* — Images grid & conditional textboxes — */}
+{/* — Images grid & conditional textboxes — */}
 {question.type === "images" && (
   <>
-    {/* ─── IMAGE GRID ─── */}
     <div className="grid grid-cols-2 gap-4">
-      {question.options.filter(o => o.img).map(o => (
-        <motion.button
-          key={o.value}
-          onClick={() => choose(o.value)}
-          whileHover={{ scale: 1.02 }}
-          className={`
-            border-2 bg-warm-gray rounded-lg overflow-hidden flex flex-col transition-shadow
-            ${
-              question.multi
-                ? (answers[question.key] || []).includes(o.value)
-                  ? "border-muted-gold shadow-lg"
-                  : "border-warm-gray hover:shadow-md"
-                : answers[question.key] === o.value
-                ? "border-muted-gold shadow-lg"
-                : "border-warm-gray hover:shadow-md"
-            }
-          `}
-        >
-          <div className="relative w-full aspect-[3/4] bg-warm-gray">
-            <Image
-              src={o.img}
-              alt={o.label}
-              fill
-              className="object-cover object-center"
-              priority={!question.multi}
-            />
-          </div>
+      {question.options.filter(o => o.img).map(o => {
+        const isSelected = question.multi
+          ? (answers[question.key] || []).includes(o.value)
+          : answers[question.key] === o.value;
 
-          {/* ← added w-full so this bar always spans the card */}
-          <div className="bg-muted-gold w-full py-2 text-center flex-shrink-0">
-            <span className="font-semibold text-ivory">{o.label}</span>
-          </div>
-        </motion.button>
-      ))}
+        return (
+          <motion.button
+            key={o.value}
+            onClick={() => choose(o.value)}
+            whileHover={{ scale: 1.02 }}
+            className={`
+              relative
+              border-2
+              rounded-lg
+              overflow-hidden
+              transition-shadow
+              ${isSelected ? "border-muted-gold shadow-lg" : "border-warm-gray hover:shadow-md"}
+            `}
+            style={{ paddingBottom: "2rem" /* leave room for the label */ }}
+          >
+            {/* IMAGE */}
+            <div className="w-full aspect-[3/4] bg-warm-gray">
+              <Image
+                src={o.img}
+                alt={o.label}
+                fill
+                className="object-cover object-center"
+                priority={!question.multi}
+              />
+            </div>
+
+            {/* GOLD NAMEPLATE */}
+            <div
+              className="
+                absolute
+                bottom-0
+                left-0
+                w-full
+                bg-muted-gold
+                h-12
+                flex items-center justify-center
+                px-2
+              "
+            >
+              <span className="text-ivory text-sm font-semibold text-center">
+                {o.label}
+              </span>
+            </div>
+          </motion.button>
+        )
+      })}
     </div>
 
     {/* ─── PROFESSIONAL UNIFORM TEXTBOX ─── */}
@@ -575,6 +596,8 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
     )}
   </>
 )}
+
+
 
 
 
