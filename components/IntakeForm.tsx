@@ -248,10 +248,10 @@ const MEN_QUESTIONS: Question[] = [
     title: "What is your hair length?",
     options: [
       { label: "Bald", value: "bald", img: "/Bald.png" },
-      { label: "Buzz Cut", value: "buzz", img: "/buzzcut.png" },
-      { label: "Short", value: "short", img: "/short.png" },
-      { label: "Medium", value: "medium", img: "/mediumlength.png" },
-      { label: "Long", value: "long", img: "/longhair.png" }
+      { label: "Buzz Cut", value: "buzz", img: "/BuzzCut.png" },
+      { label: "Short", value: "short", img: "/Short.png" },
+      { label: "Medium", value: "medium", img: "/MediumLength.png" },
+      { label: "Long", value: "long", img: "/Longhair.png" }
     ]
   },
   {
@@ -544,7 +544,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
             </div>
 
             {/* gold label bar */}
-            <div className="bg-muted-gold h-6 flex items-center justify-center">
+            <div className="bg-muted-gold w-full h-6 flex items-center justify-center">
               <span className="text-ivory text-sm">{o.label}</span>
             </div>
           </motion.button>
