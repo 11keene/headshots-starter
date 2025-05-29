@@ -33,7 +33,7 @@ export default function HeroSection() {
               <Button
                 size="lg"
                 className="
-                  bg-muted-gold text-ivory
+                  bg-charcoal text-ivory
                   hover:bg-muted-gold/90
                   transition
                   group

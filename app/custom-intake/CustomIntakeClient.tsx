@@ -1,26 +1,31 @@
-// components/CustomIntakeClient.tsx
-"use client";
+// app/custom-intake/Customintake.tsx
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import IntakeForm from "@/components/IntakeForm";
+// Make sure the file exists at src/components/CustomIntakeClient.tsx or adjust the import path accordingly
+import CustomIntakeClient from "../../components/CustomIntakeClient";
 
-export default function CustomIntakeClient({ packId }: { packId: string }) {
-  const router = useRouter();
-  const params = useSearchParams();
-  // carry forward gender so upload page can read it if needed
-  const gender = params?.get("gender") ?? "unknown";
-
-  const handleComplete = () => {
-    // send straight to the upload page
-router.push(
-  `/overview/packs/${packId}/next?gender=${gender}`
-);
+interface CustomintakeProps {
+  searchParams: {
+    gender?: "man" | "woman";
   };
+}
+
+export default function Customintake({ searchParams }: CustomintakeProps) {
+  const gender = searchParams.gender === "woman" ? "woman" : "man";
+  const packId = `custom-intake-${gender}`;
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-4">
-      <div className="w-full max-w-2xl">
-        <IntakeForm pack={packId} onComplete={handleComplete} />
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+      <div className="w-full max-w-2xl bg-charcoal rounded-xl shadow-lg overflow-hidden">
+        <header className="px-6 py-4 border-b">
+          <h1 className="text-2xl text-ivory font-semibold">
+            Custom Photoshoot Intake
+          </h1>
+        </header>
+        <main className="p-6">
+          <CustomIntakeClient packId={packId} />
+        </main>
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ export default function ScrollCTA() {
           <button
             className="
               flex items-center
-              bg-muted-gold text-ivory font-semibold
+              bg-charcoal text-ivory font-semibold
               px-4 py-2 rounded-full shadow-lg
             "
           >

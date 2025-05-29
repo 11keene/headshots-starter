@@ -86,6 +86,16 @@ export default function Navbar() {
           </div>
         </div>
       )}
+       {/* ─── Background “Create headshots” button ─── */}
+     {isLoggedIn && pathname === "/overview" && (
+       <div className="fixed bottom-0 left-0 w-full bg-muted/70 py-4 px-6 z-40">
+         <Link href="/custom-intake">
+           <Button className="w-full bg-muted-gold text-ivory">
+             Create headshots
+           </Button>
+         </Link>
+       </div>
+     )}
 
       {/* ─── Navbar ─── */}
       <header className="sticky top-0 z-50 w-full border-t-2 border-muted-gold border-b bg-charcoal backdrop-blur">

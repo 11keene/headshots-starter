@@ -1,29 +1,29 @@
 // app/custom-intake/page.tsx
-export const dynamic = "force-dynamic";  // always render on request
-export const runtime = "nodejs";          
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-import CustomIntakeClient from "./CustomIntakeClient";
+import CustomIntakeClient from "@/components/CustomIntakeClient";
 
 interface PageProps {
   searchParams: {
-    packId?: string;
-    gender?: "man" | "woman";
+    gender?: string;
   };
 }
 
 export default function Page({ searchParams }: PageProps) {
-  const gender = (searchParams.gender as "man" | "woman") || "man";
+  // default to “man” unless ?gender=woman
+  const gender = searchParams.gender === "woman" ? "woman" : "man";
   const packId = `custom-intake-${gender}`;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      {/* You can wrap in a container for styling */}
       <div className="w-full max-w-2xl bg-charcoal rounded-xl shadow-lg overflow-hidden">
         <header className="px-6 py-4 border-b">
-          <h1 className="text-2xl text-ivory font-semibold">Custom Photoshoot Intake</h1>
+          <h1 className="text-2xl text-ivory font-semibold">
+            Custom Photoshoot Intake
+          </h1>
         </header>
         <main className="p-6">
-          {/* Pass packId down to your client component */}
           <CustomIntakeClient packId={packId} />
         </main>
       </div>
