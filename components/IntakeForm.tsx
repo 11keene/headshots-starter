@@ -101,9 +101,9 @@ const WOMEN_QUESTIONS: Question[] = [
     subtitle: "You can select more than one option.",
     options: [
       { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "/blazer.png" },
-      { label: "Casual Everyday Outfit", value: "Casual everyday outfit", img: "/casualwoman.png" },
+      { label: "Casual Everyday Outfit", value: "casual everyday outfit", img: "/casualwoman.png" },
       { label: "Bold Fashion Statement", value: "bold fashion statement", img: "/Boldfashionwoman.png" },
-      { label: "Dress or Skirt Set", value: "dress or skirt set", img: "/dressskirt.png" },
+      { label: "Dress or Skirt Set", value: "dress or skirt set", img: "/DressSkirt.png" },
       { label: "Athleisure or Fitness Wear", value: "athleisure or fitness wear", img: "/athleisurewoman.png" },
       { label: "Professional Uniform", value: "professional uniform", img: "/professionalnurselady.png" },
 
@@ -261,7 +261,7 @@ const MEN_QUESTIONS: Question[] = [
     options: [
       { label: "Slim", value: "slim", img: "/Slimmale.png" },
       { label: "Average", value: "average", img: "/averageman.png" },
-      { label: "Athletic", value: "athletic", img: "/athleticman.png" },
+      { label: "Athletic", value: "athletic", img: "/Athleisureman.png" },
       { label: "Muscular", value: "muscular", img: "/muscularman.png" },
       { label: "Broad", value: "broad", img: "/broadman.png" },
    
@@ -513,43 +513,40 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   <>
     {/* ─── IMAGE GRID ─── */}
     <div className="grid grid-cols-2 gap-4">
-      {question.options.filter((o) => o.img).map((o) => {
-        const isSelected = question.multi
-          ? (answers[question.key] || []).includes(o.value)
-          : answers[question.key] === o.value
-
-        return (
-          <motion.button
-            key={o.value}
-            onClick={() => choose(o.value)}
-            whileHover={{ scale: 1.02 }}
-            className={`
-              border-2 rounded-lg overflow-hidden flex flex-col transition-shadow
-              ${
-                isSelected
+      {question.options.filter(o => o.img).map(o => (
+        <motion.button
+          key={o.value}
+          onClick={() => choose(o.value)}
+          whileHover={{ scale: 1.02 }}
+          className={`
+            border-2 bg-warm-gray rounded-lg overflow-hidden flex flex-col transition-shadow
+            ${
+              question.multi
+                ? (answers[question.key] || []).includes(o.value)
                   ? "border-muted-gold shadow-lg"
                   : "border-warm-gray hover:shadow-md"
-              }
-            `}
-          >
-            {/* image wrapper is now transparent */}
-            <div className="relative w-full aspect-[3/4]">
-              <Image
-                src={o.img}
-                alt={o.label}
-                fill
-                className="object-cover object-center"
-                priority={!question.multi}
-              />
-            </div>
+                : answers[question.key] === o.value
+                ? "border-muted-gold shadow-lg"
+                : "border-warm-gray hover:shadow-md"
+            }
+          `}
+        >
+          <div className="relative w-full aspect-[3/4] bg-warm-gray">
+            <Image
+              src={o.img}
+              alt={o.label}
+              fill
+              className="object-cover object-center"
+              priority={!question.multi}
+            />
+          </div>
 
-            {/* gold label bar */}
-<div className="bg-muted-gold w-full flex items-center justify-center py-2">
-                <span className="text-ivory text-sm">{o.label}</span>
-            </div>
-          </motion.button>
-        )
-      })}
+          {/* ← added w-full so this bar always spans the card */}
+          <div className="bg-muted-gold w-full py-2 text-center flex-shrink-0">
+            <span className="font-semibold text-ivory">{o.label}</span>
+          </div>
+        </motion.button>
+      ))}
     </div>
 
     {/* ─── PROFESSIONAL UNIFORM TEXTBOX ─── */}
@@ -578,6 +575,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
     )}
   </>
 )}
+
 
 
 {question.type === "text" && (
