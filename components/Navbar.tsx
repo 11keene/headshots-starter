@@ -25,10 +25,10 @@ export default function Navbar() {
   const isLoggedIn = Boolean(session?.user);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-charcoal backdrop-blur">
+    <header className="sticky top-0 z-50 w-full border-t-2 border-muted-gold border-b bg-charcoal backdrop-blur">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-1 text-charcoal font-semibold">
+        <Link href="/" className="flex items-center gap-1 text-ivory font-semibold text-sm">
           <Image
             src="/newlogo.png"
             alt="AI Maven Logo"
@@ -44,19 +44,19 @@ export default function Navbar() {
           <nav className="flex justify-start items-center gap-4 -ml-4">
             <Link
               href="/overview"
-              className={`text-ivory font-semibold transition-colors hover:text-muted-gold`}
+              className="text-ivory font-semibold transition-colors hover:text-muted-gold"
             >
               Home
             </Link>
             <Link
               href="/overview/packs"
-              className={`text-ivory font-semibold transition-colors hover:text-muted-gold`}
+              className="text-ivory font-semibold transition-colors hover:text-muted-gold"
             >
               Packs
             </Link>
             <Link
               href="/get-credits"
-              className={`text-ivory font-semibold transition-colors hover:text-muted-gold`}
+              className="text-ivory font-semibold transition-colors hover:text-muted-gold"
             >
               Pricing
             </Link>
