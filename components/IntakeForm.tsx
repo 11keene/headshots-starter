@@ -247,7 +247,7 @@ const MEN_QUESTIONS: Question[] = [
     type: "images",
     title: "What is your hair length?",
     options: [
-      { label: "Bald", value: "bald", img: "/bald.png" },
+      { label: "Bald", value: "bald", img: "/Bald.png" },
       { label: "Buzz Cut", value: "buzz", img: "/buzzcut.png" },
       { label: "Short", value: "short", img: "/short.png" },
       { label: "Medium", value: "medium", img: "/mediumlength.png" },
