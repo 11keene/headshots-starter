@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { Cloud, ArrowLeftIcon } from "lucide-react";
-import Image from "next/image"
-
+import { FaMars, FaVenus, FaTransgender } from "react-icons/fa";
+import Image from "next/image";
 
 type Option = { label: string; value: string; img: string; color?: string };
 type Question = {
@@ -21,17 +21,22 @@ type Question = {
   optional?: boolean;
 };
 
-const GENDER_QUESTION: Question = {
-  key: "gender",
-  type: "images",
-  title: "Who are we styling today?",
-  options: [
-    { label: "Woman", value: "female", img: "https://via.placeholder.com/300x200?text=Woman" },
-    { label: "Man", value: "male", img: "https://via.placeholder.com/300x200?text=Man" }
-  ]
-};
-
 const WOMEN_QUESTIONS: Question[] = [
+  {
+    key: "gender",
+    type: "multi",
+    multi: true,
+    title: "What is your gender?",
+    subtitle:
+      "We want to learn more about you so we can deliver the perfect images that reflects exactly who you are!",
+    optional: true,
+    options: [
+      { label: "Man", value: "man", img: "" },
+      { label: "Woman", value: "woman", img: "" },
+      { label: "Non Binary", value: "non binary", img: "" },
+    ],
+  },
+
   {
     key: "age",
     type: "multi",
@@ -224,6 +229,21 @@ const WOMEN_QUESTIONS: Question[] = [
 
 const MEN_QUESTIONS: Question[] = [
   {
+    key: "gender",
+    type: "multi",
+    multi: true,
+    title: "What is your gender?",
+    subtitle:
+      "We want to learn more about you so we can deliver the perfect images that reflcets exactly who you are!.",
+    optional: true,
+    options: [
+      { label: "Man", value: "man", img: "" },
+      { label: "Woman", value: "woman", img: "" },
+      { label: "Non Binary", value: "non binary", img: "" },
+    ],
+  },
+
+  {
     key: "age",
     type: "multi",
     multi: true,
@@ -404,7 +424,6 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   const rawGender = searchParams?.get("gender") || "woman";
   const gender = rawGender === "man" || rawGender === "male" ? "male" : "female";
 
-
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [uniformText, setUniformText] = useState("");
@@ -412,23 +431,6 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   const otherRef = React.useRef<HTMLDivElement | null>(null);
   const uniformRef = React.useRef<HTMLDivElement | null>(null);
   const [brandColorOther, setBrandColorOther] = useState("");
-
-
-  useEffect(() => {
-    const attire = answers.attire as string[] | undefined;
-    if (attire?.includes("professional uniform") && uniformRef.current) {
-      setTimeout(() => {
-        uniformRef.current!.scrollIntoView({ behavior: "smooth", block: "center" });
-        uniformRef.current!.querySelector("input")?.focus();
-      }, 200);
-    }
-    if (attire?.includes("other") && otherRef.current) {
-      setTimeout(() => {
-        otherRef.current!.scrollIntoView({ behavior: "smooth", block: "center" });
-        otherRef.current!.querySelector("input")?.focus();
-      }, 200);
-    }
-  }, [answers.attire]);
 
   useEffect(() => {
     const saved = localStorage.getItem(`intake-${pack}`);
@@ -452,10 +454,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
       if (onComplete) {
         onComplete();
       } else {
-        // redirect into your upload-images page instead of the old upsell
-router.push(
-  `/overview/packs/${pack}/next?gender=${gender}`
-);
+        router.push(`/overview/packs/${pack}/next?gender=${gender}`);
       }
     }
   };
@@ -479,31 +478,30 @@ router.push(
   };
 
   return (
-    
- <div className="relative min-h-screen max-w-lg mx-auto pt-20 pb-24 px-6 text-white">
-  {/* 1️⃣ BACK BUTTON */}
-  <div className="absolute top-4 left-4">
-    <Button
-      onClick={back}
-      className="
-        inline-flex items-center gap-2
-        bg-muted-gold text-ivory
-        px-3 py-1 rounded-full
-        shadow-sm hover:shadow-md transition
-      "
-    >
-      <ArrowLeftIcon className="w-4 h-4" />
-      Back
-    </Button>
-  </div>
-  
+    <div className="relative min-h-screen max-w-lg mx-auto pt-20 pb-24 px-6 text-white">
+      {/* 1️⃣ BACK BUTTON */}
+      <div className="absolute top-4 left-4">
+        <Button
+          onClick={back}
+          className="
+            inline-flex items-center gap-2
+            bg-muted-gold text-ivory
+            px-3 py-1 rounded-full
+            shadow-sm hover:shadow-md transition
+          "
+        >
+          <ArrowLeftIcon className="w-4 h-4" />
+          Back
+        </Button>
+      </div>
+
       {/* 2️⃣ STEP CIRCLE */}
       <div className="flex justify-center mb-4">
         <div className="w-8 h-8 rounded-full bg-muted-gold flex items-center justify-center text-white text-sm font-medium">
           {step + 1}
         </div>
       </div>
-  
+
       {/* 3️⃣ PROGRESS BAR */}
       <div className="w-full bg-white h-2 rounded-full overflow-hidden mb-6">
         <div
@@ -511,42 +509,40 @@ router.push(
           style={{ width: `${((step + 1) / questionSet.length) * 100}%` }}
         />
       </div>
-  
+
       {/* 4️⃣ TITLE & SUBTITLE */}
       <h2 className="text-2xl font-bold text-center mb-2">{question.title}</h2>
       {question.subtitle && (
         <p className="text-center text-sm mb-6">{question.subtitle}</p>
       )}
-  
+
       {/* 5️⃣ OPTIONS */}
       <div className="mt-6 space-y-6">
-       
-       
-{/* — Images grid & conditional textboxes — */}
-{question.type === "images" && (
-  <>
-    <div className="grid grid-cols-2 gap-4">
-      {question.options.filter(o => o.img).map(o => {
-        const isSelected = question.multi
-          ? (answers[question.key] || []).includes(o.value)
-          : answers[question.key] === o.value;
+        {/* — Images grid (unchanged) — */}
+        {question.type === "images" && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              {question.options.filter((o) => o.img).map((o) => {
+                const isSelected = question.multi
+                  ? (answers[question.key] || []).includes(o.value)
+                  : answers[question.key] === o.value;
 
-        return (
-          <motion.button
-            key={o.value}
-            onClick={() => choose(o.value)}
-            whileHover={{ scale: 1.02 }}
-            className={`
-              relative
-              border-2
-              rounded-lg
-              overflow-hidden
-              transition-shadow
-              ${isSelected ? "border-muted-gold shadow-lg" : "border-muted/30hover:shadow-md"}
-            `}
-            style={{ paddingBottom: "2rem" /* leave room for the label */ }}
-          >
-            {/* IMAGE */}
+                return (
+                  <motion.button
+                    key={o.value}
+                    onClick={() => choose(o.value)}
+                    whileHover={{ scale: 1.02 }}
+                    className={`
+                      relative
+                      border-2
+                      rounded-lg
+                      overflow-hidden
+                      transition-shadow
+                      ${isSelected ? "border-muted-gold shadow-lg" : "border-muted/30 hover:shadow-md"}
+                    `}
+                    style={{ paddingBottom: "2rem" /* leave room for the label */ }}
+                  >
+                    {/* IMAGE */}
             <div className="w-full aspect-[3/4] bg-muted/30">
               <Image
                 src={o.img}
@@ -557,7 +553,8 @@ router.push(
               />
             </div>
 
-            {/* GOLD NAMEPLATE */}
+
+                                {/* GOLD NAMEPLATE */}
             <div
               className="
                 absolute
@@ -579,139 +576,51 @@ router.push(
       })}
     </div>
 
-    {/* ─── PROFESSIONAL UNIFORM TEXTBOX ─── */}
-    {question.key === "attire" &&
-      Array.isArray(answers.attire) &&
-      answers.attire.includes("professional uniform") && (
-        <div
-          ref={uniformRef}
-          className="mt-4 p-2 rounded ring-1 ring-muted-gold transition"
-        >
-          <label
-            htmlFor="uniformText"
-            className="block text-sm font-medium text-white"
-          >
-            Please specify your exact uniform and industry
-          </label>
-          <input
-            type="text"
-            id="uniformText"
-            value={uniformText}
-            onChange={(e) => setUniformText(e.target.value)}
-            placeholder="e.g. firefighter, nurse, chef"
-            className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
-          />
-        </div>
-    )}
-  </>
-)}
 
-
-
-
-
-{question.type === "text" && (
-  <div className="mb-6 space-y-2">
-    {/* Textarea input only — title/subtitle stay up in the header */}
-    <textarea
-      id={question.key}
-      rows={3}
-      value={answers[question.key] || ""}
-      onChange={(e) =>
-        setAnswers((a) => ({ ...a, [question.key]: e.target.value }))
-      }
-      placeholder="e.g. no neon colors or busy patterns"
-      className="w-full rounded-md border-gray-300 bg-white text-black p-2 shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
-    />
-  </div>
-)}
-
-
-
-  
-        {/* — Fully expanded “multi” block — */}
-        {question.type === "multi" && question.multi && (
-          <div className="flex flex-col space-y-4">
-            {question.options.map((o) => {
-              const isSelected = (answers[question.key] || []).includes(o.value)
-  
-              // color map + gradient
-              const colorMap: Record<string,string> = {
-                black: "#000000", white: "#FFFFFF", beige: "#F5F5DC",
-                "blush pink": "#FFC0CB", "forest green": "#228B22",
-                "navy blue": "#000080", "cobalt blue": "#0047AB",
-                red: "#FF0000", orange: "#FFA500", gold: "#FFD700",
-                silver: "#C0C0C0"
-              }
-              const circleColor = colorMap[o.value.toLowerCase()] || "transparent"
-              const isBrandColorsOther =
-                question.key === "brandColors" && o.value.toLowerCase() === "other"
-              const gradient = `conic-gradient(
-                #000000 0% 11%, #FFFFFF 11% 22%, #F5F5DC 22% 33%,
-                #FFC0CB 33% 44%, #228B22 44% 55%, #000080 55% 66%,
-                #0047AB 66% 77%, #FF0000 77% 88%, #FFD700 88% 100%
-              )`
-  
-              return (
-                <React.Fragment key={o.value}>
-                  <motion.button
-                    onClick={() => {
-                      choose(o.value)
-                      if (question.key === "industry" || question.key === "age") next()
-                    }}
-                    whileHover={{ scale: 1.02 }}
-                    className={`
-                      relative w-full bg-muted/100 rounded-lg overflow-hidden
-                      transition-shadow ring-2 ring-white
-                      ${isSelected ? "border-muted-gold shadow-lg" : "border-muted/30 hover:shadow-md"}
-                      flex items-center px-4 py-3
-                    `}
+            {/* ─── PROFESSIONAL UNIFORM TEXTBOX ─── */}
+            {question.key === "attire" &&
+              Array.isArray(answers.attire) &&
+              answers.attire.includes("professional uniform") && (
+                <div
+                  ref={uniformRef}
+                  className="mt-4 p-2 rounded ring-1 ring-muted-gold transition"
+                >
+                  <label
+                    htmlFor="uniformText"
+                    className="block text-sm font-medium text-white"
                   >
-                    {/* ● Color dot on left */}
-                    <span
-                      className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full"
-                      style={
-                        isBrandColorsOther
-                          ? { background: gradient }
-                          : { backgroundColor: circleColor }
-                      }
-                    />
-  
-                    {/* Centered label */}
-                    <span className="flex-1 text-center">{o.label}</span>
-  
-                    {/* ✔︎ Right indicator */}
-                    <span
-                      className={`
-                        w-4 h-4 rounded-full flex-shrink-0
-                        ${isSelected ? "bg-sage-green" : "border-2 border-white"}
-                      `}
-                    />
-                  </motion.button>
-  
-                  {/* Brand-colors “Other” textbox */}
-                  {question.key === "brandColors" && o.value === "other" && isSelected && (
-                    <div className="mt-4 p-2 rounded ring-1 ring-muted-gold">
-                      <label htmlFor="brandColorOther" className="block text-sm font-medium text-white">
-                        Describe your custom color
-                      </label>
-                      <input
-                        id="brandColorOther"
-                        type="text"
-                        value={brandColorOther}
-                        onChange={(e) => setBrandColorOther(e.target.value)}
-                        placeholder="e.g. teal, coral"
-                        className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
-                      />
-                    </div>
-                  )}
-                </React.Fragment>
-              )
-            })}
+                    Please specify your exact uniform and industry
+                  </label>
+                  <input
+                    type="text"
+                    id="uniformText"
+                    value={uniformText}
+                    onChange={(e) => setUniformText(e.target.value)}
+                    placeholder="e.g. firefighter, nurse, chef"
+                    className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
+                  />
+                </div>
+              )}
+          </>
+        )}
+
+        {/* — Textarea for “text” type (unchanged) — */}
+        {question.type === "text" && (
+          <div className="mb-6 space-y-2">
+            <textarea
+              id={question.key}
+              rows={3}
+              value={answers[question.key] || ""}
+              onChange={(e) =>
+                setAnswers((a) => ({ ...a, [question.key]: e.target.value }))
+              }
+              placeholder="e.g. no neon colors or busy patterns"
+              className="w-full rounded-md border-gray-300 bg-white text-black p-2 shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
+            />
           </div>
         )}
-  
-        {/* — Select dropdown */}
+
+        {/* — Select dropdown (unchanged) — */}
         {question.type === "select" && (
           <select
             id={`select-${question.key}`}
@@ -727,8 +636,123 @@ router.push(
             ))}
           </select>
         )}
+
+        {/* — Fully expanded “multi” block with gender icons — */}
+        {question.type === "multi" && question.multi && (
+          <div className="flex flex-col space-y-4">
+            {question.options.map((o) => {
+              const isSelected = (answers[question.key] || []).includes(o.value);
+
+              // color map + gradient (unchanged)
+              const colorMap: Record<string, string> = {
+                black: "#000000",
+                white: "#FFFFFF",
+                beige: "#F5F5DC",
+                "blush pink": "#FFC0CB",
+                "forest green": "#228B22",
+                "navy blue": "#000080",
+                "cobalt blue": "#0047AB",
+                red: "#FF0000",
+                orange: "#FFA500",
+                gold: "#FFD700",
+                silver: "#C0C0C0",
+              };
+              const circleColor =
+                colorMap[o.value.toLowerCase()] || "transparent";
+              const isBrandColorsOther =
+                question.key === "brandColors" &&
+                o.value.toLowerCase() === "other";
+              const gradient = `conic-gradient(
+                #000000 0% 11%, #FFFFFF 11% 22%, #F5F5DC 22% 33%,
+                #FFC0CB 33% 44%, #228B22 44% 55%, #000080 55% 66%,
+                #0047AB 66% 77%, #FF0000 77% 88%, #FFD700 88% 100%
+              )`;
+
+              return (
+                <React.Fragment key={o.value}>
+                  <motion.button
+                    onClick={() => {
+                      choose(o.value);
+                      if (question.key === "industry" || question.key === "age"|| question.key === "gender")
+                        next();
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    className={`
+                      relative w-full bg-muted/100 rounded-lg overflow-hidden
+                      transition-shadow ring-2 ring-white
+                      ${
+                        isSelected
+                          ? "border-muted-gold shadow-lg"
+                          : "border-muted/30 hover:shadow-md"
+                      }
+                      flex items-center px-4 py-3
+                    `}
+                  >
+                    {/* — Gender icon slot — */}
+                    {question.key === "gender" && (
+                      <div className="mr-4 flex-shrink-0 text-2xl text-charcoal">
+                        {o.value === "man" && <FaMars />}
+                        {o.value === "woman" && <FaVenus />}
+                        {o.value === "non binary" && <FaTransgender />}
+                      </div>
+                    )}
+
+                    {/* ● Color dot on left (unchanged) */}
+                    <span
+                      className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full"
+                      style={
+                        isBrandColorsOther
+                          ? { background: gradient }
+                          : { backgroundColor: circleColor }
+                      }
+                    />
+
+                    {/* Centered label (unchanged) */}
+                    <span className="flex-1 text-center">{o.label}</span>
+
+                    {/* ✔︎ Right indicator (unchanged) */}
+                    <span
+                      className={`
+                        w-4 h-4 rounded-full flex-shrink-0
+                        ${
+                          isSelected
+                            ? "bg-sage-green"
+                            : "border-2 border-white"
+                        }
+                      `}
+                    />
+                  </motion.button>
+
+                  {/* Brand-colors “Other” textbox (unchanged) */}
+                  {question.key === "brandColors" &&
+                    o.value === "other" &&
+                    isSelected && (
+                      <div className="mt-4 p-2 rounded ring-1 ring-muted-gold">
+                        <label
+                          htmlFor="brandColorOther"
+                          className="block text-sm font-medium text-white"
+                        >
+                          Describe your custom color
+                        </label>
+                        <input
+                          id="brandColorOther"
+                          type="text"
+                          value={brandColorOther}
+                          onChange={(e) =>
+                            setBrandColorOther(e.target.value)
+                          }
+                          placeholder="e.g. teal, coral"
+                          className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
+                        />
+                      </div>
+                    )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        )}
       </div>
-  
+
       {/* 6️⃣ CONTINUE BUTTON fixed bottom */}
       <div className="fixed bottom-0 left-0 w-full flex items-center bg-charcoal border-t py-4 px-6">
         <Button
@@ -739,7 +763,6 @@ router.push(
           {step === questionSet.length - 1 ? "Submit" : "Next"}
         </Button>
       </div>
-      </div>
-    );
-  }
-  
+    </div>
+  );
+}

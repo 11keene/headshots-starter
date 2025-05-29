@@ -5,16 +5,21 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ClientSideModelsList from "@/components/realtime/ClientSideModelsList";
-import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { ArrowLeftIcon, ArrowRightIcon } from "@radix-ui/react-icons";
 
-type Tab = "custom";
+type Tab = "headshots" | "teams";
 
 const previewImages: Record<Tab, string[]> = {
-  custom: [
-    "/images/preview-custom-1.png",
-    "/images/preview-custom-2.png",
-    "/images/preview-custom-3.png",
-    "/images/preview-custom-4.png",
+  headshots: [
+    "https://sdbooth2-production.s3.amazonaws.com/oy0hf5ubsj407dvozb7jbkjd2rp2",
+    "https://sdbooth2-production.s3.amazonaws.com/b6izing8haworbs85wtd2ys2g59p",
+    "https://sdbooth2-production.s3.amazonaws.com/25ijtdxkeycqvgwkbvm7qjkmo57a",
+    "https://sdbooth2-production.s3.amazonaws.com/ff9azl6wxsse2e8y3wresjp9gkqj",
+  ],
+  teams: [
+    "https://sdbooth2-production.s3.amazonaws.com/i219zbezb0wpcf7w7zskf0xxitib",
+    "https://sdbooth2-production.s3.amazonaws.com/14faz1iwfc4am8e96023gzyn66uj",
+    "https://sdbooth2-production.s3.amazonaws.com/ybqcdvkkbwop2eccyn50x4c7vx1w",
   ],
 };
 
@@ -28,14 +33,29 @@ export default function OverviewClient({
   serverCredits,
 }: OverviewClientProps) {
   const searchParams = useSearchParams();
-  const tabParam = (searchParams?.get("tab") as Tab) || "custom";
+  const tabParam = (searchParams.get("tab") as Tab) || "headshots";
   const [activeTab, setActiveTab] = useState<Tab>(tabParam);
 
+  // slideshow index
+  const slides = previewImages[activeTab];
+  const [slideIndex, setSlideIndex] = useState(0);
+
+  // auto-advance every 5s
   useEffect(() => {
-    if (tabParam === "custom") {
-      setActiveTab("custom");
-    }
-  }, [tabParam]);
+    const timer = setInterval(() => {
+      setSlideIndex((i) => (i + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  // reset index when tab changes
+  useEffect(() => {
+    setSlideIndex(0);
+  }, [activeTab]);
+
+  const prev = () =>
+    setSlideIndex((i) => (i - 1 + slides.length) % slides.length);
+  const next = () => setSlideIndex((i) => (i + 1) % slides.length);
 
   return (
     <div
@@ -55,99 +75,52 @@ export default function OverviewClient({
         </Link>
       </div>
 
-      {/* ─── Header + single Tab button ─── */}
-      <div className="bg-ivory flex flex-col items-center w-full px-4 py-8">
-        <div className="text-center mb-6 font-bold text-2xl text-charcoal">
-          ⚡ Lightning-fast delivery – your headshots arrive in under an hour.
+      {/* ─── Tabs + Banner ─── */}
+      <div className="px-4 mt-4">
+        <div className="flex space-x-6 md:justify-center">
+          {(["headshots", "teams"] as Tab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`pb-2 font-semibold text-sm transition ${
+                activeTab === tab
+                  ? "text-muted-gold border-b-2 border-muted-gold"
+                  : "text-charcoal hover:text-muted-gold"
+              }`}
+            >
+              {tab === "headshots" ? "Headshots" : "Teams"}
+            </button>
+          ))}
         </div>
-
-        {/* Only one "Custom Pack" button now */}
-        <div className="mt-8 mb-8 w-full max-w-lg grid grid-cols-1">
-          <button
-            onClick={() => setActiveTab("custom")}
-            className={`
-              text-base sm:text-lg font-semibold px-1 py-2 rounded-md transition
-              ${
-                activeTab === "custom"
-                  ? "text-charcoal translate-y-[-2px] border-b-4 border-charcoal"
-                  : "text-muted-foreground hover:text-charcoal"
-              }
-            `}
-          >
-            Custom Pack
-          </button>
+        <div className="mt-4 font-bold text-center text-2xl text-charcoal">
+          ⚡ Lightning-fast delivery – your headshots arrive in under an hour.
         </div>
       </div>
 
-      {/* ─── Custom Pack panel ─── */}
-      {activeTab === "custom" && (
-        <div className="bg-charcoal w-full max-w-xl p-6 rounded-lg shadow-md mb-20 mx-auto">
-          <h2 className="text-2xl text-muted-gold font-bold mb-2 text-center">
-            Custom Pack
-          </h2>
-          <p className="text-ivory text-sm text-center mb-8">
-            Answer a few quick questions and get a fully bespoke photoshoot
-            experience, crafted to your exact brand voice and vision.
-          </p>
-          <div className="grid grid-cols-2 gap-6">
-            <Link
-              href={`/custom-intake?packType=custom&gender=woman`}
-              className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
-            >
-              <div className="overflow-hidden rounded-lg bg-white">
-                <img
-                  src="/images/placeholder-woman.png"
-                  alt="Custom Pack for Woman"
-                  className="block w-full"
-                />
-                <div className="bg-muted-gold h-6 flex items-center justify-center">
-                  <span className="text-ivory text-sm">For Woman</span>
-                </div>
-              </div>
-            </Link>
-            <Link
-              href="/custom-intake?gender=man"
-              className="w-full transition-transform duration-300 hover:scale-105 hover:shadow-xl"
-            >
-              <div className="overflow-hidden rounded-lg bg-white">
-                <img
-                  src="/images/placeholder-man.png"
-                  alt="Custom Pack for Man"
-                  className="block w-full"
-                />
-                <div className="bg-muted-gold h-6 flex items-center justify-center">
-                  <span className="text-ivory text-sm">For Man</span>
-                </div>
-              </div>
-            </Link>
-          </div>
-        </div>
-      )}
+      {/* ─── Slideshow ─── */}
+      <div className="relative w-full max-w-xl mx-auto mt-8">
+        <img
+          src={slides[slideIndex]}
+          alt={`${activeTab} preview ${slideIndex + 1}`}
+          className="w-full h-auto object-cover rounded-xl shadow-lg"
+        />
+        <button
+          onClick={prev}
+          className="absolute left-2 top-1/2 -translate-y-1/2 bg-ivory p-2 rounded-full shadow hover:bg-white transition"
+        >
+          <ArrowLeftIcon className="w-5 h-5 text-charcoal" />
+        </button>
+        <button
+          onClick={next}
+          className="absolute right-2 top-1/2 -translate-y-1/2 bg-ivory p-2 rounded-full shadow hover:bg-white transition"
+        >
+          <ArrowRightIcon className="w-5 h-5 text-charcoal" />
+        </button>
+      </div>
 
-      {/* ─── Preview Images ─── */}
-      <div className="bg-charcoal flex-1 w-full px-4 py-8 -mt-8 md:mt-0">
-        <div className="max-w-6xl mx-auto mt-8">
-          <h3 className="text-muted-gold font-semibold mb-8 text-center text-xl">
-            Preview Images
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {previewImages[activeTab].map((src, i) => (
-              <div
-                key={i}
-                className="relative overflow-hidden rounded-2xl shadow-xl pb-[150%] bg-charcoal"
-              >
-                <img
-                  src={src}
-                  alt={`${activeTab} preview ${i + 1}`}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ─── Models List ─── */}
-        <div className="max-w-6xl mx-auto mt-8">
+      {/* ─── Models List ─── */}
+      <div className="flex-1 bg-ivory px-4 py-8 mt-8">
+        <div className="max-w-6xl mx-auto">
           <ClientSideModelsList serverModels={serverModels} />
         </div>
       </div>

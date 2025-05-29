@@ -69,9 +69,12 @@ export default function Navbar() {
               </span>
             </label>
             <button
-              onClick={() => setAgreed(true)}
+              onClick={() => {
+                setAgreed(true);
+                router.push("/custom-intake?packType=custom&gender=woman");
+              }}
               disabled={!checked}
-            className={`py-2 px-6 font-semibold rounded-md transition 
+              className={`py-2 px-6 font-semibold rounded-md transition
                 ${
                   checked
                     ? "bg-muted-gold text-ivory hover:opacity-90"
