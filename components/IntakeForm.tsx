@@ -528,7 +528,7 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
             }
           `}
         >
-   <div className="relative w-full aspect-w-3 aspect-h-4 bg-warm-gray">
+   <div className="relative w-full aspect-[3/4.25] bg-warm-gray">
             <img
               src={o.img}
               alt={o.label}
