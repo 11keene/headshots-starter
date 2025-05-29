@@ -103,9 +103,9 @@ const WOMEN_QUESTIONS: Question[] = [
       { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "/blazer.png" },
       { label: "Casual Everyday Outfit", value: "casual everyday outfit", img: "/casualwoman.png" },
       { label: "Bold Fashion Statement", value: "bold fashion statement", img: "/Boldfashionwoman.png" },
-      { label: "Dress or Skirt Set", value: "dress or skirt set", img: "/DressSkirt.png" },
+      { label: "Dress or Skirt", value: "dress or skirt", img: "/dressorskirt.png" },
       { label: "Athleisure or Fitness Wear", value: "athleisure or fitness wear", img: "/athleisurewoman.png" },
-      { label: "Professional Uniform", value: "professional uniform", img: "/professionalnurselady.png" },
+      { label: "Professional Uniform", value: "professional uniform", img: "/professionalnurselady.png" }
 
 
 
