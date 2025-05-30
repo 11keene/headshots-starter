@@ -430,12 +430,12 @@ const gender = rawGender === "woman" ? "female" : "male";
   const uniformRef = React.useRef<HTMLDivElement | null>(null);
   const [brandColorOther, setBrandColorOther] = useState("");
 
-   useEffect(() => {
-    // If the URL already has ?gender=man or ?gender=woman, skip the gender question
-    if (gender === "male" || gender === "female") {
-      setStep(1);
-    }
-  }, [gender]);
++ // 🔥 Only on the very first mount, reset everything so we always start at gender=step 0
++ useEffect(() => {
++   setStep(0);
++   localStorage.removeItem(`intake-${pack}`);
++   setAnswers({});
+ }, []);      // ← run exactly once
   
   useEffect(() => {
     const saved = localStorage.getItem(`intake-${pack}`);
