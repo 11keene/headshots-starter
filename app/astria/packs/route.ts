@@ -9,7 +9,7 @@ import type { Database } from "@/types/supabase";
 // Force this route to be dynamic so we can read env vars & cookies per request
 export const dynamic = "force-dynamic";
 
-// Environment Variables
+// Environment Variablesss
 const API_KEY = process.env.ASTRIA_API_KEY;
 const QUERY_TYPE = process.env.PACK_QUERY_TYPE || "users"; // "users", "gallery", or "both"
 const DOMAIN = "https://api.astria.ai";
