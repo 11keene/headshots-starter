@@ -12,7 +12,7 @@ export default function Page() {
       {/* Left branding */}
       <div className="hidden lg:flex w-1/2 bg-warm-gray p-10 flex-col items-center justify-center">
         <img
-          src="/newlogo.png"
+          src="/glogo.png"
           alt="AI Maven Logo"
           className="w-20 h-20 mb-6 rounded-full"
         />

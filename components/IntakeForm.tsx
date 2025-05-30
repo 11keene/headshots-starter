@@ -32,8 +32,7 @@ const WOMEN_QUESTIONS: Question[] = [
     optional: true,
     options: [
       { label: "Man", value: "man", img: "" },
-      { label: "Woman", value: "woman", img: "" },
-      { label: "Non Binary", value: "non binary", img: "" },
+      { label: "Woman", value: "woman", img: "" }
     ],
   },
 
@@ -234,12 +233,11 @@ const MEN_QUESTIONS: Question[] = [
     multi: true,
     title: "What is your gender?",
     subtitle:
-      "We want to learn more about you so we can deliver the perfect images that reflcets exactly who you are!.",
+      "We want to learn more about you so we can deliver the perfect images that reflcets exactly who you are!",
     optional: true,
     options: [
       { label: "Man", value: "man", img: "" },
-      { label: "Woman", value: "woman", img: "" },
-      { label: "Non Binary", value: "non binary", img: "" },
+      { label: "Woman", value: "woman", img: "" }
     ],
   },
 
@@ -269,7 +267,6 @@ const MEN_QUESTIONS: Question[] = [
     options: [
       { label: "Bald", value: "bald", img: "/Bald.png" },
       { label: "Buzz Cut", value: "buzz", img: "/BuzzCut.png" },
-      { label: "Short", value: "short", img: "/Short.png" },
       { label: "Medium", value: "medium", img: "/MediumLength.png" },
       { label: "Long", value: "long", img: "/Longhair.png" }
     ]
@@ -433,6 +430,13 @@ const gender = rawGender === "woman" ? "female" : "male";
   const uniformRef = React.useRef<HTMLDivElement | null>(null);
   const [brandColorOther, setBrandColorOther] = useState("");
 
+   useEffect(() => {
+    // If the URL already has ?gender=man or ?gender=woman, skip the gender question
+    if (gender === "male" || gender === "female") {
+      setStep(1);
+    }
+  }, [gender]);
+  
   useEffect(() => {
     const saved = localStorage.getItem(`intake-${pack}`);
     if (saved) setAnswers(JSON.parse(saved));
@@ -521,6 +525,7 @@ const gender = rawGender === "woman" ? "female" : "male";
 
       {/* 5️⃣ OPTIONS */}
       <div className="mt-6 space-y-6">
+        
         {/* — Images grid (unchanged) — */}
         {question.type === "images" && (
           <>
@@ -530,23 +535,20 @@ const gender = rawGender === "woman" ? "female" : "male";
                   ? (answers[question.key] || []).includes(o.value)
                   : answers[question.key] === o.value;
 
-                return (
-                   <motion.button
-                   onClick={() => {
-                     choose(o.value);
-                    
-                   }}
-                    whileHover={{ scale: 1.02 }}
-                    className={`
-                      relative
-                      border-2
-                      rounded-lg
-                      overflow-hidden
-                      transition-shadow
-                      ${isSelected ? "border-muted-gold shadow-lg" : "border-muted/30 hover:shadow-md"}
-                    `}
-                    style={{ paddingBottom: "2rem" /* leave room for the label */ }}
-                  >
+        return (
+        <motion.button
+          onClick={() => choose(o.value)}
+          whileHover={{ scale: 1.02 }}
+         className={`
+   relative rounded-lg overflow-hidden transition-shadow
+   ${isSelected
+     ? "border-4 border-sage-green shadow-lg"
+     : "border-2 border-muted/30 hover:shadow-md"
+   }
+ `}
+          style={{ paddingBottom: "2rem" }}
+        >
+                  
                     {/* IMAGE */}
             <div className="w-full aspect-[3/4] bg-muted/30">
               <Image
@@ -646,11 +648,11 @@ const gender = rawGender === "woman" ? "female" : "male";
 {question.type === "multi" && question.multi && (
   <div className="flex flex-col space-y-4">
     {question.options.map((o) => {
-      // isSelected: for gender we store an array of one, for others it's a normal includes()
       const isSelected =
         question.key === "gender"
           ? (answers[question.key] || [])[0] === o.value
           : (answers[question.key] || []).includes(o.value);
+
 
       // your existing brand-color gradient code (unchanged)
       const colorMap: Record<string, string> = {
@@ -674,48 +676,42 @@ const gender = rawGender === "woman" ? "female" : "male";
         #FFC0CB 33% 44%, #228B22 44% 55%, #000080 55% 66%,
         #0047AB 66% 77%, #FF0000 77% 88%, #FFD700 88% 100%
       )`;
-
-      return (
+ return (
         <React.Fragment key={o.value}>
           <motion.button
             onClick={() => {
-              if (question.key === "gender") {
-                // 1️⃣ replace the answer array with exactly one choice
-                setAnswers((a) => ({ ...a, [question.key]: [o.value] }));
-                // 2️⃣ route immediately
-                const targetGender = o.value === "woman" ? "woman" : "man";
-                router.push(
-                  `/custom-intake?packType=${encodeURIComponent(
-                    pack
-                  )}&gender=${encodeURIComponent(targetGender)}`
-                );
-              } else {
-                // the existing multi-select toggle helper
-                choose(o.value);
-                // still auto-advance for age/industry only
-                if (question.key === "age" || question.key === "industry") {
-                  next();
-                }
-              }
-            }}
+           if (question.key === "gender") {
+          // 1️⃣ save into localStorage so our other logic can pick it up if you want
+   setAnswers(a => ({ ...a, [question.key]: [o.value] }));
+   // 2️⃣ reload the form with the gender param, picking the correct question set
+   router.push(
+     `/custom-intake?packType=${encodeURIComponent(pack)}&gender=${encodeURIComponent(o.value)}`
+   );
+           } else {
+             // multi-toggle
+             choose(o.value);
+             // if you want age or industry to auto advance, keep that here:
+             if (question.key === "age" || question.key === "industry") {
+               next();
+             }
+           }
+         }}
             whileHover={{ scale: 1.02 }}
             className={`
-              relative w-full bg-muted/100 rounded-lg overflow-hidden
-              transition-shadow ring-2 ring-white
-              ${
-                isSelected
-                  ? "border-muted-gold shadow-lg"
-                  : "border-muted/30 hover:shadow-md"
-              }
-              flex items-center px-4 py-3
-            `}
-          >
+   relative w-full bg-muted/100 rounded-lg overflow-hidden
+   transition-shadow ${
+     isSelected
+       ? "border-4 border-sage-green shadow-lg"
+       : "border-2 border-muted/30 hover:shadow-md"
+   }
+   flex items-center px-4 py-3
+ `}
+            >
             {/* — Gender icons (only on the gender question) — */}
             {question.key === "gender" && (
               <div className="mr-4 flex-shrink-0 text-2xl text-charcoal">
                 {o.value === "man" && <FaMars />}
                 {o.value === "woman" && <FaVenus />}
-                {o.value === "non binary" && <FaTransgender />}
               </div>
             )}
 

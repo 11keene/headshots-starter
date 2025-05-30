@@ -106,7 +106,7 @@ export default function Navbar() {
             className="flex items-center gap-1 text-ivory font-semibold text-sm"
           >
             <Image
-              src="/newlogo.png"
+              src="/glogo.png"
               alt="AI Maven Logo"
               width={25}
               height={35}
