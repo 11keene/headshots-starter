@@ -54,7 +54,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon1.ico" type="image/ico" />
+        <link rel="icon" href="/newfav.ico" type="image/ico" />
       </head>
       <body className="min-h-screen flex flex-col bg-background">
         <SupabaseProvider>

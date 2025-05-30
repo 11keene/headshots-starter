@@ -6,8 +6,9 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ClientSideModelsList from "@/components/realtime/ClientSideModelsList";
 import { ArrowLeftIcon, ArrowRightIcon } from "@radix-ui/react-icons";
+import { AnimatePresence, motion } from "framer-motion";
 
-type Tab = "headshots" | "teams";
+type Tab = "headshots" | "multi-purpose" | "teams";
 
 const previewImages: Record<Tab, string[]> = {
   headshots: [
@@ -15,6 +16,12 @@ const previewImages: Record<Tab, string[]> = {
     "https://sdbooth2-production.s3.amazonaws.com/b6izing8haworbs85wtd2ys2g59p",
     "https://sdbooth2-production.s3.amazonaws.com/25ijtdxkeycqvgwkbvm7qjkmo57a",
     "https://sdbooth2-production.s3.amazonaws.com/ff9azl6wxsse2e8y3wresjp9gkqj",
+  ],
+  "multi-purpose": [
+    // replace with your multi-purpose previews
+      "https://sdbooth2-production.s3.amazonaws.com/i219zbezb0wpcf7w7zskf0xxitib",
+    "https://sdbooth2-production.s3.amazonaws.com/14faz1iwfc4am8e96023gzyn66uj",
+    "https://sdbooth2-production.s3.amazonaws.com/ybqcdvkkbwop2eccyn50x4c7vx1w",
   ],
   teams: [
     "https://sdbooth2-production.s3.amazonaws.com/i219zbezb0wpcf7w7zskf0xxitib",
@@ -36,27 +43,32 @@ export default function OverviewClient({
   const tabParam = (searchParams.get("tab") as Tab) || "headshots";
   const [activeTab, setActiveTab] = useState<Tab>(tabParam);
 
-  // slideshow index
+  // the slides for the active tab
   const slides = previewImages[activeTab];
-  const [slideIndex, setSlideIndex] = useState(0);
 
-  // auto-advance every 5s
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSlideIndex((i) => (i + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [slides.length]);
+  // header text per tab
+  const headerText = {
+    headshots: "⚡ Lightning-fast delivery – your headshots arrive in under an hour.",
+    "multi-purpose": "🎩 You wear more than one hat, your HeadShot should too.",
+    teams: "👥 Bring your whole team into focus – group portraits made easy.",
+  }[activeTab];
 
-  // reset index when tab changes
-  useEffect(() => {
-    setSlideIndex(0);
-  }, [activeTab]);
+  //
+  // ─── build the keyframes and timing for a seamless loop ────────────────
+  //
+  // e.g. ["0%", "-100%", "-200%", ..., "0%"]
+  const xKeyframes = slides
+    .map((_, i) => `-${i * 100}%`)
+    .concat("0%");
+  // times: [0, 1/n, 2/n, ..., 1]
+  const times = slides
+    .map((_, i) => i / slides.length)
+    .concat(1);
+  const cycleDuration = slides.length * 4; // 4 seconds per image
 
-  const prev = () =>
-    setSlideIndex((i) => (i - 1 + slides.length) % slides.length);
-  const next = () => setSlideIndex((i) => (i + 1) % slides.length);
-
+  //
+  // ─── RENDER ────────────────────────────────────────────────────────────
+  //
   return (
     <div
       className="min-h-screen flex flex-col w-full pb-16"
@@ -78,7 +90,7 @@ export default function OverviewClient({
       {/* ─── Tabs + Banner ─── */}
       <div className="px-4 mt-4">
         <div className="flex space-x-6 md:justify-center">
-          {(["headshots", "teams"] as Tab[]).map((tab) => (
+          {(["headshots", "multi-purpose", "teams"] as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -88,34 +100,60 @@ export default function OverviewClient({
                   : "text-charcoal hover:text-muted-gold"
               }`}
             >
-              {tab === "headshots" ? "Headshots" : "Teams"}
+              {tab === "headshots"
+                ? "Headshots"
+                : tab === "multi-purpose"
+                ? "Multi-Purpose"
+                : "Teams"}
             </button>
           ))}
         </div>
         <div className="mt-4 font-bold text-center text-2xl text-charcoal">
-          ⚡ Lightning-fast delivery – your headshots arrive in under an hour.
+          {headerText}
         </div>
       </div>
 
-      {/* ─── Slideshow ─── */}
-      <div className="relative w-full max-w-xl mx-auto mt-8">
-        <img
-          src={slides[slideIndex]}
-          alt={`${activeTab} preview ${slideIndex + 1}`}
-          className="w-full h-auto object-cover rounded-xl shadow-lg"
-        />
-        <button
-          onClick={prev}
-          className="absolute left-2 top-1/2 -translate-y-1/2 bg-ivory p-2 rounded-full shadow hover:bg-white transition"
+      {/* ─── Continuous Sliding Carousel ─── */}
+      <div className="relative w-full max-w-xl mx-auto mt-8 overflow-hidden rounded-xl">
+        {/* the moving strip */}
+        <motion.div
+          className="flex"
+          animate={{ x: xKeyframes }}
+          transition={{
+            duration: cycleDuration,
+            ease: "linear",
+            times,
+            repeat: Infinity,
+          }}
         >
-          <ArrowLeftIcon className="w-5 h-5 text-charcoal" />
-        </button>
-        <button
-          onClick={next}
-          className="absolute right-2 top-1/2 -translate-y-1/2 bg-ivory p-2 rounded-full shadow hover:bg-white transition"
-        >
-          <ArrowRightIcon className="w-5 h-5 text-charcoal" />
-        </button>
+          {/* each slide takes 100% of wrapper */}
+          {slides.map((src, i) => (
+            <div
+              key={i}
+              className="flex-shrink-0 w-full px-2" /* px-2 gives space between */
+            >
+              <img
+                src={src}
+                alt={`${activeTab} preview ${i + 1}`}
+                className="w-full h-auto object-cover rounded-xl shadow-lg"
+              />
+            </div>
+          ))}
+          {/* duplicate the first slide for seamless wrap */}
+          <div className="flex-shrink-0 w-full px-2">
+            <img
+              src={slides[0]}
+              alt={`${activeTab} preview duplicate`}
+              className="w-full h-auto object-cover rounded-xl shadow-lg"
+            />
+          </div>
+        </motion.div>
+
+        {/* left/right fade overlays */}
+        <div className="pointer-events-none absolute inset-0 flex justify-between">
+          <div className="w-16 h-full bg-gradient-to-r from-ivory to-transparent" />
+          <div className="w-16 h-full bg-gradient-to-l from-ivory to-transparent" />
+        </div>
       </div>
 
       {/* ─── Models List ─── */}

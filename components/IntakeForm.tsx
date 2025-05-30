@@ -44,14 +44,12 @@ const WOMEN_QUESTIONS: Question[] = [
     subtitle: "Our service is intended for adults only. We do not provide services to individuals under the age of 18.",
     optional: true,
     options: [
-      { label: "18-20", value: "18-20", img: "" },
-      { label: "21-24", value: "21-24", img: "" },
-      { label: "25-29", value: "25-29", img: "" },
-      { label: "30-40", value: "30-40", img: "" },
-      { label: "41-50", value: "41-50", img: "" },
-      { label: "51-65", value: "51-65", img: "" },
-      { label: "65+", value: "65+", img: "" },
-    
+      { label: "18-24", value: "18-24", img: "" },
+      { label: "25-34", value: "25-34", img: "" },
+      { label: "35-44", value: "35-44", img: "" },
+      { label: "45-54", value: "45-54", img: "" },
+      { label: "55+", value: "55+", img: "" },
+ 
     ]
   },
   
@@ -249,14 +247,12 @@ const MEN_QUESTIONS: Question[] = [
     subtitle: "Our service is intended for adults only. We do not provide services to individuals under the age of 18.",
     optional: true,
     options: [
-      { label: "18-20", value: "18-20", img: "" },
-      { label: "21-24", value: "21-24", img: "" },
-      { label: "25-29", value: "25-29", img: "" },
-      { label: "30-40", value: "30-40", img: "" },
-      { label: "41-50", value: "41-50", img: "" },
-      { label: "51-65", value: "51-65", img: "" },
-      { label: "65+", value: "65+", img: "" },
-    
+{ label: "18-24", value: "18-24", img: "" },
+      { label: "25-34", value: "25-34", img: "" },
+      { label: "35-44", value: "35-44", img: "" },
+      { label: "45-54", value: "45-54", img: "" },
+      { label: "55+", value: "55+", img: "" },
+ 
     ]
   },
   
@@ -268,6 +264,10 @@ const MEN_QUESTIONS: Question[] = [
       { label: "Bald", value: "bald", img: "/Bald.png" },
       { label: "Buzz Cut", value: "buzz", img: "/BuzzCut.png" },
       { label: "Medium", value: "medium", img: "/MediumLength.png" },
+            { label: "Curly", value: "curly", img: "/curlyman.png" },
+                  { label: "Dreads", value: "dreads", img: "/mandreads.png" },
+
+
       { label: "Long", value: "long", img: "/Longhair.png" }
     ]
   },
@@ -681,13 +681,15 @@ const gender = rawGender === "woman" ? "female" : "male";
           <motion.button
             onClick={() => {
            if (question.key === "gender") {
-          // 1️⃣ save into localStorage so our other logic can pick it up if you want
-   setAnswers(a => ({ ...a, [question.key]: [o.value] }));
-   // 2️⃣ reload the form with the gender param, picking the correct question set
-   router.push(
-     `/custom-intake?packType=${encodeURIComponent(pack)}&gender=${encodeURIComponent(o.value)}`
-   );
-           } else {
+    // 1️⃣ record the gender
+    setAnswers(a => ({ ...a, [question.key]: [o.value] }));
+
+    // 2️⃣ update the URL param shallowly so questionSet flips
+    router.push(`/custom-intake?packType=${encodeURIComponent(pack)}&gender=${o.value}`);
+    // 3️⃣ now immediately advance to the next question
+    next();
+    return;
+  } else {
              // multi-toggle
              choose(o.value);
              // if you want age or industry to auto advance, keep that here:

@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react";
 import {
   DropdownMenu,
@@ -17,12 +17,33 @@ import { Button } from "./ui/button";
 import { HamburgerMenuIcon } from "@radix-ui/react-icons";
 import { ThemeToggle } from "@/components/homepage/theme-toggle";
 
+type PackTab = "headshots" | "multi-purpose" | "teams";
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useSupabaseClient();
   const session = useSession();
   const isLoggedIn = Boolean(session?.user);
+
+  // Determine current pack tab from ?tab=
+  const searchParams = useSearchParams();
+  const currentTab = (searchParams.get("tab") as PackTab) || "headshots";
+  const tabMap: Record<PackTab, { text: string; href: string }> = {
+    headshots: {
+      text: "Create headshots",
+      href: "/custom-intake?packType=headshots",
+    },
+    "multi-purpose": {
+      text: "Create multi-purpose headshots",
+      href: "/custom-intake?packType=multi-purpose",
+    },
+    teams: {
+      text: "Create team headshots",
+      href: "/custom-intake?packType=teams",
+    },
+  };
+  const { text: buttonText, href: buttonHref } = tabMap[currentTab];
 
   // Age-gate state
   const [agreed, setAgreed] = useState(false);
@@ -64,8 +85,7 @@ export default function Navbar() {
                 and{" "}
                 <Link href="/privacy" className="text-muted-gold underline">
                   privacy policy
-                </Link>
-                .
+                </Link>.
               </span>
             </label>
             <button
@@ -86,16 +106,17 @@ export default function Navbar() {
           </div>
         </div>
       )}
-       {/* ─── Background “Create headshots” button ─── */}
-     {isLoggedIn && pathname === "/overview" && (
-       <div className="fixed bottom-0 left-0 w-full bg-muted/70 py-4 px-6 z-40">
-         <Link href="/custom-intake">
-           <Button className="w-full bg-muted-gold text-ivory">
-             Create headshots
-           </Button>
-         </Link>
-       </div>
-     )}
+
+      {/* ─── Background “Create …” button ─── */}
+      {isLoggedIn && pathname === "/overview" && (
+        <div className="fixed bottom-0 left-0 w-full bg-muted/70 py-4 px-6 z-40">
+          <Link href={buttonHref}>
+            <Button className="w-full bg-muted-gold text-ivory">
+              {buttonText}
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* ─── Navbar ─── */}
       <header className="sticky top-0 z-50 w-full border-t-2 border-muted-gold border-b bg-charcoal backdrop-blur">
