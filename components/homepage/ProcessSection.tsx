@@ -12,21 +12,21 @@ const processSteps = [
     title: "Upload Your Selfies",
     description: "Send us 6+ high-quality selfies (front-facing, natural lighting, no hats or glasses). Just be you — we’ll handle the magic.",
     icon: <Camera className="h-5 w-5" />,
-    images: ["/example1.png", "/example2.png", "/example3.png"]
+    images: ["/Ava6.png", "/Ava5.png", "/Ava4.png"]
   },
   {
     number: 2,
     title: " Let the AI Work Its Magic",
     description: "In about 20 minutes, our powerful AI gets to know your features and builds your custom model. You'll be notified the moment your shoot is ready.",
     icon: <Sparkles className="h-5 w-5" />,
-    processingImage: "/blur.png"
+    processingImage: "/blur1.png"
   },
   {
     number: 3,
     title: "Reveal Your Glow-Up",
     description: "Download a full gallery of edittorial-quality headshots that feel like you — only elevated. Polished, professional, and ready to make a statement. ",
     icon: <Download className="h-5 w-5" />,
-    resultImages: ["/result1.png", "/result2.png", "/result3.png"]
+    resultImages: ["/Ava1.png", "/Ava2.png", "/Ava3.png"]
   }
 ]
 

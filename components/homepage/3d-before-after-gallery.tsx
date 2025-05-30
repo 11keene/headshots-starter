@@ -6,69 +6,53 @@ import { motion, AnimatePresence } from "motion/react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-interface GalleryItem {
+interface Person {
   before: string
-  after: string
+  after: string[]
   label: string
 }
 
 export default function ThreeDBeforeAfterGallery() {
-  const [activeIndex, setActiveIndex] = useState(0)
+  const [personIndex, setPersonIndex] = useState(0)
+  const [afterIndex, setAfterIndex] = useState(0)
   const [isFlipping, setIsFlipping] = useState(false)
-  const [direction, setDirection] = useState(0) // -1 for left, 1 for right
+  const [direction, setDirection] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const autoplayRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Real headshot examples
-  const galleryItems: GalleryItem[] = [
+  const people: Person[] = [
     {
-      before: "/homepage/before0001.png",
-      after: "/homepage/example0001.png",
-      label: "Professional Corporate",
+      before: "/henry4.png",
+      after: [
+        "/henry2.png",
+        "/henry3.png",
+        "/henry1.png",
+      ],
+      label: "Multi-Purpose",
     },
     {
-      before: "/homepage/before0002.png",
-      after: "/homepage/example0002.png",
-      label: "Executive Style",
-    },
-    {
-      before: "/homepage/before0001.png",
-      after: "/homepage/example0004.png",
-      label: "Professional Pattern",
-    },
-    {
-      before: "/homepage/before0001.png",
-      after: "/homepage/example0005.png",
-      label: "Urban Professional",
-    },
-    {
-      before: "/homepage/before0002.png",
-      after: "/homepage/example0006.png",
-      label: "Formal Business",
-    },
-    {
-      before: "/homepage/before0002.png",
-      after: "/homepage/example0007.png",
-      label: "Executive Portrait",
-    },
-    {
-      before: "/homepage/before0001.png",
-      after: "/homepage/example0008.png",
-      label: "Modern Business",
-    },
-    {
-      before: "/homepage/before0002.png",
-      after: "/homepage/example0009.png",
-      label: "Formal Event",
+      before: "/lisa1.png",
+      after: [
+        "/lisa2.png",
+        "/lisa3.png",
+        "/lisa4.png",
+      ],
+      label: "Personalized Headshots",
     },
   ]
 
-  const nextSlide = () => {
+ const nextSlide = () => {
     if (isFlipping) return
     setDirection(1)
     setIsFlipping(true)
     setTimeout(() => {
-      setActiveIndex((prev) => (prev + 1) % galleryItems.length)
+      const cur = people[personIndex]
+      if (afterIndex < cur.after.length - 1) {
+        setAfterIndex((i) => i + 1)
+      } else {
+        setAfterIndex(0)
+        setPersonIndex((p) => (p + 1) % people.length)
+      }
       setIsFlipping(false)
     }, 600)
   }
@@ -78,64 +62,61 @@ export default function ThreeDBeforeAfterGallery() {
     setDirection(-1)
     setIsFlipping(true)
     setTimeout(() => {
-      setActiveIndex((prev) => (prev - 1 + galleryItems.length) % galleryItems.length)
+      if (afterIndex > 0) {
+        setAfterIndex((i) => i - 1)
+      } else {
+        setPersonIndex((p) => {
+          const prev = (p - 1 + people.length) % people.length
+          setAfterIndex(people[prev].after.length - 1)
+          return prev
+        })
+      }
       setIsFlipping(false)
     }, 600)
   }
 
-  // 3D effect on mouse move
+  // 3D hover effect
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!containerRef.current || isFlipping) return
-
       const { left, top, width, height } = containerRef.current.getBoundingClientRect()
       const x = (e.clientX - left) / width - 0.5
       const y = (e.clientY - top) / height - 0.5
-
       containerRef.current.style.transform = `
-        perspective(1000px) 
-        rotateY(${x * 5}deg) 
+        perspective(1000px)
+        rotateY(${x * 5}deg)
         rotateX(${-y * 5}deg)
       `
     }
-
     const handleMouseLeave = () => {
-      if (!containerRef.current) return
-      containerRef.current.style.transform = `
-        perspective(1000px) 
-        rotateY(0deg) 
-        rotateX(0deg)
-      `
-    }
-
-    const container = containerRef.current
-    if (container) {
-      container.addEventListener("mousemove", handleMouseMove)
-      container.addEventListener("mouseleave", handleMouseLeave)
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener("mousemove", handleMouseMove)
-        container.removeEventListener("mouseleave", handleMouseLeave)
+      if (containerRef.current) {
+        containerRef.current.style.transform = `
+          perspective(1000px)
+          rotateY(0deg)
+          rotateX(0deg)
+        `
       }
+    }
+    const el = containerRef.current
+    el?.addEventListener("mousemove", handleMouseMove)
+    el?.addEventListener("mouseleave", handleMouseLeave)
+    return () => {
+      el?.removeEventListener("mousemove", handleMouseMove)
+      el?.removeEventListener("mouseleave", handleMouseLeave)
     }
   }, [isFlipping])
 
   // Autoplay
   useEffect(() => {
     autoplayRef.current = setInterval(() => {
-      if (!isFlipping) {
-        nextSlide()
-      }
+      if (!isFlipping) nextSlide()
     }, 5000)
-
     return () => {
-      if (autoplayRef.current) {
-        clearInterval(autoplayRef.current)
-      }
+      if (autoplayRef.current) clearInterval(autoplayRef.current)
     }
   }, [isFlipping])
+
+  const current = people[personIndex]
 
   return (
     <div className="relative mx-auto max-w-4xl py-10">
@@ -146,78 +127,43 @@ export default function ThreeDBeforeAfterGallery() {
       >
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative w-full max-w-3xl">
-
-            {/* Main card container */}
             <div className="relative flex h-[500px] md:h-[550px] rounded-xl bg-muted/30 backdrop-blur-sm shadow-xl overflow-hidden">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`container-${activeIndex}`}
-                  className="flex w-full"
-                  initial={{
-                    rotateY: direction * 90,
-                    opacity: 0,
-                  }}
-                  animate={{
-                    rotateY: 0,
-                    opacity: 1,
-                  }}
-                  exit={{
-                    rotateY: direction * -90,
-                    opacity: 0,
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 300,
-                    damping: 30,
-                    opacity: { duration: 0.2 },
-                  }}
-                  style={{ transformStyle: "preserve-3d" }}
-                >
-                  {/* Before image */}
-                  <div className="w-1/2 relative">
-                    <div className="absolute top-2 left-2 z-10 bg-background/80 backdrop-blur-sm text-xs px-2 py-1 rounded-full">
-                      Before
-                    </div>
-                    <div className="h-full w-full overflow-hidden">
-                      <Image
-                        src={galleryItems[activeIndex].before || "/placeholder.svg"}
-                        alt={`Before ${galleryItems[activeIndex].label}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
+              
+              {/* BEFORE (static!) */}
+              <div className="w-1/2 relative">
+                <div className="absolute top-2 left-2 z-10 bg-background/80 backdrop-blur-sm text-xs px-2 py-1 rounded-full">
+                  Before
+                </div>
+                <div className="h-full w-full overflow-hidden">
+                  <Image
+                    src={current.before}
+                    alt={`Before ${current.label}`}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </div>
 
-                    {/* Overlay with arrow */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <motion.div
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 0.7 }}
-                        className="bg-muted/30 backdrop-blur-sm rounded-full p-3"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-muted-gold foreground"
-                        >
-                          <path d="M5 12h14"></path>
-                          <path d="m12 5 7 7-7 7"></path>
-                        </svg>
-                      </motion.div>
-                    </div>
-                  </div>
-
-                  {/* After image */}
-                  <div className="w-1/2 relative overflow-hidden">
-                    <div className="absolute top-2 right-2 z-10 bg-muted-gold/70 text-primary-foreground backdrop-blur-sm text-xs px-2 py-1 rounded-full">
-                      After
-                    </div>
+              {/* AFTER (animated only) */}
+              <div className="w-1/2 relative overflow-hidden">
+                <div className="absolute top-2 right-2 z-10 bg-muted-gold/70 text-primary-foreground backdrop-blur-sm text-xs px-2 py-1 rounded-full">
+                  After
+                </div>
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`p${personIndex}-a${afterIndex}`}
+                    className="h-full w-full"
+                    initial={{ rotateY: direction * 90, opacity: 0 }}
+                    animate={{ rotateY: 0, opacity: 1 }}
+                    exit={{ rotateY: direction * -90, opacity: 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 30,
+                      opacity: { duration: 0.2 },
+                    }}
+                    style={{ transformStyle: "preserve-3d" }}
+                  >
                     <motion.div
                       initial={{ scale: 0.9 }}
                       animate={{ scale: 1 }}
@@ -225,83 +171,78 @@ export default function ThreeDBeforeAfterGallery() {
                       className="h-full w-full"
                     >
                       <Image
-                        src={galleryItems[activeIndex].after || "/placeholder.svg"}
-                        alt={`After ${galleryItems[activeIndex].label}`}
+                        src={current.after[afterIndex]}
+                        alt={`After ${current.label}`}
                         fill
                         className="object-cover"
                       />
                     </motion.div>
-
-                    {/* AI Generated badge */}
                     <div className="absolute bottom-2 right-2 rounded-full bg-muted-gold/70 px-3 py-1 text-xs text-white">
                       <span className="flex items-center gap-1">
                         <span className="h-2 w-2 rounded-full bg-ivory"></span>
                         AI Generated
                       </span>
                     </div>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
 
-            {/* Transformation label */}
+            {/* LABEL */}
             <motion.div
-              key={`label-${activeIndex}`}
+              key={`lbl-${personIndex}`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
               className="absolute -bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-charcoal/90 px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg"
             >
-              {galleryItems[activeIndex].label}
+              {current.label}
             </motion.div>
           </div>
         </div>
-
       </div>
 
-      {/* Navigation buttons */}
+      {/* NAV BUTTONS */}
       <button
         onClick={prevSlide}
         className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-ivory/80 p-3 shadow-md hover:bg-white transition-all hover:scale-110"
-        aria-label="Previous slide"
+        aria-label="Previous"
         disabled={isFlipping}
       >
         <ChevronLeft className={cn("h-6 w-6", isFlipping && "opacity-50")} />
       </button>
-
       <button
         onClick={nextSlide}
         className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-3 shadow-md hover:bg-white transition-all hover:scale-110"
-        aria-label="Next slide"
+        aria-label="Next"
         disabled={isFlipping}
       >
         <ChevronRight className={cn("h-6 w-6", isFlipping && "opacity-50")} />
       </button>
 
-      {/* Indicators */}
+      {/* INDICATORS */}
       <div className="mt-8 flex justify-center gap-2">
-        {galleryItems.map((_, index) => (
+        {people[personIndex].after.map((_, idx) => (
           <button
-            key={index}
+            key={idx}
             onClick={() => {
               if (isFlipping) return
-              setDirection(index > activeIndex ? 1 : -1)
+              setDirection(idx > afterIndex ? 1 : -1)
               setIsFlipping(true)
               setTimeout(() => {
-                setActiveIndex(index)
+                setAfterIndex(idx)
                 setIsFlipping(false)
               }, 600)
             }}
             className={`h-2 transition-all ${
-              index === activeIndex ? "w-8 bg-muted-gold" : "w-2 bg-gray-300"
+              idx === afterIndex ? "w-8 bg-muted-gold" : "w-2 bg-gray-300"
             } rounded-full`}
-            aria-label={`Go to slide ${index + 1}`}
             disabled={isFlipping}
+            aria-label={`Go to after frame ${idx + 1}`}
           />
         ))}
       </div>
     </div>
   )
 }
-

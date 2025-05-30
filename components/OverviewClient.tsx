@@ -7,6 +7,7 @@ import Link from "next/link";
 import ClientSideModelsList from "@/components/realtime/ClientSideModelsList";
 import { ArrowLeftIcon, ArrowRightIcon } from "@radix-ui/react-icons";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 type Tab = "headshots" | "multi-purpose" | "teams";
 
@@ -36,12 +37,14 @@ interface OverviewClientProps {
 }
 
 export default function OverviewClient({
+  
   serverModels,
   serverCredits,
 }: OverviewClientProps) {
   const searchParams = useSearchParams();
   const tabParam = (searchParams.get("tab") as Tab) || "headshots";
   const [activeTab, setActiveTab] = useState<Tab>(tabParam);
+  const router = useRouter();
 
   // the slides for the active tab
   const slides = previewImages[activeTab];
@@ -49,7 +52,7 @@ export default function OverviewClient({
   // header text per tab
   const headerText = {
     headshots: "⚡ Lightning-fast delivery – your headshots arrive in under an hour.",
-    "multi-purpose": "🎩 You wear more than one hat, your HeadShot should too.",
+    "multi-purpose": "🎩 You wear more than one hat, your headshot should too.",
     teams: "👥 Bring your whole team into focus – group portraits made easy.",
   }[activeTab];
 
@@ -88,73 +91,68 @@ export default function OverviewClient({
       </div>
 
       {/* ─── Tabs + Banner ─── */}
-      <div className="px-4 mt-4">
-        <div className="flex space-x-6 md:justify-center">
-          {(["headshots", "multi-purpose", "teams"] as Tab[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`pb-2 font-semibold text-sm transition ${
-                activeTab === tab
-                  ? "text-muted-gold border-b-2 border-muted-gold"
-                  : "text-charcoal hover:text-muted-gold"
-              }`}
-            >
-              {tab === "headshots"
-                ? "Headshots"
-                : tab === "multi-purpose"
-                ? "Multi-Purpose"
-                : "Teams"}
-            </button>
-          ))}
-        </div>
-        <div className="mt-4 font-bold text-center text-2xl text-charcoal">
-          {headerText}
-        </div>
-      </div>
+<div className="px-4 mt-4">
+  <div className="flex space-x-6 md:justify-center">
+    {(["headshots", "multi-purpose", "teams"] as Tab[]).map((tab) => (
+      <button
+        key={tab}
+        onClick={() => {
+          setActiveTab(tab);
+          // ← here: push the new tab into the URL
+          router.replace(
+            `/overview?tab=${encodeURIComponent(tab)}`, 
+            { scroll: false }
+          );
+        }}
+        className={`pb-2 font-semibold text-sm transition ${
+          activeTab === tab
+            ? "text-muted-gold border-b-2 border-muted-gold"
+            : "text-charcoal hover:text-muted-gold"
+        }`}
+      >
+        {tab === "headshots"
+          ? "Headshots"
+          : tab === "multi-purpose"
+          ? "Multi-Purpose"
+          : "Teams"}
+      </button>
+    ))}
+  </div>
+  <div className="mt-4 font-bold text-center text-2xl text-charcoal">
+    {headerText}
+  </div>
+</div>
 
-      {/* ─── Continuous Sliding Carousel ─── */}
-      <div className="relative w-full max-w-xl mx-auto mt-8 overflow-hidden rounded-xl">
-        {/* the moving strip */}
-        <motion.div
-          className="flex"
-          animate={{ x: xKeyframes }}
-          transition={{
-            duration: cycleDuration,
-            ease: "linear",
-            times,
-            repeat: Infinity,
-          }}
-        >
-          {/* each slide takes 100% of wrapper */}
-          {slides.map((src, i) => (
-            <div
-              key={i}
-              className="flex-shrink-0 w-full px-2" /* px-2 gives space between */
-            >
-              <img
-                src={src}
-                alt={`${activeTab} preview ${i + 1}`}
-                className="w-full h-auto object-cover rounded-xl shadow-lg"
-              />
-            </div>
-          ))}
-          {/* duplicate the first slide for seamless wrap */}
-          <div className="flex-shrink-0 w-full px-2">
-            <img
-              src={slides[0]}
-              alt={`${activeTab} preview duplicate`}
-              className="w-full h-auto object-cover rounded-xl shadow-lg"
-            />
-          </div>
-        </motion.div>
 
-        {/* left/right fade overlays */}
-        <div className="pointer-events-none absolute inset-0 flex justify-between">
-          <div className="w-16 h-full bg-gradient-to-r from-ivory to-transparent" />
-          <div className="w-16 h-full bg-gradient-to-l from-ivory to-transparent" />
-        </div>
+{/* ─── Continuous Sliding Carousel ─── */}
+<div className="relative w-full max-w-xl mx-auto mt-8 overflow-hidden rounded-xl">
+  <motion.div
+    className="flex"
+    animate={{ x: [`0%`, `-${100 * slides.length}%`] }}
+    transition={{
+      duration: cycleDuration,
+      ease: "linear",
+      repeat: Infinity,
+    }}
+  >
+    {[...slides, ...slides].map((src, i) => (
+      <div key={i} className="flex-shrink-0 w-full px-2">
+        <img
+          src={src}
+          alt={`${activeTab} preview ${ (i % slides.length) + 1 }`}
+          className="w-full h-auto object-cover rounded-xl shadow-lg"
+        />
       </div>
+    ))}
+  </motion.div>
+
+  {/* left/right fade overlays */}
+  <div className="pointer-events-none absolute inset-0 flex justify-between">
+    <div className="w-16 h-full bg-gradient-to-r from-ivory to-transparent" />
+    <div className="w-16 h-full bg-gradient-to-l from-ivory to-transparent" />
+  </div>
+</div>
+
 
       {/* ─── Models List ─── */}
       <div className="flex-1 bg-ivory px-4 py-8 mt-8">

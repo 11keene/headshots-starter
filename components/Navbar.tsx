@@ -35,11 +35,11 @@ export default function Navbar() {
       href: "/custom-intake?packType=headshots",
     },
     "multi-purpose": {
-      text: "Create multi-purpose headshots",
+      text: "Create Multi-Purpose Headshots",
       href: "/custom-intake?packType=multi-purpose",
     },
     teams: {
-      text: "Create team headshots",
+      text: "Create Team Headshots",
       href: "/custom-intake?packType=teams",
     },
   };
@@ -88,10 +88,11 @@ export default function Navbar() {
                 </Link>.
               </span>
             </label>
+            {/* ← DYNAMIC BUTTON TEXT & HREF */}
             <button
               onClick={() => {
                 setAgreed(true);
-                router.push("/custom-intake?packType=custom&gender=woman");
+                router.push(buttonHref);
               }}
               disabled={!checked}
               className={`py-2 px-6 font-semibold rounded-md transition
@@ -101,7 +102,7 @@ export default function Navbar() {
                     : "bg-muted/30 text-ivory cursor-not-allowed"
                 }`}
             >
-              Create headshots
+              {buttonText}
             </button>
           </div>
         </div>
