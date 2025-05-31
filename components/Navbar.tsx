@@ -17,7 +17,8 @@ import { Button } from "./ui/button";
 import { HamburgerMenuIcon } from "@radix-ui/react-icons";
 import { ThemeToggle } from "@/components/homepage/theme-toggle";
 
-type PackTab = "headshots" | "multi-purpose" | "teams";
+
+type PackTab = "headshots" | "multi-purpose" | "reference-match";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -28,20 +29,20 @@ export default function Navbar() {
 
   // Determine current pack tab from ?tab=
   const searchParams = useSearchParams();
-  const currentTab = (searchParams.get("tab") as PackTab) || "headshots";
-  const tabMap: Record<PackTab, { text: string; href: string }> = {
+ const currentTab = (searchParams.get("tab") as PackTab) || "headshots";
+   const tabMap: Record<PackTab, { text: string; href: string }> = {
     headshots: {
-      text: "Create headshots",
+      text: "Create Headshots",
       href: "/custom-intake?packType=headshots",
     },
     "multi-purpose": {
-      text: "Create Multi-Purpose Headshots",
-      href: "/custom-intake?packType=multi-purpose",
-    },
-    teams: {
-      text: "Create Team Headshots",
-      href: "/custom-intake?packType=teams",
-    },
+     text: "Create Multi-Purpose Headshots",
+     href: "/multi-purpose-intake", // ← updated to your new Multi-Purpose form route
+   },
+    "reference-match": {
+     text: "Create Reference Match Pack",
+     href: "/reference-intake", // ← your new intake‐form route
+   },
   };
   const { text: buttonText, href: buttonHref } = tabMap[currentTab];
 

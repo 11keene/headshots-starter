@@ -37,47 +37,45 @@ export default function ModernPricing() {
 
   const tiers: PricingTier[] = [
     {
-      title: "Starter Pack",
-      originalPrice: "$37.49",
-      price: "$29.99",
+      title: "The Professional Pack",
+      originalPrice: "$56.24",
+      price: "$44.99",
       description:
-        "Ideal for updating your LinkedIn, profile picture, or personal brand with clean, natural looks that build instant credibility.",
+        "Designed for professionals who want a polished headshot tailored to a single role or brand identity. This is your go-to image: Perfect for LinkedIn, business websites, speaker bios, and more.",
       features: [
-        "6 Prompts • 18 Images • 6 Unique Outfits • 6 Unique Backgrounds",
-        "Studio-style lighting with warm, inviting tones",
-        "A mix of close-up and mid-length poses",
-        "Clean, modern backgrounds that work across industries",
-        "Designed to make a strong first impression without the overwhelm",
+        "15 fully customized AI-generated images",
+        "Tailored to one industry or role",
+        "Personalization based on your intake (vibe, brand colors, wardrobe, setting)",
+        "Clean, minimal styling with a consistent look and feel across all images",
       ],
-      buttonText: "Get Starter Pack",
+      buttonText: "Choose Professional",
     },
     {
-      title: "Themed Packs",
-      originalPrice: "$53.74",
-      price: "$42.99",
+      title: "Multi-Purpose Pack",
+      originalPrice: "$68.74",
+      price: "$54.99",
       description:
-        "Each pack is built around a powerful theme. You’ll receive a full visual collection tailored to your industry’s tone and aesthetic.",
+        "This pack is for people with layered identities. Whether you're a CEO by day and a painter by night, or a speaker, coach, and consultant all in one - this image set is designed to show your full range. You'll get visuals that reflect each of the roles you choose, all styled to feel cohesive while capturing different sides of your brand.",
       features: [
-        "15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds",
-        "Profession-specific styling and pose direction",
-        "A balanced mix of headshots, lifestyle, and leadership moments",
-        "Natural lighting, minimal backgrounds, and intentional color use",
+        "15 AI-generated images tailored to multiple industries or roles",
+        "Each image reflects a distinct identity (e.g., founder, educator, artist)",
+        "Custom prompts based on your intake form - same flow, but optimized to create variety in style, setting, and tone",
+        "Different outfits, backgrounds, and expressions to reflect the roles you play",
       ],
-      buttonText: "Shop Themed Packs",
+      buttonText: "Choose Multi-Purpose",
       popular: true,
     },
     {
-      title: "Custom Pack",
-      originalPrice: "$87.49",
-      price: "$69.99",
+      title: "Reference Match Pack",
+      originalPrice: "$81.24",
+      price: "$64.99",
       description:
-        "Your personalized photoshoot — We use your style preferences, mood, industry, and brand voice to generate a completely customized set of professional images.",
+        "This pack is for the visual thinkers - the ones who already know what they want. Whether, it's an old headshot you loved, a Pinterest image that speaks to you, or a photo of someone else that nails the vibe - just upload it. We'll recreate the mood, angle, lighting, and pose with your look and details.",
       features: [
-        "15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds",
-        "Personalized outfits, background settings, poses, and vibe",
-        "Reflects your brand tone, emotional energy, and usage goals",
-        "Ideal for speaker pages, business websites, and media kits",
-        "Includes deeper visual storytelling moments for maximum impact",
+        "15 AI-generated images inspired by your reference image",
+        "Replicates the composition, pose, mood, or aesthetic of the photo you upload",
+        "Custom prompts still factor in your features, brand colors, wardrobe preferences",
+        "Ideal for recreating something iconic - but personalized for you",
       ],
       buttonText: "Create Your Custom Pack",
       bestValue: true,
@@ -93,7 +91,7 @@ export default function ModernPricing() {
               key={idx}
               className={cn(
                 "group relative flex flex-col p-6 bg-charcoal/100 border rounded-lg shadow-md transition-all ease-in-out",
-                 tier.popular && "border-2 border-muted-gold",
+                tier.popular && "border-2 border-muted-gold",
                 "hover:scale-105 hover:shadow-xl",
                 "hover:border-muted-gold hover:bg-charcoal/50",
                 "w-full",
@@ -130,26 +128,101 @@ export default function ModernPricing() {
 
               <ul className="my-6 space-y-4">
                 {tier.features.map((feat, i) => {
+                  // ───────────────────────────────────────────────
+                  // Step 1: convert to lowercase for case-insensitive matching
+                  const text = feat.toLowerCase();
+
+                  // Step 2: default icon is a checkmark
                   let Icon = Check;
-                  if (feat.includes("Prompts")) Icon = FileText;
-                  else if (feat.includes("Images")) Icon = ImageIcon;
-                  else if (feat.includes("Unique Outfits")) Icon = Shirt;
-                  else if (feat.includes("Unique Backgrounds")) Icon = LayoutGrid;
-                  else if (feat.toLowerCase().includes("lighting")) Icon = Sun;
-                  else if (feat.toLowerCase().includes("pose")) Icon = User;
-                  else if (feat.toLowerCase().includes("mix of headshots")) Icon = Layers;
-                  else if (feat.toLowerCase().includes("first impression")) Icon = Target;
-                  else if (feat.toLowerCase().includes("reflects your brand")) Icon = Palette;
-                  else if (feat.toLowerCase().includes("speaker pages")) Icon = Mic;
-                  else if (feat.toLowerCase().includes("visual storytelling"))
+
+                  // Step 3: pick the correct icon based on keywords in the lowercase string
+                  if (text.includes("ai-generatedimages")) {
+                    // (unlikely to match exactly without typo, but we check separately for "ai-generated images")
+                    Icon = ImageIcon;
+                  }
+                  else if (text.includes("ai-generated images")) {
+                    // “15 AI-generated images inspired by your reference image”
+                    Icon = ImageIcon;
+                  }
+                  else if (text.includes("images tailored")) {
+                    // “15 AI-generated images tailored to multiple industries or roles”
+                    Icon = ImageIcon;
+                  }
+                  else if (text.includes("each image")) {
+                    // “Each image reflects a distinct identity …”
+                    Icon = ImageIcon;
+                  }
+                  else if (text.includes("prompts")) {
+                    // “Custom prompts based on your intake form …”
+                    Icon = FileText;
+                  }
+                  else if (text.includes("unique outfits") || text.includes("outfits")) {
+                    // “Different outfits, backgrounds, and expressions …”
+                    Icon = Shirt;
+                  }
+                  else if (text.includes("unique backgrounds") || text.includes("backgrounds")) {
+                    // “15 Unique Backgrounds” or “Different outfits, backgrounds …”
+                    Icon = LayoutGrid;
+                  }
+                  else if (text.includes("inspired by your reference")) {
+                    // “15 AI-generated images inspired by your reference image”
+                    Icon = ImageIcon;
+                  }
+                  else if (text.includes("replicates") || text.includes("composition") || text.includes("pose") || text.includes("mood") || text.includes("aesthetic")) {
+                    // “Replicates the composition, pose, mood, or aesthetic …”
+                    Icon = Layers;
+                  }
+                  else if (text.includes("lighting")) {
+                    // (if you ever add “lighting” feature back)
+                    Icon = Sun;
+                  }
+                  else if (text.includes("reflects your brand")) {
+                    // “Reflects your brand tone, emotional energy, and usage goals”
+                    Icon = Palette;
+                  }
+                  else if (text.includes("speaker pages")) {
+                    // “Ideal for speaker pages, business websites, and media kits”
+                    Icon = Mic;
+                  }
+                  else if (text.includes("visual storytelling")) {
+                    // “Includes deeper visual storytelling moments …”
                     Icon = Star;
-                  else if (feat.toLowerCase().startsWith("perfect for:")) Icon = Award;
+                  }
+                  else if (text.startsWith("15 prompts") || text.startsWith("15 prompts • 45 images")) {
+                    // The old “15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds” 
+                    Icon = FileText;
+                  }
+                  else if (text.startsWith("15 fully customized ai-generated images")) {
+                    // “15 fully customized AI-generated images”
+                    Icon = ImageIcon;
+                  }
+                  else if (text.startsWith("tailored to")) {
+                    // “Tailored to one industry or role”
+                    Icon = Target;
+                  }
+                  else if (text.startsWith("personalization")) {
+                    // “Personalization based on your intake …”
+                    Icon = Award;
+                  }
+                  else if (text.startsWith("clean, minimal styling")) {
+                    // “Clean, minimal styling with a consistent look …”
+                    Icon = Palette;
+                  }
+                  else if (text.includes("ideal for recreating")) {
+                    // “Ideal for recreating something iconic …”
+                    Icon = Award;
+                  }
+                  // ───────────────────────────────────────────────
 
                   return (
-                    <li key={i} className="flex items-center gap-2">
-                      <Icon className="h-5 w-5 text-sage-green" />
-                      <span className="text-xs text-white leading-snug">{feat}</span>
-                    </li>
+             <li key={i} className="flex items-center gap-2">
+  <div className="relative h-5 w-5">
+<Icon size={20} strokeWidth={2} className="text-sage-green" />
+      {/* do NOT pass a `size` prop—letting it fill its parent */}
+  </div>
+  <span className="text-xs text-white leading-snug">{feat}</span>
+</li>
+
                   );
                 })}
               </ul>

@@ -20,7 +20,7 @@ export default function Page({ searchParams }: PageProps) {
       <div className="w-full max-w-2xl bg-charcoal rounded-xl shadow-lg overflow-hidden">
         <header className="px-6 py-4 border-b">
           <h1 className="text-2xl text-ivory font-semibold">
-            Custom Photoshoot Intake
+            The Professional Intake
           </h1>
         </header>
         <main className="p-6">

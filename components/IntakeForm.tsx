@@ -10,6 +10,7 @@ import { Cloud, ArrowLeftIcon } from "lucide-react";
 import { FaMars, FaVenus, FaTransgender } from "react-icons/fa";
 import Image from "next/image";
 
+
 type Option = { label: string; value: string; img: string; color?: string };
 type Question = {
   key: string;
@@ -40,7 +41,7 @@ const WOMEN_QUESTIONS: Question[] = [
     key: "age",
     type: "multi",
     multi: true,
-    title: "What is your age?",
+    title: "What is your age range?",
     subtitle: "Our service is intended for adults only. We do not provide services to individuals under the age of 18.",
     optional: true,
     options: [
@@ -243,7 +244,7 @@ const MEN_QUESTIONS: Question[] = [
     key: "age",
     type: "multi",
     multi: true,
-    title: "What is your age?",
+    title: "What is your age range?",
     subtitle: "Our service is intended for adults only. We do not provide services to individuals under the age of 18.",
     optional: true,
     options: [
@@ -518,7 +519,7 @@ const gender = rawGender === "woman" ? "female" : "male";
       </div>
 
       {/* 4️⃣ TITLE & SUBTITLE */}
-      <h2 className="text-2xl font-bold text-center mb-2">{question.title}</h2>
+      <h2 className="text-2xl font-bold text-center text-muted-gold mb-2">{question.title}</h2>
       {question.subtitle && (
         <p className="text-center text-sm mb-6">{question.subtitle}</p>
       )}

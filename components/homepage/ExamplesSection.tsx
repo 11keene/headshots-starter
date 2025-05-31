@@ -19,9 +19,9 @@ export default function ExamplesSection() {
         </div>
         <div className="mt-16 grid gap-4 sm:gap-6 md:gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
           {[
-   "/ashley1.png",
+   "/henry8.png",
    "/lisa7.png",
-   "/Maggie1.png",
+   "/adam.png",
    "/Ness4.png"
  ].map((src, i) => (
             <div
