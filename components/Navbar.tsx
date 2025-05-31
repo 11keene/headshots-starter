@@ -66,7 +66,7 @@ export default function Navbar() {
 
   return (
     <>
-      {/* ─── Age Verification Banner at bottom ─── */}
+     {/* ─── Age Verification Banner at bottom ─── */}
       {isLoggedIn && pathname === "/overview" && !agreed && (
         <div className="fixed bottom-0 left-0 w-full bg-charcoal border-t border-muted-gold p-4 z-50">
           <div className="max-w-screen-md mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -83,7 +83,7 @@ export default function Navbar() {
                   terms
                 </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="text-muted-gold underline">
+                <Link href="/privacy-policy" className="text-muted-gold underline">
                   privacy policy
                 </Link>.
               </span>
@@ -107,7 +107,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-
       {/* ─── Background “Create …” button ─── */}
       {isLoggedIn && pathname === "/overview" && (
         <div className="fixed bottom-0 left-0 w-full bg-muted/70 py-4 px-6 z-40">

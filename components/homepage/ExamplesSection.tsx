@@ -18,12 +18,17 @@ export default function ExamplesSection() {
           </p>
         </div>
         <div className="mt-16 grid gap-4 sm:gap-6 md:gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 8 }, (_, i) => `/homepage/example000${i + 1}.png`).map((src, i) => (
+          {[
+   "/ashley1.png",
+   "/lisa7.png",
+   "/Maggie1.png",
+   "/Ness4.png"
+ ].map((src, i) => (
             <div
               key={i}
               className="group relative overflow-hidden rounded-lg border bg-background transition-all hover:shadow-lg"
             >
-              <div className="h-96 overflow-hidden">
+<div className="aspect-[3/4] w-full overflow-hidden">
                 <div className="relative h-full w-full transition-all group-hover:scale-105">
                   <Image
                     src={src || "/placeholder.svg"}

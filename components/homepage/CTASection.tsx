@@ -135,11 +135,31 @@ export default function CTASection() {
 
         {/* — Carousel */}
         <div className="mt-16 flex justify-center">
-          <div
-            ref={containerRef}
-            className="relative w-full max-w-3xl h-[500px] md:h-[550px] rounded-xl overflow-hidden bg-muted/30 backdrop-blur-sm shadow-xl transition-transform duration-300 ease-out"
-            style={{ transformStyle: "preserve-3d" }}
-          >
+         <div
+  ref={containerRef}
+  className="
+    relative
+    w-full
+    max-w-3xl
+
+    /* On small screens: use a 7/5 aspect ratio (700 × 500 ⇒ 7/5) so both halves fit */
+    aspect-[7/5]
+
+    /* On md (and larger): revert to your original fixed height */
+    md:aspect-auto
+    md:h-[550px]
+
+    rounded-xl
+    overflow-hidden
+    bg-muted/30
+    backdrop-blur-sm
+    shadow-xl
+    transition-transform
+    duration-300
+    ease-out
+  "
+  style={{ transformStyle: "preserve-3d" }}
+>
             <div className="flex h-full">
               {/* BEFORE (static) */}
               <div className="w-1/2 relative">

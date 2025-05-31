@@ -23,25 +23,17 @@ export default function ThreeDBeforeAfterGallery() {
   const people: Person[] = [
     {
       before: "/henry4.png",
-      after: [
-        "/henry2.png",
-        "/henry3.png",
-        "/henry1.png",
-      ],
+      after: ["/henry2.png", "/henry3.png", "/henry1.png"],
       label: "Multi-Purpose",
     },
     {
       before: "/lisa1.png",
-      after: [
-        "/lisa2.png",
-        "/lisa3.png",
-        "/lisa4.png",
-      ],
-      label: "Personalized Headshots",
+      after: ["/lisa2.png", "/lisa3.png", "/lisa4.png"],
+      label: "Personalized",
     },
   ]
 
- const nextSlide = () => {
+  const nextSlide = () => {
     if (isFlipping) return
     setDirection(1)
     setIsFlipping(true)
@@ -122,13 +114,44 @@ export default function ThreeDBeforeAfterGallery() {
     <div className="relative mx-auto max-w-4xl py-10">
       <div
         ref={containerRef}
-        className="relative h-[550px] w-full transition-transform duration-300 ease-out"
+        className="
+          relative
+          w-full
+
+          /* === MOBILE: shrink by aspect ratio 7/5 (700×500 ⇒ 7/5) === */
+          aspect-[7/5]
+
+          /* === DESKTOP (md+): go back to fixed height 550px === */
+          md:aspect-auto
+          md:h-[550px]
+
+          transition-transform
+          duration-300
+          ease-out
+        "
         style={{ transformStyle: "preserve-3d" }}
       >
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative w-full max-w-3xl">
-            <div className="relative flex h-[500px] md:h-[550px] rounded-xl bg-muted/30 backdrop-blur-sm shadow-xl overflow-hidden">
-              
+            <div
+              className="
+                relative
+                flex
+
+                /* === MOBILE: inner gallery uses same 7/5 ratio to avoid clipping === */
+                aspect-[7/5]
+
+                /* === DESKTOP (md+): fixed 550px height === */
+                md:aspect-auto
+                md:h-[550px]
+
+                rounded-xl
+                bg-muted/30
+                backdrop-blur-sm
+                shadow-xl
+                overflow-hidden
+              "
+            >
               {/* BEFORE (static!) */}
               <div className="w-1/2 relative">
                 <div className="absolute top-2 left-2 z-10 bg-background/80 backdrop-blur-sm text-xs px-2 py-1 rounded-full">
@@ -235,9 +258,12 @@ export default function ThreeDBeforeAfterGallery() {
                 setIsFlipping(false)
               }, 600)
             }}
-            className={`h-2 transition-all ${
-              idx === afterIndex ? "w-8 bg-muted-gold" : "w-2 bg-gray-300"
-            } rounded-full`}
+            className={`
+              h-2
+              transition-all
+              ${idx === afterIndex ? "w-8 bg-muted-gold" : "w-2 bg-gray-300"}
+              rounded-full
+            `}
             disabled={isFlipping}
             aria-label={`Go to after frame ${idx + 1}`}
           />
