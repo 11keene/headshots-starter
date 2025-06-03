@@ -1,202 +1,170 @@
-// File: /app/api/generate-prompts/route.ts
-import { promptPacks } from "@/lib/promptPacks";
-import { generateImagesFromPack } from "@/utils/generateFromPack";
+// File: app/api/generate-prompts/route.ts
+
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { supabaseAdmin } from "@/lib/supabaseClient";
-import { generateImagesFromPrompts } from "@/lib/generateImagesFromPrompts";
-import { sendHeadshotReadyEmail } from "@/lib/sendEmail";
-import { createTune } from "@/utils/createTune"; // this should hit Astria's /tunes endpoint
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// ────────────────────────────────────────────────────────────────────────────────
+// Initialize OpenAI client
+// ────────────────────────────────────────────────────────────────────────────────
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!, // Make sure this is set in .env.local
+});
 
+// ────────────────────────────────────────────────────────────────────────────────
+// Helper to build ChatGPT messages, forcing a *pure* JSON‐only response.
+// For testing, we ask for exactly one prompt instead of fifteen.
+// If intakeData is null/undefined, pass an empty object.
+// ────────────────────────────────────────────────────────────────────────────────
+function buildPromptMessages(
+  intakeData: Record<string, any> | null,
+  packType: string
+): ChatCompletionMessageParam[] {
+  const systemMessage: ChatCompletionMessageParam = {
+    role: "system",
+    content: `
+You are a seasoned creative director specializing in AI‐generated headshots.
+Given a user’s intake data (as JSON) and their pack type (“${packType}”), produce **exactly one natural‐language image prompt** that will guide an AI to create a professional headshot.
+Your **only output** must be a JSON array containing one string, for example:
+
+["A professional headshot of a confident individual wearing a tailored suit with a neutral background, soft lighting, and a warm expression."]
+
+Do not include any additional text, markdown fences, or commentary—**only** the JSON array with one string.
+`.trim(),
+  };
+
+  const safeIntake = intakeData ?? {};
+  const userMessage: ChatCompletionMessageParam = {
+    role: "user",
+    content: `Here is the intake data (as JSON):\n\n${JSON.stringify(safeIntake, null, 2)}`,
+  };
+
+  return [systemMessage, userMessage];
+}
+
+// ────────────────────────────────────────────────────────────────────────────────
+// POST handler for /api/generate-prompts — now returns exactly one prompt.
+// ────────────────────────────────────────────────────────────────────────────────
 export async function POST(req: Request) {
   try {
-    const { pack, answers, user_id } = (await req.json()) as {
-      pack: keyof typeof promptPacks | "defaultPack";
-      answers: any;
-      user_id: string;
-    };
-    const CUSTOM_BASE_PACK_ID = "1504944";
+    // 1) Parse request body and check for packId
+    const body = await req.json();
+    const { packId } = body as { packId?: string };
 
-    // ── CUSTOM FLOW FOR "defaultPack" ──
-    if (pack === "defaultPack") {
-      console.log("→ Calling OpenAI with intake:", answers);
-
-      // 1️⃣ Generate prompts from the user’s intake via OpenAI
-      const chat = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "You generate 16 headshot prompts." },
-          {
-            role: "user",
-            content: `Based on these answers:\n${JSON.stringify(
-              answers,
-              null,
-              2
-            )}\nReply with a numbered list of 16 prompts.`,
-          },
-        ],
-      });
-      console.log("← OpenAI returned:", chat.choices[0].message?.content);
-      const rawText = chat.choices[0].message?.content || "";
-      const prompts = rawText
-        .split(/\n\d+\.\s*/)
-        .map((p) => p.trim())
-        .filter(Boolean);
-
-      // 2️⃣ Send those prompts directly to Astria
-          // 2️⃣ Create a new Astria Tune from the user’s uploads
-          const uploadedImages = answers.uploadedImages || [];
-          if (!Array.isArray(uploadedImages) || uploadedImages.length < 3) {
-            return NextResponse.json(
-              { error: "At least 3 uploaded images are required to train a model." },
-              { status: 400 }
-            );
-          }
-          // use “man” or “woman” as the class_name for fine-tuning
-          const className = answers.gender === "male" ? "man" : "woman";
-    
-          // train a new tune off your CUSTOM_BASE_PACK_ID
-          const tune = await createTune(
-            CUSTOM_BASE_PACK_ID,
-            uploadedImages,
-            className
-          );
-          const modelId = tune.id;
-          const fineTunedFaceId = `ft-${Date.now()}`;
-    
-          // 3️⃣ Generate images from those prompts using the new tune
-          const generation = await generateImagesFromPrompts({
-            prompts,
-            fineTunedFaceId,
-            modelId,
-          });
-          const imageUrls = generation.map((item: { image_url: string }) => item.image_url);
-    
-
-      // 3️⃣ Insert into headshots table
-      await supabaseAdmin.from("headshots").insert({
-        user_id,
-        face_id: fineTunedFaceId,
-        prompts,
-        images: imageUrls,
-        created_at: new Date().toISOString(),
-      });
-
-      // 4️⃣ Send transactional email
-      try {
-        const { data: userRec, error: fetchEmailErr } = await supabaseAdmin
-          .from("users")
-          .select("email")
-          .eq("id", user_id)
-          .single();
-        if (!fetchEmailErr && userRec?.email) {
-          await sendHeadshotReadyEmail(userRec.email, imageUrls);
-        }
-      } catch {
-        /* silent */
-      }
-
-      return NextResponse.json({ prompts, images: imageUrls, fineTunedFaceId });
-    }
-    // ── END CUSTOM FLOW ──
-
-    // 1️⃣ Fetch user to see if they have a custom tune
-    const { data: user, error: userError } = await supabaseAdmin
-      .from("users")
-      .select("astria_model_id")
-      .eq("id", user_id)
-      .single();
-    if (userError) {
-      console.error("Error fetching user tune ID:", userError);
-      return NextResponse.json({ error: userError.message }, { status: 500 });
-    }
-
-    // 2️⃣ Create a new Tune for this user using uploaded photos
-    const uploadedImages = answers.uploadedImages || [];
-    if (!Array.isArray(uploadedImages) || uploadedImages.length < 3) {
-      return NextResponse.json(
-        { error: "At least 3 uploaded images are required to train a model." },
-        { status: 400 }
-      );
-    }
-
-    const className = answers.gender === "male" ? "man" : "woman";
-    const packIdMap: Record<string, string> = {
-      "fitness-pack": "2123",
-  "podcaster-pack": "2121",
-  "tech-pack": "2120",
-  "realtor-pack": "2118",
-  "nurse-pack": "2114",
-  "teacher-pack": "2110",
-  "ceo-entrepreneur-pack": "2103",
-  "starter-pack": "2033",
-      // add your other themed pack IDs here
-    };
-    const packId = packIdMap[pack];
     if (!packId) {
+      console.error("[generate-prompts] ❌ Missing packId");
+      return NextResponse.json({ error: "Missing packId" }, { status: 400 });
+    }
+
+    // 2) Fetch the pack row (pack_type + intake) from Supabase
+    const supabase = createRouteHandlerClient({ cookies });
+    const { data: packRow, error: packErr } = await supabase
+      .from("packs")
+      .select("pack_type, intake")
+      .eq("id", packId)
+      .single();
+
+    if (packErr || !packRow) {
+      console.error("[generate-prompts] ❌ Could not fetch pack row:", packErr);
+      return NextResponse.json({ error: "Pack not found" }, { status: 404 });
+    }
+
+    const packType: string = packRow.pack_type;
+    const intakeData: Record<string, any> | null = packRow.intake as
+      | Record<string, any>
+      | null;
+
+    console.log("[generate-prompts] packType =", packType);
+    console.log("[generate-prompts] intakeData =", intakeData);
+
+    // 3) Build ChatGPT messages (asking for exactly one prompt)
+    const messages = buildPromptMessages(intakeData, packType);
+
+    // 4) Call OpenAI to generate one prompt
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o", // or "gpt-4"
+      messages,
+      temperature: 0.7,
+      max_tokens: 150, // enough for one prompt
+      n: 1,
+    });
+
+    const rawContent = completion.choices?.[0]?.message?.content;
+    if (!rawContent) {
+      console.error("[generate-prompts] ❌ No content from OpenAI.");
       return NextResponse.json(
-        { error: `Pack ID not found for ${pack}` },
-        { status: 400 }
+        { error: "OpenAI returned no content." },
+        { status: 500 }
       );
     }
 
-    const tune = await createTune(packId, uploadedImages, className);
-    const modelId = tune.id;
-    console.log(`[generate-prompts] user_id=${user_id} | trained new tuneId=${modelId}`);
+    console.log("[generate-prompts] rawContent =", rawContent);
 
-    // 3️⃣ Pull prompts directly from local promptPacks
-    const prompts = promptPacks[pack];
-    if (!prompts || prompts.length === 0) {
-      return NextResponse.json(
-        { error: `No prompts found for pack "${pack}"` },
-        { status: 400 }
-      );
-    }
+    // 5) Clean up any markdown fences or extra text, then extract the JSON array
+    let jsonText = rawContent.trim();
 
-    // 4️⃣ Generate images from those prompts
-    const fineTunedFaceId = `ft-${Date.now()}`;
-    const generation = await generateImagesFromPack(modelId, pack);
-    console.log("⚠️ Full generation response:", generation);
-    const imageUrls = generation.results.map((result: any) => result.image_url);
-
-    // 5️⃣ Insert into headshots table
-    const { error: insertError } = await supabaseAdmin
-      .from("headshots")
-      .insert({
-        user_id,
-        face_id: fineTunedFaceId,
-        prompts,
-        images: imageUrls,
-        created_at: new Date().toISOString(),
-      });
-    if (insertError) {
-      console.error("Supabase insert error:", insertError);
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
-    }
-
-    // 6️⃣ Send transactional email via Sendinblue
-    try {
-      const { data: userRec, error: fetchEmailErr } = await supabaseAdmin
-        .from("users")
-        .select("email")
-        .eq("id", user_id)
-        .single();
-      if (!fetchEmailErr && userRec?.email) {
-        await sendHeadshotReadyEmail(userRec.email, imageUrls);
-        console.log("✉️ Sent headshot-ready email to", userRec.email);
+    if (jsonText.startsWith("```")) {
+      const parts = jsonText.split("\n");
+      if (parts[0].startsWith("```")) {
+        parts.shift();
       }
-    } catch (emailErr) {
-      console.error("Error sending headshot-ready email:", emailErr);
+      if (parts[parts.length - 1].trim() === "```") {
+        parts.pop();
+      }
+      jsonText = parts.join("\n").trim();
     }
 
-    // 7️⃣ Return the prompts and image URLs to the client
-    return NextResponse.json({ prompts, images: imageUrls, fineTunedFaceId });
-  } catch (err: any) {
-    console.error("Unexpected error in generate-prompts route:", err);
+    const firstBracket = jsonText.indexOf("[");
+    const lastBracket = jsonText.lastIndexOf("]");
+    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+      jsonText = jsonText.substring(firstBracket, lastBracket + 1);
+    }
+
+    // 6) Parse the JSON array (should contain exactly one string)
+    let promptsArray: string[];
+    try {
+      promptsArray = JSON.parse(jsonText);
+      if (!Array.isArray(promptsArray) || promptsArray.length !== 1) {
+        throw new Error("Parsed result is not a single-element array");
+      }
+    } catch (parseErr) {
+      console.error(
+        "[generate-prompts] ❌ Could not parse JSON array. JSON text was:",
+        jsonText,
+        parseErr
+      );
+      return NextResponse.json(
+        { error: "OpenAI did not return a valid single-element JSON array." },
+        { status: 500 }
+      );
+    }
+
+    console.log("[generate-prompts] promptsArray =", promptsArray);
+
+    // 7) Insert that one prompt into Supabase “prompts” table
+    //    (Adjust column name if necessary—e.g. you might use "text" instead of "prompt_text")
+    const rowsToInsert = promptsArray.map((promptText) => ({
+      pack_id: packId,
+      prompt_text: promptText,
+      created_at: new Date().toISOString(),
+    }));
+
+    const { error: insertErr } = await supabase.from("prompts").insert(rowsToInsert);
+    if (insertErr) {
+      console.error("[generate-prompts] ❌ Supabase insert error:", insertErr);
+      // Continue anyway so client still receives the prompt
+    }
+
+    console.log("[generate-prompts] ✅ Stored single prompt in database");
+
+    // 8) Return that single prompt to the client
+    return NextResponse.json({ prompts: promptsArray }, { status: 200 });
+  } catch (e: any) {
+    console.error("[generate-prompts] ❌ Unexpected error:", e);
     return NextResponse.json(
-      { error: err.message || "Unknown error" },
+      { error: e.message || "Something went wrong." },
       { status: 500 }
     );
   }

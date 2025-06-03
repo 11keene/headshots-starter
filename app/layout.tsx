@@ -1,5 +1,4 @@
 // File: app/layout.tsx
-
 import dynamic from "next/dynamic";
 import Footer from "@/components/Footer";
 import { Toaster } from "@/components/ui/toaster";
@@ -12,13 +11,13 @@ import { validateConfig } from "@/lib/config";
 import Navbar from "@/components/Navbar";
 import { UploadProvider } from "@/components/UploadContext";
 
-// ← NEW imports for server-side upsert
+// ← NEW imports for server‐side upsert
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
 validateConfig();
 
-// Dynamically load the client-only SupabaseProvider (no SSR)
+// Dynamically load the client‐only SupabaseProvider (no SSR)
 const SupabaseProvider = dynamic(
   () => import("@/components/SupabaseProvider"),
   { ssr: false }
@@ -34,21 +33,25 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // — NEW: upsert auth user into public.users —
-  const supabaseServer = createServerComponentClient({ cookies });
+  // — NEW: Upsert auth user into public.users —
+  const supabaseServer = createServerComponentClient({
+    cookies,
+  });
+
   const {
     data: { user },
   } = await supabaseServer.auth.getUser();
 
   if (user) {
-    await supabaseServer.from("users").upsert(
-      {
-        id: user.id,
-        email: user.email,
-      
-      },
-      { onConflict: "id", ignoreDuplicates: true }
-    );
+    await supabaseServer
+      .from("users")
+      .upsert(
+        {
+          id: user.id,
+          email: user.email,
+        },
+        { onConflict: "id", ignoreDuplicates: true }
+      );
   }
 
   return (
@@ -57,6 +60,10 @@ export default async function RootLayout({
         <link rel="icon" href="/newfav.ico" type="image/ico" />
       </head>
       <body className="min-h-screen flex flex-col bg-background">
+        {/*
+          1. Dynamically load SupabaseProvider (client-only, with SessionContextProvider).
+          2. Wrap everything in ThemeProvider, AnnouncementBar, Navbar, etc.
+        */}
         <SupabaseProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <AnnouncementBar />
@@ -69,9 +76,17 @@ export default async function RootLayout({
             >
               <Navbar />
             </Suspense>
-           <UploadProvider packId={""}>
-             <main className="flex-1">{children}</main>
+
+            {/*
+              3. UploadProvider: If you need a “packId” context (for uploads),
+                 you can wrap only the upload-related pages in it. 
+                 Here, we pass an empty string by default; typically,
+                 your child page will override it if needed.
+            */}
+            <UploadProvider packId={""}>
+              <main className="flex-1">{children}</main>
             </UploadProvider>
+
             <Footer />
             <Toaster />
             <Analytics />

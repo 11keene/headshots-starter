@@ -9,7 +9,9 @@ import { useSearchParams } from "next/navigation";
 import { Cloud, ArrowLeftIcon } from "lucide-react";
 import { FaMars, FaVenus, FaTransgender } from "react-icons/fa";
 import Image from "next/image";
-
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useSession } from "@supabase/auth-helpers-react";
+import { v4 as uuidv4 } from "uuid";
 
 type Option = { label: string; value: string; img: string; color?: string };
 type Question = {
@@ -269,12 +271,14 @@ const MEN_QUESTIONS: Question[] = [
   {
     key: "hairLength",
     type: "images",
-    title: "What is your hair length?",
+    title: "Which best describes your hair?",
     options: [
       { label: "Bald", value: "bald", img: "/Bald.png" },
       { label: "Buzz Cut", value: "buzz", img: "/BuzzCut.png" },
       { label: "Medium", value: "medium", img: "/MediumLength.png" },
             { label: "Curly", value: "curly", img: "/curlyman.png" },
+                        { label: "Locs", value: "locs", img: "" },
+
 
 
       { label: "Long", value: "long", img: "/Longhair.png" }
@@ -287,7 +291,7 @@ const MEN_QUESTIONS: Question[] = [
     options: [
       { label: "Slim", value: "slim", img: "/Slimmale.png" },
       { label: "Average", value: "average", img: "/averageman.png" },
-      { label: "Athletic", value: "athletic", img: "/Athleisureman.png" },
+      { label: "Athletic", value: "athletic", img: "/athmen.png" },
       { label: "Muscular", value: "muscular", img: "/muscularman.png" },
       { label: "Broad", value: "broad", img: "/broadman.png" },
    
@@ -446,12 +450,14 @@ const gender = rawGender === "woman" ? "female" : "male";
   const otherRef = React.useRef<HTMLDivElement | null>(null);
   const uniformRef = React.useRef<HTMLDivElement | null>(null);
   const [brandColorOther, setBrandColorOther] = useState("");
-
-+ // 🔥 Only on the very first mount, reset everything so we always start at gender=step 0
-+ useEffect(() => {
-+   setStep(0);
-+   localStorage.removeItem(`intake-${pack}`);
-+   setAnswers({});
+// ─── STEP A: Create a Supabase client and grab the current user’s session ───
+  const supabase = createClientComponentClient();
+  const session = useSession();
+ // 🔥 Only on the very first mount, reset everything so we always start at gender=step 0
+ useEffect(() => {
+   setStep(0);
+   localStorage.removeItem(`intake-${pack}`);
+   setAnswers({});
  }, []);      // ← run exactly once
   
   useEffect(() => {
@@ -469,30 +475,64 @@ const gender = rawGender === "woman" ? "female" : "male";
   );
   const question = questionSet[step];
 
-  const next = () => {
-    
-       // ① If we’re on “attire”, check whether “professional uniform” was chosen
-    if (question.key === "attire") {
-      const chosenArr: string[] = answers.attire || [];
-      // ── If “professional uniform” is NOT in the array, jump two steps (skip “uniform”)
-      if (!chosenArr.includes("professional uniform")) {
-        setStep((s) => s + 2);
-        return;
-      }
-      // Otherwise, let it fall through so the very next step is “uniform”
+const next = async () => {
+  // ① If we’re on “attire”, skip “uniform” if not chosen
+  if (question.key === "attire") {
+    const chosenArr: string[] = answers.attire || [];
+    if (!chosenArr.includes("professional uniform")) {
+      setStep((s) => s + 2);
+      return;
+    }
+  }
+
+  // ② Advance steps or submit on last question
+  if (step < questionSet.length - 1) {
+    setStep(step + 1);
+  } else {
+    // Final “Submit” clicked → create a Supabase row
+    const newPackId = uuidv4();
+
+    // Build a JSON object of all intake answers
+    // (This matches your `intake jsonb` column in Supabase)
+    const intakePayload = {
+      gender: answers.gender?.[0] || null,
+      age: answers.age?.[0] || null,
+      hairLength: answers.hairLength || null,
+      hairTexture: answers.hairTexture || null,
+      bodyType: answers.bodyType || null,
+      attire: answers.attire || [],
+      uniform: uniformText || null,
+      setting: answers.setting || [],
+      mood: answers.mood || [],
+      brandColors: answers.brandColors || [],
+      avoid: answers.avoid || null,
+      industry: answers.industry || [],
+      photoUsage: answers.photoUsage || [],
+      personalized: answers.personalized || null,
+    };
+
+    const { data: createdPack, error: packError } = await supabase
+      .from("packs")
+      .insert({
+        id: newPackId,                       // uuid
+        user_id: session?.user?.id ?? "",    // current user
+        intake: intakePayload,               // store all answers as JSONB
+        pack_type: pack,                     // your original slug (e.g. "custom-intake-man")
+        created_at: new Date(),              // timestamp
+      })
+      .select("id")
+      .single();
+
+    if (packError) {
+      console.error("Error creating pack:", packError);
+      return;
     }
 
-    // ② The rest of your existing logic:
-    if (step < questionSet.length - 1) {
-      setStep(step + 1);
-    } else {
-      if (onComplete) {
-        onComplete();
-      } else {
-        router.push(`/overview/packs/${pack}/next?gender=${gender}`);
-      }
-    }
-  };
+    // Redirect to upload page with the real UUID
+    router.push(`/overview/packs/${createdPack.id}/next?gender=${answers.gender?.[0]}`);
+  }
+};
+
 
 const back = () => {
   if (step > 0) {

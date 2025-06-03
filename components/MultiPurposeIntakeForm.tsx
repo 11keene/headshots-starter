@@ -9,6 +9,9 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeftIcon } from "lucide-react";
 import { FaMars, FaVenus } from "react-icons/fa";
 import Image from "next/image";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useSession } from "@supabase/auth-helpers-react";
+import { v4 as uuidv4 } from "uuid";
 
 type Option = { label: string; value: string; img?: string; color?: string };
 
@@ -253,14 +256,15 @@ const MEN_QUESTIONS: Question[] = [
   {
     key: "hairLength",
     type: "images",
-    title: "What is your hair length?",
+    title: "Which best describes your hair?",
     options: [
       { label: "Bald", value: "bald", img: "/Bald.png" },
       { label: "Buzz Cut", value: "buzz", img: "/BuzzCut.png" },
       { label: "Medium", value: "medium", img: "/MediumLength.png" },
-      { label: "Curly", value: "curly", img: "/curlyman.png" },
+            { label: "Curly", value: "curly", img: "/curlyman.png" },
       { label: "Long", value: "long", img: "/Longhair.png" },
-    ],
+        { label: "Locs", value: "locs", img: "/locsmen.png" },
+    ]
   },
   {
     key: "bodyType",
@@ -269,7 +273,7 @@ const MEN_QUESTIONS: Question[] = [
     options: [
       { label: "Slim", value: "slim", img: "/Slimmale.png" },
       { label: "Average", value: "average", img: "/averageman.png" },
-      { label: "Athletic", value: "athletic", img: "/Athleisureman.png" },
+      { label: "Athletic", value: "athletic", img: "/athmen.png" },
       { label: "Muscular", value: "muscular", img: "/muscularman.png" },
       { label: "Broad", value: "broad", img: "/broadman.png" },
     ],
@@ -284,7 +288,7 @@ const MEN_QUESTIONS: Question[] = [
       { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "/blazersuitman.png" },
       { label: "Casual Everyday Outfit", value: "casual everyday outfit", img: "/casualman.png" },
       { label: "Bold Fashion Statement", value: "bold fashion statement", img: "/boldfashionmen.png" },
-      { label: "Athleisure or Fitness Wear", value: "athleisure or fitness wear", img: "/Athleisureman.png" },
+      { label: "Athleisure or Fitness Wear", value: "athleisure or fitness wear", img: "/athman.png" },
       { label: "Professional Uniform", value: "professional uniform", img: "/professionalnurseman.png" },
     ],
   },
@@ -419,6 +423,8 @@ export default function MultiPurposeIntakeForm({
   const [otherTextMap, setOtherTextMap] = useState<Record<string, string>>({});
   const [brandColorOther, setBrandColorOther] = useState("");
   const [propsOther, setPropsOther] = useState("");
+const supabase = createClientComponentClient();
+const session = useSession();
 
   // ────────────────────────────────────────────────────────────────────────────────
   // Reset everything whenever the `pack` prop changes (start at question 0)
@@ -453,7 +459,7 @@ export default function MultiPurposeIntakeForm({
    );
    const question = questionSet[step];
 
-  const next = () => {
+ const next = async () => {
   // 1) If we’re on “attire”, and the user did NOT pick “professional uniform”, skip TWO steps:
   if (question.key === "attire") {
     const chosenArr: string[] = answers.attire || [];
@@ -505,12 +511,55 @@ export default function MultiPurposeIntakeForm({
   if (step < questionSet.length - 1) {
     setStep(step + 1);
   } else {
-    if (onComplete) {
-      onComplete();
-    } else {
-      router.push(`/overview/packs/${pack}/next?gender=${gender}`);
+   // 5a) Generate a brand‐new UUID for this pack
+      const newPackId = uuidv4();
+
+      // 5b) Build a JSON object of all intake answers:
+      //     (We know that answers contains gender, age, hairLength, hairTexture, etc.,
+      //      plus we added answers.roles (array of up to 3) and answers.moods (array of same length).
+      const intakePayload = {
+        gender: answers.gender ? answers.gender[0] : null,
+        age: answers.age ? answers.age[0] : null,
+        hairLength: answers.hairLength || null,
+        hairTexture: answers.hairTexture || null,
+        bodyType: answers.bodyType || null,
+        attire: answers.attire || [],
+        uniform: answers.uniform || null,
+        setting: answers.setting || [],
+        roles: answers.roles || [],
+        moods: answers.moods || [],
+        brandColors: answers.brandColors || [],
+        avoid: answers.avoid || null,
+        industry: answers.industry || [],
+        photoUsage: answers.photoUsage || [],
+        personalized: answers.personalized || null,
+      };
+      try {
+        // 5c) Insert a new row into “packs” table, matching your existing columns:
+        //     id, user_id, pack_type, intake (JSONB), created_at
+        const { data: createdPack, error: packError } = await supabase
+          .from("packs")
+          .insert({
+            id: newPackId,
+            user_id: session?.user?.id ?? "",
+            pack_type: pack,         // the original slug, e.g. "multi-purpose"
+            intake: intakePayload,   // everything as a single JSONB column
+            created_at: new Date(),  // timestamp
+          })
+          .select("id")
+          .single();
+
+        if (packError || !createdPack) {
+          console.error("Error creating multi‐purpose pack:", packError);
+          return;
+        }
+
+        // 5d) Finally, redirect to the upload page using the new real UUID:
+        router.push(`/overview/packs/${createdPack.id}/next?gender=${gender}`);
+      } catch (err) {
+        console.error("Unexpected error in multi‐purpose pack creation:", err);
+      }
     }
-  }
 };
 const back = () => {
   if (step > 0) {

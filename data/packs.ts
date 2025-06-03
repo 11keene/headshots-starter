@@ -1,58 +1,57 @@
-// data/packs.ts
+// File: data/packs.ts
 
 export interface Pack {
-  id: string;              // Astria Pack ID or internal slug
-  name: string;            // Display name for the pack
-  exampleImg: string;      // Preview image shown in the UI
-  prompt_template?: string;
-  forGender: "woman" | "man" | "all";
+  id: string;             // THIS is just a slug, not a DB UUID
   slug?: string;
-  stripePriceId?: string;  // Optional Stripe price ID for the pack
+  name: string;           // Display name
+  exampleImg: string;     // (optional preview image URL)
+  forGender: "woman" | "man" | "all";
+  stripePriceId?: string; // Your Stripe price ID for this pack type
 }
 
-// ───── PLACEHOLDER PACKS ─────
-export const placeholderPacks: Pack[] = [];
-
-// ───── CUSTOM PACK (Standalone) ─────
-export const customPacks: Pack[] = [
+// ───── PROFESSIONAL PACK ─────
+export const professionalPacks: Pack[] = [
   {
-    id: "custom-intake-man",
-    slug: "custom-intake-man",
-    name: "Custom Pack",
-    exampleImg: "",           // your man‐pack image URL here
+    id: "professional-pack-man",
+    slug: "professional-pack-man",
+    name: "Professional Pack (Man)",
+    exampleImg: "/images/pro-pack-man.png", // optional preview
     forGender: "man",
-    stripePriceId: "price_1RPSMg4RnIZz7j08lS1rZllC"
+    stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PROFESSIONAL_MAN!,
   },
   {
-    id: "custom-intake-woman",
-    slug: "custom-intake-woman",
-    name: "Custom Pack",
-    exampleImg: "",           // your woman‐pack image URL here
+    id: "professional-pack-woman",
+    slug: "professional-pack-woman",
+    name: "Professional Pack (Woman)",
+    exampleImg: "/images/pro-pack-woman.png",
     forGender: "woman",
-    stripePriceId: "price_1RPSMg4RnIZz7j08lS1rZllC"
-  }
+    stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PROFESSIONAL_WOMAN!,
+  },
 ];
 
-// ───── EXTRA ADD-ON: one extra headshot ─────
-export const extrasPacks: Pack[] = [
+// ───── MULTI-PURPOSE PACK ─────
+export const multiPurposePacks: Pack[] = [
   {
-    id: "extra-headshot",
-    name: "Additional Photo",
-    exampleImg: "/images/extra-photo.png",
-    forGender: "all",
-    stripePriceId: "price_1RPV3C4RnIZz7j08faR6KeJW"
-  }
+    id: "multi-purpose-man",
+    slug: "multi-purpose-man",
+    name: "Multi-Purpose Pack (Man)",
+    exampleImg: "/images/multi-man.png",
+    forGender: "man",
+    stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MULTI_MAN!,
+  },
+  {
+    id: "multi-purpose-woman",
+    slug: "multi-purpose-woman",
+    name: "Multi-Purpose Pack (Woman)",
+    exampleImg: "/images/multi-woman.png",
+    forGender: "woman",
+    stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MULTI_WOMAN!,
+  },
 ];
 
-// (optionally, any “basePacks” you still want)
-const basePacks: Pack[] = [
-  // …if you really still need any of these, otherwise delete this block too
-];
-
-// ───── EXPORT ALL YOUR ACTIVE PACKS ─────
+// Export all active packs for the Overview page
 export const packs: Pack[] = [
-  ...placeholderPacks,
-  ...customPacks,
-  ...extrasPacks,
-  // ...basePacks,      // ← uncomment if you kept basePacks
+  ...professionalPacks,
+  ...multiPurposePacks,
+  // (any extras, etc.)
 ];

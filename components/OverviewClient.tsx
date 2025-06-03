@@ -1,16 +1,18 @@
 // File: components/OverviewClient.tsx
 "use client";
 
-import { DashboardDropdownToggle } from "@/components/DashboardDropdownToggle";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import ClientSideModelsList from "@/components/realtime/ClientSideModelsList";
-import { ArrowLeftIcon, ArrowRightIcon } from "@radix-ui/react-icons";
+import { v4 as uuidv4 } from "uuid";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-// 1️⃣ Change Tab type to include "reference-match" instead of "teams"
+import ClientSideModelsList from "@/components/realtime/ClientSideModelsList";
+import { DashboardDropdownToggle } from "@/components/DashboardDropdownToggle";
+import type { Pack } from "@/data/packs";
+
 type Tab = "headshots" | "multi-purpose" | "teams";
 
 const previewImages: Record<Tab, string[]> = {
@@ -27,7 +29,7 @@ const previewImages: Record<Tab, string[]> = {
     "https://sdbooth2-production.s3.amazonaws.com/qabd979c6hr61yqdfm6h321wyyqb",
     "https://sdbooth2-production.s3.amazonaws.com/14faz1iwfc4am8e96023gzyn66uj",
   ],
-  "teams": [
+  teams: [
     "https://sdbooth2-production.s3.amazonaws.com/sm41olkjbp6eqqi2r3j5gn4mc0ze",
     "https://sdbooth2-production.s3.amazonaws.com/14faz1iwfc4am8e96023gzyn66uj",
     "https://sdbooth2-production.s3.amazonaws.com/ybqcdvkkbwop2eccyn50x4c7vx1w",
@@ -37,38 +39,77 @@ const previewImages: Record<Tab, string[]> = {
 interface OverviewClientProps {
   serverModels: any[];
   serverCredits: number;
+  availablePacks: Pack[];
+  userId: string;
 }
 
 export default function OverviewClient({
   serverModels,
   serverCredits,
+  availablePacks,
+  userId,
 }: OverviewClientProps) {
   const searchParams = useSearchParams();
   const tabParam = (searchParams.get("tab") as Tab) || "headshots";
   const [activeTab, setActiveTab] = useState<Tab>(tabParam);
   const router = useRouter();
-const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
+  const supabase = createClientComponentClient(); // no <Database> generic, so .from("packs") is allowed
+
+  const SHOW_TEAMS = false; // Toggle if you ever want to enable the “teams” tab
 
   useEffect(() => {
     localStorage.setItem("lastDashboard", "personal");
   }, []);
 
-  // the slides for the active tab
+  // Set up the image carousel
   const slides = previewImages[activeTab];
+  const cycleDuration = slides.length * 8;
 
-  // 3️⃣ Quote "reference-match" in headerText mapping
   const headerText = {
-    headshots: "⚡ Lightning-fast delivery – your headshots arrive in under an hour.",
-    "multi-purpose": "🎩 You wear more than one hat, your headshot should too.",
-    "teams": "👥 Bring your whole team into focus – group portraits made easy.",
+    headshots:
+      "⚡ Lightning-fast delivery – your headshots arrive in under an hour.",
+    "multi-purpose":
+      "🎩 You wear more than one hat, your headshot should too.",
+    teams:
+      "👥 Bring your whole team into focus – group portraits made easy.",
   }[activeTab];
 
-  // ─── build the keyframes and timing for a seamless loop ────────────────
-  const xKeyframes = slides.map((_, i) => `-${i * 100}%`).concat("0%");
-  const times = slides.map((_, i) => i / slides.length).concat(1);
-  const cycleDuration = slides.length * 8; // 8 seconds per image (slower)
+  // When user clicks “Buy {pack.name}”
+  const [loadingPack, setLoadingPack] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // ─── RENDER ────────────────────────────────────────────────────────────
+  const handleBuy = async (packSlug: string) => {
+    setError(null);
+    setLoadingPack(packSlug);
+
+    // 1) Generate a brand-new UUID 
+    const newPackId = uuidv4(); 
+    // e.g. "11111111-2222-3333-4444-555555555555"
+
+    // 2) Insert into your Supabase "packs" table
+    const { error: dbError } = await supabase
+      .from("packs")
+      // @ts-ignore: allow naked "packs" table
+      .insert({
+        id: newPackId,
+        user_id: userId,
+        pack_type: packSlug,
+        status: "pending",
+        created_at: new Date().toISOString(),
+      });
+
+    if (dbError) {
+      console.error("Error creating pack:", dbError.message);
+      setError("Failed to create pack. Please try again.");
+      setLoadingPack(null);
+      return;
+    }
+
+    // 3) Redirect to the Upload step at `/overview/packs/{UUID}/next?gender=man`
+    // We can append `?gender=man` or `?gender=woman` if your Upload page expects it.
+    router.push(`/overview/packs/${newPackId}/next?gender=${packSlug.endsWith("-man") ? "man" : "woman"}`);
+  };
+
   return (
     <div
       className="min-h-screen flex flex-col w-full pb-16"
@@ -86,35 +127,37 @@ const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
           Back
         </Link>
       </div>
-<DashboardDropdownToggle /> {/* 👈 Add this line right here */}
+
+      {/* ─── Dropdown Toggle ─── */}
+      <DashboardDropdownToggle />
 
       {/* ─── Tabs + Banner ─── */}
       <div className="px-4 mt-4">
         <div className="flex space-x-6 md:justify-center">
-        {(
-  ["headshots", "multi-purpose", ...(SHOW_TEAMS ? ["teams"] : [])] as Tab[]
-).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                router.replace(`/overview?tab=${encodeURIComponent(tab)}`, {
-                  scroll: false,
-                });
-              }}
-              className={`pb-2 font-semibold text-sm transition ${
-                activeTab === tab
-                  ? "text-muted-gold border-b-2 border-muted-gold"
-                  : "text-charcoal hover:text-muted-gold"
-              }`}
-            >
-              {tab === "headshots"
-                ? "Headshots"
-                : tab === "multi-purpose"
-                ? "Multi-Purpose"
-                : "Teams"}
-            </button>
-          ))}
+          {( ["headshots", "multi-purpose", ...(SHOW_TEAMS ? ["teams"] : [])] as Tab[] ).map(
+            (tab) => (
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  router.replace(`/overview?tab=${encodeURIComponent(tab)}`, {
+                    scroll: false,
+                  });
+                }}
+                className={`pb-2 font-semibold text-sm transition ${
+                  activeTab === tab
+                    ? "text-muted-gold border-b-2 border-muted-gold"
+                    : "text-charcoal hover:text-muted-gold"
+                }`}
+              >
+                {tab === "headshots"
+                  ? "Headshots"
+                  : tab === "multi-purpose"
+                  ? "Multi-Purpose"
+                  : "Teams"}
+              </button>
+            )
+          )}
         </div>
         <div className="mt-4 font-bold text-center text-2xl text-charcoal">
           {headerText}
@@ -143,15 +186,58 @@ const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
           ))}
         </motion.div>
 
-        {/* left/right fade overlays */}
+        {/* Left/Right Fade Overlays */}
         <div className="pointer-events-none absolute inset-0 flex justify-between">
           <div className="w-16 h-full bg-gradient-to-r from-ivory to-transparent" />
           <div className="w-16 h-full bg-gradient-to-l from-ivory to-transparent" />
         </div>
       </div>
 
+      {/* ─── “Choose a Pack” Section ─── */}
+      <section className="px-4 mt-10 max-w-4xl mx-auto">
+        <h2 className="text-2xl font-bold mb-4">Choose a Pack</h2>
+        <div className="grid gap-6 md:grid-cols-2">
+          {availablePacks.map((p) => (
+            <div
+              key={p.id}
+              className="border rounded-lg p-6 flex flex-col justify-between hover:shadow-lg transition"
+            >
+              <div>
+                <h3 className="text-xl font-semibold mb-1">{p.name}</h3>
+                <p className="text-gray-600 mb-2">
+                  {p.forGender === "all"
+                    ? "For everyone"
+                    : p.forGender === "man"
+                    ? "For men"
+                    : "For women"}
+                </p>
+                {p.exampleImg && (
+                  <img
+                    src={p.exampleImg}
+                    alt={`${p.name} preview`}
+                    className="w-full h-40 object-cover rounded"
+                  />
+                )}
+              </div>
+              <button
+                onClick={() => handleBuy(p.slug!)}
+                disabled={loadingPack !== null}
+                className={`mt-4 px-4 py-2 font-semibold rounded ${
+                  loadingPack === p.slug
+                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+              >
+                {loadingPack === p.slug ? "Creating…" : `Buy ${p.name}`}
+              </button>
+            </div>
+          ))}
+        </div>
+        {error && <p className="mt-4 text-center text-red-600">{error}</p>}
+      </section>
+
       {/* ─── Models List ─── */}
-      <div className="flex-1 bg-ivory px-4 py-8 mt-8">
+      <div className="flex-1 bg-ivory px-4 py-8 mt-12">
         <div className="max-w-6xl mx-auto">
           <ClientSideModelsList serverModels={serverModels} />
         </div>
