@@ -1,6 +1,7 @@
 // File: components/OverviewClient.tsx
 "use client";
 
+import { DashboardDropdownToggle } from "@/components/DashboardDropdownToggle";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -10,11 +11,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
 // 1️⃣ Change Tab type to include "reference-match" instead of "teams"
-type Tab = "headshots" | "multi-purpose" | "reference-match";
+type Tab = "headshots" | "multi-purpose" | "teams";
 
 const previewImages: Record<Tab, string[]> = {
   headshots: [
-     "/adam1.png",
+    "/adam1.png",
     "https://sdbooth2-production.s3.amazonaws.com/72tpgztgtucn8g1leq8h4h8ezdsn",
     "https://sdbooth2-production.s3.amazonaws.com/b6izing8haworbs85wtd2ys2g59p",
     "/eryn.png",
@@ -25,13 +26,8 @@ const previewImages: Record<Tab, string[]> = {
     "/chan.png",
     "https://sdbooth2-production.s3.amazonaws.com/qabd979c6hr61yqdfm6h321wyyqb",
     "https://sdbooth2-production.s3.amazonaws.com/14faz1iwfc4am8e96023gzyn66uj",
-    
-    
-
-    
   ],
-  // 2️⃣ Quote the key "reference-match" (hyphens must be quoted)
-  "reference-match": [
+  "teams": [
     "https://sdbooth2-production.s3.amazonaws.com/sm41olkjbp6eqqi2r3j5gn4mc0ze",
     "https://sdbooth2-production.s3.amazonaws.com/14faz1iwfc4am8e96023gzyn66uj",
     "https://sdbooth2-production.s3.amazonaws.com/ybqcdvkkbwop2eccyn50x4c7vx1w",
@@ -51,6 +47,11 @@ export default function OverviewClient({
   const tabParam = (searchParams.get("tab") as Tab) || "headshots";
   const [activeTab, setActiveTab] = useState<Tab>(tabParam);
   const router = useRouter();
+const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
+
+  useEffect(() => {
+    localStorage.setItem("lastDashboard", "personal");
+  }, []);
 
   // the slides for the active tab
   const slides = previewImages[activeTab];
@@ -59,13 +60,14 @@ export default function OverviewClient({
   const headerText = {
     headshots: "⚡ Lightning-fast delivery – your headshots arrive in under an hour.",
     "multi-purpose": "🎩 You wear more than one hat, your headshot should too.",
-    "reference-match": "👥 Bring your whole team into focus – group portraits made easy.",
+    "teams": "👥 Bring your whole team into focus – group portraits made easy.",
   }[activeTab];
 
   // ─── build the keyframes and timing for a seamless loop ────────────────
   const xKeyframes = slides.map((_, i) => `-${i * 100}%`).concat("0%");
   const times = slides.map((_, i) => i / slides.length).concat(1);
-const cycleDuration = slides.length * 8; // 8 seconds per image (slower)
+  const cycleDuration = slides.length * 8; // 8 seconds per image (slower)
+
   // ─── RENDER ────────────────────────────────────────────────────────────
   return (
     <div
@@ -84,13 +86,14 @@ const cycleDuration = slides.length * 8; // 8 seconds per image (slower)
           Back
         </Link>
       </div>
+<DashboardDropdownToggle /> {/* 👈 Add this line right here */}
 
       {/* ─── Tabs + Banner ─── */}
       <div className="px-4 mt-4">
         <div className="flex space-x-6 md:justify-center">
-          {(
-            ["headshots", "multi-purpose", "reference-match"] as Tab[]
-          ).map((tab) => (
+        {(
+  ["headshots", "multi-purpose", ...(SHOW_TEAMS ? ["teams"] : [])] as Tab[]
+).map((tab) => (
             <button
               key={tab}
               onClick={() => {
@@ -109,7 +112,7 @@ const cycleDuration = slides.length * 8; // 8 seconds per image (slower)
                 ? "Headshots"
                 : tab === "multi-purpose"
                 ? "Multi-Purpose"
-                : "Reference Match"}
+                : "Teams"}
             </button>
           ))}
         </div>
@@ -133,7 +136,7 @@ const cycleDuration = slides.length * 8; // 8 seconds per image (slower)
             <div key={i} className="flex-shrink-0 w-full px-2">
               <img
                 src={src}
-                alt={`${activeTab} preview ${ (i % slides.length) + 1 }`}
+                alt={`${activeTab} preview ${(i % slides.length) + 1}`}
                 className="w-full h-auto object-cover rounded-xl shadow-lg"
               />
             </div>

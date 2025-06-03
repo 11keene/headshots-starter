@@ -1,4 +1,3 @@
-// app/overview/packs/[packId]/next/page.tsx
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
@@ -12,9 +11,9 @@ import { useSession } from "@supabase/auth-helpers-react";
 
 const supabase = createClientComponentClient();
 
-// we only support the “custom” pack now
-const PRICE_IDS_CLIENT = {
-  custom: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_CUSTOM_PACK!,
+const PRICE_IDS_CLIENT: Record<"headshots" | "multi-purpose", string> = {
+  headshots: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_HEADSHOTS!,
+  "multi-purpose": process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MULTI!,
 };
 
 export default function UploadPage() {
@@ -22,19 +21,17 @@ export default function UploadPage() {
   const { packId: _packId } = useParams();
   const packId = Array.isArray(_packId) ? _packId[0] : _packId || "";
   const session = useSession();
-  const userId = session?.user.id;
+  const userId = session?.user?.id;
 
   const { previewUrls, setPreviewUrls } = useUploadContext();
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // whenever `files` changes, rebuild the preview URLs
   useEffect(() => {
     setPreviewUrls(files.map((f) => URL.createObjectURL(f)));
   }, [files, setPreviewUrls]);
 
-  // fire-and-forget supabase upload
   const onFiles = useCallback(
     (list: FileList | null) => {
       if (!list || !userId) return;
@@ -59,7 +56,6 @@ export default function UploadPage() {
     setFiles((prev) => prev.filter((_, idx) => idx !== i));
   }, []);
 
-  // kick off a Stripe Checkout session and redirect
   const goNext = async () => {
     if (!userId) {
       router.push("/login");
@@ -67,7 +63,22 @@ export default function UploadPage() {
     }
     setIsLoading(true);
 
-    const stripePriceId = PRICE_IDS_CLIENT.custom;
+    // Detect correct pack type
+    let packType: "headshots" | "multi-purpose" = "headshots";
+    if (packId.includes("multi")) {
+      packType = "multi-purpose";
+    }
+
+    const stripePriceId = PRICE_IDS_CLIENT[packType];
+
+    console.log("Sending to /api/create-checkout-session:", {
+      stripePriceId,
+      user_id: userId,
+      user_email: session.user?.email || "",
+      packId,
+      packType,
+    });
+
     const resp = await fetch("/api/create-checkout-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -76,21 +87,29 @@ export default function UploadPage() {
         user_id: userId,
         user_email: session.user?.email || "",
         packId,
+        packType,
       }),
     });
 
     if (!resp.ok) {
       console.error("create-checkout-session failed:", await resp.text());
+      alert("Stripe checkout failed");
       setIsLoading(false);
       return;
     }
+
     const { url } = await resp.json();
-    if (url) window.location.href = url;
+    if (!url) {
+      alert("Stripe checkout URL was missing.");
+      setIsLoading(false);
+      return;
+    }
+
+    window.location.href = url;
   };
 
   return (
     <div className="p-6 sm:p-8 max-w-3xl mx-auto">
-      {/* Back button */}
       <button
         onClick={() => router.back()}
         className="inline-flex items-center mb-6 text-gray-700 hover:text-sage-green"
@@ -120,9 +139,7 @@ export default function UploadPage() {
         />
         <FiUploadCloud className="mx-auto mb-4 text-4xl text-muted-gold" />
         <Button variant="outline">Browse files</Button>
-        <p className="mt-2 text-sm text-gray-500">
-          or drag & drop your photos here
-        </p>
+        <p className="mt-2 text-sm text-gray-500">or drag & drop your photos here</p>
       </div>
 
       {previewUrls.length > 0 && (
@@ -145,7 +162,6 @@ export default function UploadPage() {
         </div>
       )}
 
-      {/* Instruction cards */}
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
         {[
           { title: "Selfies", desc: "Frontal, well-lit at eye-level", img: "/placeholders/selfie.png" },
@@ -176,9 +192,14 @@ export default function UploadPage() {
           onClick={goNext}
           className={isLoading ? "bg-warm-gray text-white" : ""}
         >
-          {isLoading
-            ? <><FiLoader className="animate-spin mr-2"/> Starting…</>
-            : "Continue"}
+          {isLoading ? (
+            <>
+              <FiLoader className="animate-spin mr-2" />
+              Starting…
+            </>
+          ) : (
+            "Continue"
+          )}
         </Button>
       </div>
     </div>

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-type PlanID = "starter" | "themed" | "custom";
+type PlanID = "professional" | "multi-purpose" | "team";
 
 interface Plan {
   id: PlanID;
@@ -17,13 +17,19 @@ interface Plan {
 }
 
 const PLANS: Plan[] = [
-
   {
-    id: "custom",
-    name: "Custom Pack",
-    description: "15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds",
-    price: "$69.99",
+    id: "professional",
+    name: "The Professional Pack",
+    description: "15 fully customized AI-generated images for a single role/brand identity",
+    price: "$44.99",
   },
+  {
+    id: "multi-purpose",
+    name: "The Multi-Purpose Pack",
+    description: "15 AI images tailored to multiple roles or industries",
+    price: "$54.99",
+  },
+
 ];
 
 export default function PricingPage() {
@@ -40,8 +46,22 @@ export default function PricingPage() {
   }, [supabase, router]);
 
   const choosePlan = (planId: PlanID) => {
-    // send them to overview and set that tab active
-    router.push(`/overview?tab=${planId}`);
+    switch (planId) {
+      case "professional":
+        router.push("/custom-intake?packType=professional");
+        break;
+
+      case "multi-purpose":
+        router.push("/multi-purpose-intake?packType=multi-purpose");
+        break;
+
+      case "team":
+        router.push("/reference-intake?packType=reference-match");
+        break;
+
+      default:
+        break;
+    }
   };
 
   return (

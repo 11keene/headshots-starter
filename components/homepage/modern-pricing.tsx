@@ -65,27 +65,13 @@ export default function ModernPricing() {
       buttonText: "Choose Multi-Purpose",
       popular: true,
     },
-    {
-      title: "Reference Match Pack",
-      originalPrice: "$81.24",
-      price: "$64.99",
-      description:
-        "This pack is for the visual thinkers - the ones who already know what they want. Whether, it's an old headshot you loved, a Pinterest image that speaks to you, or a photo of someone else that nails the vibe - just upload it. We'll recreate the mood, angle, lighting, and pose with your look and details.",
-      features: [
-        "15 AI-generated images inspired by your reference image",
-        "Replicates the composition, pose, mood, or aesthetic of the photo you upload",
-        "Custom prompts still factor in your features, brand colors, wardrobe preferences",
-        "Ideal for recreating something iconic - but personalized for you",
-      ],
-      buttonText: "Create Your Custom Pack",
-      bestValue: true,
-    },
+    
   ];
 
   return (
-    <div className="mx-auto max-w-4xl px-4">
+    <div className="mx-auto max-w-6xl px-4">
       <div className="flex flex-col items-center justify-center space-y-8">
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-12">
           {tiers.map((tier, idx) => (
             <div
               key={idx}

@@ -64,8 +64,7 @@ const WOMEN_QUESTIONS: Question[] = [
       { label: "Shoulder", value: "shoulder", img: "/shoulder.png" },
       { label: "Past Shoulder", value: "past-shoulder", img: "/pastshoulder.png" },
       { label: "Midback", value: "midback", img: "/midback.png" },
-      { label: "Long", value: "long", img: "/longg.png" },
-      { label: "Dreads", value: "dreads", img: "/dreads.png" },
+      { label: "Long", value: "long", img: "/longg.png" }
 
     ]
   },
@@ -80,6 +79,8 @@ const WOMEN_QUESTIONS: Question[] = [
       { label: "Wavy", value: "wavy", img: "/wavy.png" },
       { label: "Curly", value: "curly", img: "/curly.png" },
       { label: "Coily", value: "coily", img: "/coily.png" },
+            { label: "Locs", value: "locs", img: "/dreads.png" },
+
 
     ]
   },
@@ -101,7 +102,7 @@ const WOMEN_QUESTIONS: Question[] = [
     type: "images",
     multi: true,
     title: "What will you wear in your photos?",
-    subtitle: "You can select more than one option.",
+    subtitle: "Select all that apply. (Tap multiple choices)",
     options: [
       { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "/blazer.png" },
       { label: "Casual Everyday Outfit", value: "casual everyday outfit", img: "/casualwoman.png" },
@@ -114,13 +115,19 @@ const WOMEN_QUESTIONS: Question[] = [
 
     ]
   },
-  
+  {
+      key: "uniform",
+      type: "text",
+      title: "Please specify your exact uniform and industry",
+      optional: true,    // optional because we will skip it if “professional uniform” wasn’t chosen
+      options: [],
+    },
   {
     key: "setting",
     type: "images",
     multi: true,
     title: "What is your preferred setting? ",
-    subtitle: "You can select more than one option.",
+    subtitle: "Select all that apply. (Tap multiple choices)",
     options: [
       { label: "Cozy Indoor Space", value: "cozy inddor space", img: "/Cozyindoor.png" },
       { label: "Natural Outdoor", value: "natural outdoor", img: "/naturaloutdoor.png" },
@@ -136,7 +143,7 @@ const WOMEN_QUESTIONS: Question[] = [
     type: "multi",
     multi: true,
     title: "Select your mood or vibe",
-    subtitle: "You can select more than one option.",
+    subtitle: "Select all that apply. (Tap multiple choices)",
     options: [
       { label: "Approachable", value: "approachable", img: "" },
       { label: "Bold", value: "bold", img: "" },
@@ -155,7 +162,7 @@ const WOMEN_QUESTIONS: Question[] = [
     type: "multi",
     multi: true,
     title: "Do you have brand colors you'd like subtly included in your shoot?",
-    subtitle: "You can select more than one option. (Optional)",
+    subtitle: "Select all that apply. (Optional)",
     optional: true,
     options: [
       { label: "Black", value: "black", img: "" },
@@ -201,14 +208,16 @@ const WOMEN_QUESTIONS: Question[] = [
     type: "multi",
     multi: true,
     title: "What will you use these for?",
-    subtitle: "You can select more than one option.",
+    subtitle: "Select all that apply. (Tap multiple choices)",
     options: [
       { label: "LinkedIn", value: "linkedin", img: "" },
       { label: "Website", value: "website", img: "" },
       { label: "Speaking Profile", value: "speaking", img: "" },
       { label: "Podcast Cover", value: "podcast", img: "" },
       { label: "Press Kit", value: "press", img: "" },
-      { label: "Social Media", value: "social", img: "" }
+      { label: "Social Media", value: "social", img: "" },
+            { label: "Other", value: "other", img: "" }
+
     ]
   },
 
@@ -266,7 +275,6 @@ const MEN_QUESTIONS: Question[] = [
       { label: "Buzz Cut", value: "buzz", img: "/BuzzCut.png" },
       { label: "Medium", value: "medium", img: "/MediumLength.png" },
             { label: "Curly", value: "curly", img: "/curlyman.png" },
-                  { label: "Dreads", value: "dreads", img: "/mandreads.png" },
 
 
       { label: "Long", value: "long", img: "/Longhair.png" }
@@ -290,7 +298,7 @@ const MEN_QUESTIONS: Question[] = [
     key: "attire",
     type: "images",
     title: "What will you wear in your photos?",
-    subtitle: "You can select more than one option.",
+    subtitle: "Select all that apply. (Tap multiple choices)",
     multi: true,
     options: [
       { label: "Blazer or Suit Jacket", value: "blazer or suit jacket", img: "/blazersuitman.png" },
@@ -300,13 +308,19 @@ const MEN_QUESTIONS: Question[] = [
       { label: "Professional Uniform", value: "professional uniform", img: "/professionalnurseman.png" },
     ]
   },
-
+  {
+    key: "uniform",
+    type: "text",
+    title: "Please specify your exact uniform and industry",
+    optional: true,    // optional because we will skip it if “professional uniform” wasn’t chosen
+    options: [],       // ← added to satisfy the Question type
+  },
   {
     key: "setting",
     type: "images",
     multi: true,
     title: "What is your preferred setting? ",
-    subtitle: "You can select more than one option.",
+    subtitle: "Select all that apply. (Tap multiple choices)",
     options: [
       { label: "Cozy Indoor Space", value: "cozy indoor space", img: "/cozy indoor man.png" },
       { label: "Natural Outdoor", value: "natural outdoor", img: "/man natural outdoor.png" },
@@ -322,7 +336,7 @@ const MEN_QUESTIONS: Question[] = [
     type: "multi",
     multi: true,
     title: "Select your mood or vibe",
-    subtitle: "You can select more than one option.",
+    subtitle: "Select all that apply. (Tap multiple choices)",
     options: [
       { label: "Approachable", value: "approachable", img: "" },
       { label: "Bold", value: "bold", img: "" },
@@ -340,7 +354,7 @@ const MEN_QUESTIONS: Question[] = [
     key: "brandColors",
     type: "multi",
     title: "Do you have brand colors you'd like subtly included in your shoot?",
-    subtitle: "You can select more than one option.",
+    subtitle: "Select all that apply. (Tap multiple choices)",
     multi: true,
     optional: true,
     options: [
@@ -387,14 +401,16 @@ const MEN_QUESTIONS: Question[] = [
     type: "multi",
     multi: true,
     title: "What will you use these for?",
-    subtitle: "You can select more than one option.",
+    subtitle: "Select all that apply. (Tap multiple choices)",
     options: [
       { label: "LinkedIn", value: "linkedin", img: "" },
       { label: "Website", value: "website", img: "" },
       { label: "Speaking Profile", value: "speaking", img: "" },
       { label: "Podcast Cover", value: "podcast", img: "" },
       { label: "Press Kit", value: "press", img: "" },
-      { label: "Social Media", value: "social", img: "" }
+      { label: "Social Media", value: "social", img: "" },
+                  { label: "Other", value: "other", img: "" }
+
     ]
   },
   {
@@ -454,6 +470,19 @@ const gender = rawGender === "woman" ? "female" : "male";
   const question = questionSet[step];
 
   const next = () => {
+    
+       // ① If we’re on “attire”, check whether “professional uniform” was chosen
+    if (question.key === "attire") {
+      const chosenArr: string[] = answers.attire || [];
+      // ── If “professional uniform” is NOT in the array, jump two steps (skip “uniform”)
+      if (!chosenArr.includes("professional uniform")) {
+        setStep((s) => s + 2);
+        return;
+      }
+      // Otherwise, let it fall through so the very next step is “uniform”
+    }
+
+    // ② The rest of your existing logic:
     if (step < questionSet.length - 1) {
       setStep(step + 1);
     } else {
@@ -465,23 +494,38 @@ const gender = rawGender === "woman" ? "female" : "male";
     }
   };
 
-  const back = () => {
-    if (step > 0) setStep(step - 1);
-    else router.back();
-  };
-
-  const choose = (val: any) => {
-    if (question.multi) {
-      const current = answers[question.key] || [];
-      const updated = current.includes(val)
-        ? current.filter((v: any) => v !== val)
-        : [...current, val];
-      setAnswers((a) => ({ ...a, [question.key]: updated }));
-    } else {
-      setAnswers((a) => ({ ...a, [question.key]: val }));
-      setTimeout(next, 300);
+const back = () => {
+  if (step > 0) {
+    // If the previous question is “uniform” but “professional uniform” wasn’t chosen, skip it
+    const prevQ = questionSet[step - 1];
+    if (prevQ.key === "uniform") {
+      const chosenArr: string[] = answers.attire || [];
+      if (!chosenArr.includes("professional uniform")) {
+        setStep((s) => s - 2);
+        return;
+      }
     }
-  };
+
+    // Otherwise just go back one step
+    setStep((s) => s - 1);
+  } else {
+    router.back();
+  }
+};
+
+const choose = (val: any) => {
+  if (question.multi) {
+    const current = answers[question.key] || [];
+    const updated = current.includes(val)
+      ? current.filter((v: any) => v !== val)
+      : [...current, val];
+    setAnswers((a) => ({ ...a, [question.key]: updated }));
+  } else {
+    setAnswers((a) => ({ ...a, [question.key]: val }));
+    setTimeout(next, 300);
+  }
+};
+
 
   return (
     <div className="relative min-h-screen max-w-lg mx-auto pt-20 pb-24 px-6 text-white">
@@ -585,30 +629,7 @@ const gender = rawGender === "woman" ? "female" : "male";
     </div>
 
 
-            {/* ─── PROFESSIONAL UNIFORM TEXTBOX ─── */}
-            {question.key === "attire" &&
-              Array.isArray(answers.attire) &&
-              answers.attire.includes("professional uniform") && (
-                <div
-                  ref={uniformRef}
-                  className="mt-4 p-2 rounded ring-1 ring-muted-gold transition"
-                >
-                  <label
-                    htmlFor="uniformText"
-                    className="block text-sm font-medium text-white"
-                  >
-                    Please specify your exact uniform and industry
-                  </label>
-                  <input
-                    type="text"
-                    id="uniformText"
-                    value={uniformText}
-                    onChange={(e) => setUniformText(e.target.value)}
-                    placeholder="e.g. firefighter, nurse, chef"
-                    className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
-                  />
-                </div>
-              )}
+      
           </>
         )}
 
@@ -629,12 +650,14 @@ const gender = rawGender === "woman" ? "female" : "male";
         )}
 
         {/* — Select dropdown (unchanged) — */}
-        {question.type === "select" && (
+          {question.type === "select" && question.options && (
           <select
             id={`select-${question.key}`}
-            className="w-full p-3 border rounded-lg focus:border-muted-gold"
+            className="w-full p-3 border rounded-lg focus:border-muted-gold text-black"
             value={answers[question.key] || ""}
-            onChange={(e) => choose(e.target.value)}
+            onChange={(e) =>
+              setAnswers((a) => ({ ...a, [question.key]: e.target.value }))
+            }
           >
             <option value="">Choose…</option>
             {question.options.map((o) => (
@@ -761,6 +784,51 @@ const gender = rawGender === "woman" ? "female" : "male";
                 />
               </div>
             )}
+                      {/* — “Other” textbox for industry — */}
+          {question.key === "industry" &&
+            o.value === "other" &&
+            isSelected && (
+             <div className="mt-4 p-2 rounded ring-1 ring-muted-gold">
+               <label
+                  htmlFor="industryOtherText"
+                 className="block text-sm font-medium text-white"
+               >
+                  Please specify your industry
+                </label>
+                <input
+                 id="industryOtherText"
+                 type="text"
+                  value={otherText}
+                 onChange={(e) => setOtherText(e.target.value)}
+                 placeholder="e.g. “Freelance Graphic Designer”"
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm 
+                             focus:border-charcoal focus:ring-charcoal sm:text-sm"
+                />
+              </div>
+            )}
+
+          {/* — “Other” textbox for photoUsage — */}
+          {question.key === "photoUsage" &&
+            o.value === "other" &&
+            isSelected && (
+              <div className="mt-4 p-2 rounded ring-1 ring-muted-gold">
+                <label
+                  htmlFor="photoUsageOtherText"
+                  className="block text-sm font-medium text-white"
+                >
+                  Please specify your usage
+                </label>
+                <input
+                  id="photoUsageOtherText"
+                 type="text"
+                  value={otherText}
+                  onChange={(e) => setOtherText(e.target.value)}
+                  placeholder="e.g. “Book Cover Design”"
+                 className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm 
+                            focus:border-charcoal focus:ring-charcoal sm:text-sm"
+                />
+              </div>
+           )}
         </React.Fragment>
       );
     })}

@@ -17,8 +17,7 @@ import { Button } from "./ui/button";
 import { HamburgerMenuIcon } from "@radix-ui/react-icons";
 import { ThemeToggle } from "@/components/homepage/theme-toggle";
 
-
-type PackTab = "headshots" | "multi-purpose" | "reference-match";
+type PackTab = "headshots" | "multi-purpose" | "teams";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -29,32 +28,46 @@ export default function Navbar() {
 
   // Determine current pack tab from ?tab=
   const searchParams = useSearchParams();
- const currentTab = (searchParams.get("tab") as PackTab) || "headshots";
-   const tabMap: Record<PackTab, { text: string; href: string }> = {
+  const currentTab = (searchParams.get("tab") as PackTab) || "headshots";
+  const tabMap: Record<PackTab, { text: string; href: string }> = {
     headshots: {
       text: "Create Headshots",
       href: "/custom-intake?packType=headshots",
     },
     "multi-purpose": {
-     text: "Create Multi-Purpose Headshots",
-     href: "/multi-purpose-intake", // ← updated to your new Multi-Purpose form route
-   },
-    "reference-match": {
-     text: "Create Reference Match Pack",
-     href: "/reference-intake", // ← your new intake‐form route
-   },
+      text: "Create Multi-Purpose Headshots",
+      href: "/multi-purpose-intake",
+    },
+    teams: {
+    text: "Create Team Headshots",
+    href: "/teams-intake",    // ← This is the new page we just created
+  },
   };
   const { text: buttonText, href: buttonHref } = tabMap[currentTab];
+const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
 
-  // Age-gate state
+  // ─── Age-gate state ───────────────────────────────────────────────────────────
   const [agreed, setAgreed] = useState(false);
   const [checked, setChecked] = useState(false);
 
-  // Reset age-gate on login
+  // ─── (1) On mount (or whenever isLoggedIn flips to true),
+  //           read “ageGateSeen” from localStorage.
+  //           If it’s "true", immediately hide the banner.
   useEffect(() => {
     if (isLoggedIn) {
-      setAgreed(false);
+      const seenFlag = localStorage.getItem("ageGateSeen");
+      if (seenFlag === "true") {
+        setAgreed(true);
+      }
+    }
+  }, [isLoggedIn]);
+
+  // ─── (2) When they first log in, reset only the checkbox.
+  //           Do NOT reset `agreed`, so that if they already saw it, it stays hidden.
+  useEffect(() => {
+    if (isLoggedIn) {
       setChecked(false);
+      // Do NOT call setAgreed(false) here! We want to preserve “agreed” if previously stored.
     }
   }, [isLoggedIn]);
 
@@ -67,7 +80,7 @@ export default function Navbar() {
 
   return (
     <>
-     {/* ─── Age Verification Banner at bottom ─── */}
+      {/* ─── Age Verification Banner at bottom ───────────────────────────────────── */}
       {isLoggedIn && pathname === "/overview" && !agreed && (
         <div className="fixed bottom-0 left-0 w-full bg-charcoal border-t border-muted-gold p-4 z-50">
           <div className="max-w-screen-md mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -75,7 +88,7 @@ export default function Navbar() {
               <input
                 type="checkbox"
                 checked={checked}
-                onChange={() => setChecked(!checked)}
+                onChange={() => setChecked((c) => !c)}
                 className="w-4 h-4 text-muted-gold"
               />
               <span className="text-ivory text-sm">
@@ -89,9 +102,12 @@ export default function Navbar() {
                 </Link>.
               </span>
             </label>
-            {/* ← DYNAMIC BUTTON TEXT & HREF */}
             <button
               onClick={() => {
+                // ① Store the “seen” flag so they never see this again:
+                localStorage.setItem("ageGateSeen", "true");
+
+                // ② Update state and navigate to the correct intake form:
                 setAgreed(true);
                 router.push(buttonHref);
               }}
@@ -108,8 +124,9 @@ export default function Navbar() {
           </div>
         </div>
       )}
-      {/* ─── Background “Create …” button ─── */}
-      {isLoggedIn && pathname === "/overview" && (
+
+      {/* ─── Background “Create …” button once agreed ───────────────────────────── */}
+      {isLoggedIn && pathname === "/overview" && agreed && (
         <div className="fixed bottom-0 left-0 w-full bg-muted/70 py-4 px-6 z-40">
           <Link href={buttonHref}>
             <Button className="w-full bg-muted-gold text-ivory">
@@ -119,7 +136,7 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* ─── Navbar ─── */}
+      {/* ─── Navbar ───────────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 w-full border-t-2 border-muted-gold border-b bg-charcoal backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           {/* Logo */}
@@ -148,18 +165,11 @@ export default function Navbar() {
                 Home
               </Link>
               <Link
-                href="/overview/packs"
-                onClick={blockNav}
-                className="text-ivory font-semibold transition-colors hover:text-muted-gold"
-              >
-                Packs
-              </Link>
-              <Link
                 href="/get-credits"
                 onClick={blockNav}
                 className="text-ivory font-semibold transition-colors hover:text-muted-gold"
               >
-                Pricing
+                Packs
               </Link>
             </nav>
           )}
@@ -171,7 +181,6 @@ export default function Navbar() {
                 <HamburgerMenuIcon className="h-6 w-6 text-muted-gold" />
               </Button>
             </DropdownMenuTrigger>
-
             <DropdownMenuContent className="w-48 z-50">
               {/* Dark mode toggle */}
               <DropdownMenuItem className="flex justify-center py-2">
@@ -187,7 +196,7 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/overview/packs" onClick={blockNav}>
+                      <Link href="/get-credits" onClick={blockNav}>
                       Packs
                     </Link>
                   </DropdownMenuItem>

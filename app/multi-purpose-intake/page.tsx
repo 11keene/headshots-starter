@@ -5,6 +5,11 @@ import React from "react";
 // ← This path + filename must match exactly (including capitalization).
 import MultiPurposeIntakeForm from "@/components/MultiPurposeIntakeForm";
 
+interface PageProps {
+  searchParams: {
+    gender?: string;
+  };
+}
 export default function MultiPurposeIntakePage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
