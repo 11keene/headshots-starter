@@ -193,49 +193,7 @@ export default function OverviewClient({
         </div>
       </div>
 
-      {/* ─── “Choose a Pack” Section ─── */}
-      <section className="px-4 mt-10 max-w-4xl mx-auto">
-        <h2 className="text-2xl font-bold mb-4">Choose a Pack</h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          {availablePacks.map((p) => (
-            <div
-              key={p.id}
-              className="border rounded-lg p-6 flex flex-col justify-between hover:shadow-lg transition"
-            >
-              <div>
-                <h3 className="text-xl font-semibold mb-1">{p.name}</h3>
-                <p className="text-gray-600 mb-2">
-                  {p.forGender === "all"
-                    ? "For everyone"
-                    : p.forGender === "man"
-                    ? "For men"
-                    : "For women"}
-                </p>
-                {p.exampleImg && (
-                  <img
-                    src={p.exampleImg}
-                    alt={`${p.name} preview`}
-                    className="w-full h-40 object-cover rounded"
-                  />
-                )}
-              </div>
-              <button
-                onClick={() => handleBuy(p.slug!)}
-                disabled={loadingPack !== null}
-                className={`mt-4 px-4 py-2 font-semibold rounded ${
-                  loadingPack === p.slug
-                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
-                }`}
-              >
-                {loadingPack === p.slug ? "Creating…" : `Buy ${p.name}`}
-              </button>
-            </div>
-          ))}
-        </div>
-        {error && <p className="mt-4 text-center text-red-600">{error}</p>}
-      </section>
-
+     
       {/* ─── Models List ─── */}
       <div className="flex-1 bg-ivory px-4 py-8 mt-12">
         <div className="max-w-6xl mx-auto">

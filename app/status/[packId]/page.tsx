@@ -1,112 +1,114 @@
 // File: app/status/[packId]/page.tsx
-"use client"; // ← Must be the very first line
+"use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-interface StatusPageProps {
-  params: { packId: string };
-}
+type GenerationStatus =
+  | "idle"
+  | "fetchingExistingImages"
+  | "displayingExistingImages"
+  | "pollingAstria"
+  | "done"
+  | "error";
 
-type GenerationStatus = "idle" | "generatingPrompts" | "trainingAstria" | "done" | "error";
-
-export default function StatusPage({ params }: StatusPageProps) {
+export default function StatusPage({ params }: { params: { packId: string } }) {
   const { packId } = params;
-  const router = useRouter();
+  const supabase = createClientComponentClient();
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Local React state
-  // ─────────────────────────────────────────────────────────────────────────────
   const [status, setStatus] = useState<GenerationStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [astriaImages, setAstriaImages] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Step 1: When this page first loads, kick off the “generate prompts” API call
-  // ─────────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    async function runGenerationFlow() {
-      try {
-        setStatus("generatingPrompts");
+    async function loadOrPoll() {
+      // ──────────── Step 1) Look for Astria results in `generated_images` ────────────
+      setStatus("fetchingExistingImages");
+      console.log("[StatusPage] Checking Supabase for generated_images of packId =", packId);
 
-        // 1A) Call /api/generate-prompts to get the array of GPT prompts
-        console.log(`[StatusPage] Calling /api/generate-prompts for packId=${packId}`);
-        const gpRes = await fetch("/api/generate-prompts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ packId }),
-        });
+      const { data: existingGen, error: fetchGenErr } = await supabase
+        .from("generated_images")
+        .select("image_url")
+        .eq("pack_id", packId);
 
-        if (!gpRes.ok) {
-          const errJson = await gpRes.json();
-          console.error("[StatusPage] generate-prompts returned error:", errJson);
-          setErrorMessage(errJson.error || `Error ${gpRes.status}`);
-          setStatus("error");
-          return;
-        }
-
-        const gpData = await gpRes.json();
-        const prompts: string[] = gpData.prompts;
-        console.log("[StatusPage] Received prompts:", prompts);
-
-        // 1B) After we have the array of prompts, send them to Astria
-        setStatus("trainingAstria");
-
-        console.log(
-          "[StatusPage] Calling /api/create-astria-job with prompts, packId=",
-          packId
-        );
-        const astriaRes = await fetch("/api/create-astria-job", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ packId, prompts }),
-        });
-
-        if (!astriaRes.ok) {
-          const errJson = await astriaRes.json();
-          console.error("[StatusPage] create-astria-job returned error:", errJson);
-          setErrorMessage(errJson.error || `Error ${astriaRes.status}`);
-          setStatus("error");
-          return;
-        }
-
-        const astriaData = await astriaRes.json();
-        const images: string[] = astriaData.images;
-        console.log("[StatusPage] Received Astria images:", images);
-
-        // 1C) Save the returned image URLs into state so we can render them
-        setAstriaImages(images);
-        setStatus("done");
-      } catch (e: any) {
-        console.error("[StatusPage] Unexpected error in runGenerationFlow:", e);
-        setErrorMessage(e.message || "Something went wrong.");
+      if (fetchGenErr) {
+        console.error("[StatusPage] Error fetching generated_images:", fetchGenErr);
+        setErrorMessage("Failed to fetch generated images.");
         setStatus("error");
+        return;
       }
+
+      if (existingGen && existingGen.length > 0) {
+        // ── 1A) Astria has already returned results → display them
+        const urls = existingGen.map((row: any) => row.image_url);
+        console.log("[StatusPage] Found generated_images rows:", urls);
+        setImageUrls(urls);
+        setStatus("displayingExistingImages");
+        return;
+      }
+
+      // ── 1B) No `generated_images` yet → wait/poll for Astria webhook
+      console.log("[StatusPage] No generated_images yet; polling Astria every 2s.");
+      setStatus("pollingAstria");
+
+      const intervalId = setInterval(async () => {
+        console.log(`[StatusPage] Polling generated_images for packId ${packId}`);
+        const { data: checkRows, error: checkErr } = await supabase
+          .from("generated_images")
+          .select("image_url")
+          .eq("pack_id", packId);
+
+        if (checkErr) {
+          console.error("[StatusPage] Polling generated_images error:", checkErr);
+          clearInterval(intervalId);
+          setErrorMessage("Error while polling for Astria images.");
+          setStatus("error");
+          return;
+        }
+
+        if (checkRows && checkRows.length > 0) {
+          clearInterval(intervalId);
+          const urls = checkRows.map((r: any) => r.image_url);
+          console.log("[StatusPage] Astria images appeared:", urls);
+
+          // ── Optional: insert into `images` if you want to store them there as well
+          const rowsToInsert = urls.map((u) => ({
+            pack_id: packId,
+            url: u,
+            created_at: new Date().toISOString(),
+          }));
+          const { error: insertErr } = await supabase.from("images").insert(rowsToInsert);
+          if (insertErr) {
+            console.error("[StatusPage] Could not insert into images table:", insertErr);
+          } else {
+            console.log("[StatusPage] ✅ Stored images in Supabase `images` table");
+          }
+
+          // Finally display them
+          setImageUrls(urls);
+          setStatus("done");
+        }
+        // else: keep waiting
+      }, 2000);
+
+      // Exit so we never run any generate-prompts logic
+      return;
     }
 
-    runGenerationFlow();
-  }, [packId]);
+    loadOrPoll();
+  }, [packId, supabase]);
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // UI: Show different messages based on `status`
-  // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-lg mx-auto p-6 text-center">
-      {status === "idle" && <p>Waiting…</p>}
-      
-      {status === "generatingPrompts" && (
-        <p className="text-xl font-medium">🔄 Generating image prompts…</p>
+      {status === "fetchingExistingImages" && (
+        <p className="text-lg">Looking for your images…</p>
       )}
-      
-      {status === "trainingAstria" && (
-        <p className="text-xl font-medium">⏳ Training your custom model (Astria)…</p>
-      )}
-      
-      {status === "done" && (
+
+      {status === "displayingExistingImages" && (
         <>
-          <h2 className="text-2xl font-bold mb-4">🎉 Your images are ready!</h2>
+          <h2 className="text-2xl font-bold mb-4">Your images are ready!</h2>
           <div className="grid grid-cols-1 gap-4">
-            {astriaImages.map((url, idx) => (
+            {imageUrls.map((url, idx) => (
               <div key={idx} className="flex flex-col items-center">
                 <img
                   src={url}
@@ -125,9 +127,33 @@ export default function StatusPage({ params }: StatusPageProps) {
           </div>
         </>
       )}
-      
+
+      {status === "pollingAstria" && (
+        <p className="text-xl font-medium">⏳ Waiting for images to finish…</p>
+      )}
+
+      {status === "done" && imageUrls.length > 0 && (
+        <>
+          <h2 className="text-2xl font-bold mb-4">🎉 Your images are ready!</h2>
+          <div className="flex flex-col items-center">
+            <img
+              src={imageUrls[0]}
+              alt="Generated headshot"
+              className="w-64 h-64 object-cover rounded-lg mb-2"
+            />
+            <a
+              href={imageUrls[0]}
+              download={`pack_${packId}_image.png`}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Download Image
+            </a>
+          </div>
+        </>
+      )}
+
       {status === "error" && (
-        <p className="text-red-600">Error: {errorMessage}</p>
+        <p className="text-red-600 mt-4">Error: {errorMessage}</p>
       )}
     </div>
   );

@@ -439,8 +439,15 @@ type IntakeFormProps = {
 export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-const rawGender = (searchParams?.get("gender") || "").toLowerCase();
-const gender = rawGender === "woman" ? "female" : "male";
+const rawGender = (searchParams?.get("gender") || "").toLowerCase(); // "" | "man" | "woman"
+const [genderParam, setGenderParam] = useState<"man" | "woman" | null>(null);
+
+useEffect(() => {
+  if (rawGender === "man" || rawGender === "woman") {
+    setGenderParam(rawGender as "man" | "woman");
+  }
+}, [rawGender]);
+
 
 
   const [step, setStep] = useState(0);
@@ -469,6 +476,7 @@ const gender = rawGender === "woman" ? "female" : "male";
     localStorage.setItem(`intake-${pack}`, JSON.stringify(answers));
   }, [answers, pack]);
 
+  const gender = genderParam === "woman" ? "female" : "male";
   const questionSet = useMemo(
     () => (gender === "female" ? WOMEN_QUESTIONS : MEN_QUESTIONS),
     [gender]
@@ -756,9 +764,12 @@ const choose = (val: any) => {
   } else {
              // multi-toggle
              choose(o.value);
-             // if you want age or industry to auto advance, keep that here:
-             if (question.key === "age" || question.key === "industry") {
-               next();
+            // auto-advance for "age". For "industry", only auto-advance if user clicked anything except "other":
+                if (question.key === "age") {
+                  next();
+                } else if (question.key === "industry" && o.value !== "other") {
+                  // if they picked "marketing"/"finance"/etc. (i.e. not "other"), jump immediately
+                  next();
              }
            }
          }}
@@ -824,28 +835,25 @@ const choose = (val: any) => {
                 />
               </div>
             )}
-                      {/* — “Other” textbox for industry — */}
+                      {/* This is the culprit. It’s still INSIDE the .map: */}
           {question.key === "industry" &&
             o.value === "other" &&
             isSelected && (
-             <div className="mt-4 p-2 rounded ring-1 ring-muted-gold">
-               <label
-                  htmlFor="industryOtherText"
-                 className="block text-sm font-medium text-white"
-               >
+              <div className="mt-4 p-2 rounded ring-1 ring-muted-gold">
+                <label htmlFor="industryOtherText" className="block text-sm font-medium text-white">
                   Please specify your industry
                 </label>
                 <input
-                 id="industryOtherText"
-                 type="text"
+                  id="industryOtherText"
+                  type="text"
                   value={otherText}
-                 onChange={(e) => setOtherText(e.target.value)}
-                 placeholder="e.g. “Freelance Graphic Designer”"
-                  className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm 
-                             focus:border-charcoal focus:ring-charcoal sm:text-sm"
+                  onChange={(e) => setOtherText(e.target.value)}
+                  placeholder="e.g. “Freelance Graphic Designer”"
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-white text-black shadow-sm focus:border-charcoal focus:ring-charcoal sm:text-sm"
+                  required
                 />
               </div>
-            )}
+      )}
 
           {/* — “Other” textbox for photoUsage — */}
           {question.key === "photoUsage" &&

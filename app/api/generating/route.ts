@@ -1,47 +1,58 @@
-// File: app/api/create-astria-job/route.ts
+// File: app/api/generating/route.ts
 import { NextResponse } from "next/server";
+import Stripe from "stripe";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import Stripe from "stripe";
 
-// Your helper for “wait until at least 4 uploads are in Supabase”
-async function waitForUploads(supabase: any, packId: string, maxAttempts = 10, delayMs = 1500) {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-04-30.basil" });
+
+// same waitForUploads helper you already have…
+async function waitForUploads(supabase: any, packId: string, maxAttempts = 5, delayMs = 2000) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    console.log(`[Webhook][Debug] About to query uploads with packId = "${packId}" (attempt ${attempt})`);
-    const { data: rows, error } = await supabase
+    const { data: uploads, error } = await supabase
       .from("uploads")
       .select("url")
       .eq("pack_id", packId);
 
     if (error) throw error;
-    if (rows && rows.length >= 4) {
-      return rows.map((r: any) => r.url as string);
+    if (uploads && uploads.length >= 4) {
+      return uploads.map((u: { url: string }) => u.url);
     }
     await new Promise((r) => setTimeout(r, delayMs));
   }
   throw new Error("No uploaded images found for pack " + packId);
 }
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   const supabase = createRouteHandlerClient({ cookies });
-  const { packId, prompts } = await req.json();
-
-  if (!packId || !Array.isArray(prompts) || prompts.length === 0) {
-    return NextResponse.json({ error: "Missing packId or prompts" }, { status: 400 });
+  const url = new URL(req.url);
+  const session_id = url.searchParams.get("session_id");
+  const packId = url.searchParams.get("packId");
+  if (!session_id || !packId) {
+    return NextResponse.json({ error: "Missing session_id or packId" }, { status: 400 });
   }
 
-  // 1) Load “intake” (for gender) and verify pack exists
+  // 1) Verify Stripe session
+  const session = await stripe.checkout.sessions.retrieve(session_id, { expand: ["payment_intent"] });
+  if (session.payment_status !== "paid") {
+    return NextResponse.json({ error: "Payment not completed" }, { status: 402 });
+  }
+  if (session.metadata?.packId !== packId) {
+    return NextResponse.json({ error: "packId mismatch" }, { status: 400 });
+  }
+
+  // 2) Fetch intake to get gender
   const { data: packRow, error: packErr } = await supabase
     .from("packs")
     .select("intake")
     .eq("id", packId)
     .single();
   if (packErr || !packRow) {
-    return NextResponse.json({ error: "Could not find pack or intake data" }, { status: 500 });
+    return NextResponse.json({ error: "Could not find pack/intake" }, { status: 500 });
   }
   const gender = (packRow.intake?.gender as string) || "woman";
 
-  // 2) Wait up to ~15 seconds (10 attempts × 1.5s) for user‐uploaded images
+  // 3) Wait for at least 4 uploads to appear
   let imageUrls: string[];
   try {
     imageUrls = await waitForUploads(supabase, packId);
@@ -49,9 +60,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 
-  // 3) Create an Astria “tune” using those 4+ sample images
+  // 4) Create Astria tune
   const tuneForm = new FormData();
-  tuneForm.append("tune[title]", `${packRow.intake?.user_id || "unknown"}-${packId}`);
+  tuneForm.append("tune[title]", `${session.metadata.user_id}-${packId}`);
   tuneForm.append("tune[name]", gender);
   tuneForm.append("tune[branch]", "fast");
   imageUrls.forEach((url) => tuneForm.append("tune[images][]", url));
@@ -64,12 +75,21 @@ export async function POST(req: Request) {
   const tuneData = await tuneRes.json();
   const tuneId = tuneData?.id;
   if (!tuneId) {
-    console.error("Astria tune creation failed:", tuneData);
     return NextResponse.json({ error: "Tune creation failed" }, { status: 500 });
   }
 
-  // 4) For each GPT prompt text, send to Astria
-  let lastPromptId: number | null = null;
+  // 5) Generate GPT prompts (re‐use your existing /api/generate-prompts)
+  const promptRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/generate-prompts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ packId }),
+  });
+  const { prompts } = await promptRes.json();
+  if (!Array.isArray(prompts)) {
+    return NextResponse.json({ error: "Prompt generation failed" }, { status: 500 });
+  }
+
+  // 6) Send each prompt to Astria
   for (const promptText of prompts) {
     const astriaPrompt = `sks ${gender} ${promptText}`;
     const sendRes = await fetch(`https://api.astria.ai/tunes/${tuneId}/prompts`, {
@@ -85,26 +105,18 @@ export async function POST(req: Request) {
         inpaint_faces: true,
       }),
     });
-    const promptData = await sendRes.json();
-    const promptId = promptData?.id;
+    const sendData = await sendRes.json();
+    const promptId = sendData?.id;
     if (promptId) {
-      lastPromptId = promptId;
-      // 5) Immediately save a “placeholder” row into generated_images
       await supabase.from("generated_images").insert({
         prompt_id: promptId,
         pack_id: packId,
-        image_url: "", // will be filled later by your “/api/check-astria-status”
+        image_url: "",
         url: `https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`,
         created_at: new Date().toISOString(),
       });
-      console.log(`[create-astria-job] Saved placeholder for Astria promptId ${promptId}`);
     }
   }
 
-  if (!lastPromptId) {
-    return NextResponse.json({ error: "No Astria prompt IDs were created" }, { status: 500 });
-  }
-
-  // 6) Return the most recent promptId to the client (so it can start polling)
-  return NextResponse.json({ promptId: lastPromptId });
+  return NextResponse.json({ success: true });
 }

@@ -1,16 +1,17 @@
-"use client"
+// components/AnnouncementBar.tsx
+"use client";
 
-import { useState } from "react"
-import { X } from "lucide-react"
-import { motion } from "motion/react"
+import { useState } from "react";
+import { X } from "lucide-react";
+import { motion } from "motion/react";
 
-const isEnabled = process.env.NEXT_PUBLIC_ANNOUNCEMENT_ENABLED === "true"
-const message = process.env.NEXT_PUBLIC_ANNOUNCEMENT_MESSAGE
+const isEnabled = process.env.NEXT_PUBLIC_ANNOUNCEMENT_ENABLED === "true";
 
 export default function AnnouncementBar() {
-  const [isVisible, setIsVisible] = useState(true)
+  const [isVisible, setIsVisible] = useState(true);
 
-  if (!isEnabled || !isVisible) return null
+  // Hide entirely if the feature is turned off or the bar has been dismissed
+  if (!isEnabled || !isVisible) return null;
 
   return (
     <motion.div
@@ -19,7 +20,17 @@ export default function AnnouncementBar() {
       className="relative bg-charcoal text-white py-2 px-4 text-center text-sm"
     >
       <div className="container mx-auto flex items-center justify-center">
-        <p>{message}</p>
+        <p>
+          👥 For Team Headshots, please&nbsp;
+          <a
+            href="mailto:support@aimavenstudio.com"
+            className="underline hover:text-slate-300"
+          >
+            click here to email us
+          </a>
+          &nbsp;and let us know exactly what you need.
+        </p>
+
         <button
           onClick={() => setIsVisible(false)}
           className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white"
@@ -29,7 +40,5 @@ export default function AnnouncementBar() {
         </button>
       </div>
     </motion.div>
-  )
+  );
 }
-
-

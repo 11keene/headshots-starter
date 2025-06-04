@@ -414,8 +414,15 @@ export default function MultiPurposeIntakeForm({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const rawGender = (searchParams?.get("gender") || "").toLowerCase();
-  const gender = rawGender === "woman" ? "female" : "male";
+ const rawGender = (searchParams?.get("gender") || "").toLowerCase(); // "" | "man" | "woman"
+const [genderParam, setGenderParam] = useState<"man" | "woman" | null>(null);
+
+useEffect(() => {
+  if (rawGender === "man" || rawGender === "woman") {
+    setGenderParam(rawGender as "man" | "woman");
+  }
+}, [rawGender]);
+
 
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -454,8 +461,8 @@ const session = useSession();
   // Choose the correct question set based on `gender` (or “multi-purpose” fallback)
   // ────────────────────────────────────────────────────────────────────────────────
    const questionSet = useMemo(
-     () => (gender === "female" ? WOMEN_QUESTIONS : MEN_QUESTIONS),
-     [gender]
+     () => (genderParam === "woman" ? WOMEN_QUESTIONS : MEN_QUESTIONS),
+     [genderParam]
    );
    const question = questionSet[step];
 
@@ -555,7 +562,7 @@ const session = useSession();
         }
 
         // 5d) Finally, redirect to the upload page using the new real UUID:
-        router.push(`/overview/packs/${createdPack.id}/next?gender=${gender}`);
+        router.push(`/overview/packs/${createdPack.id}/next?gender=${genderParam}`);
       } catch (err) {
         console.error("Unexpected error in multi‐purpose pack creation:", err);
       }
