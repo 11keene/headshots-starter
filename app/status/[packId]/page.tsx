@@ -36,13 +36,9 @@ export default function StatusPage({ params }: { params: { packId: string } }) {
 
         const urls = (rows as GeneratedImageRow[])
           .filter((row) => row.image_url)
-          .map((row) => {
-            // Convert to public URL
-            const urlParts = row.image_url.split("/object/");
-            return urlParts.length === 2
-              ? `https://xyz.supabase.co/storage/v1/object/public/${urlParts[1]}`
-              : row.image_url;
-          });
+          .map((row) => row.image_url);
+
+        console.log(`📸 Loaded ${urls.length} images from Supabase for pack ${packId}`);
 
         setImages(urls);
         setLoading(false);

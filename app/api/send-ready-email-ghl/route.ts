@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     }
 
     // 3️⃣ Generate a unique timestamped tag for this contact update
-    const dynamicTag = `photos_ready_${Date.now()}`;
+const tags = [`photos_ready`, `photos_ready_${Date.now()}`];
 
     // 4️⃣ Build the upsert contact payload with custom fields and dynamic tag
     const contactPayload = {
@@ -35,10 +35,12 @@ export async function POST(req: Request) {
       lastName,
       locationId: LOCATION_ID,
       customFields: {
-        packId,
-        statusLink: `https://aimavenstudio.com/status/${packId}`,
-      },
-      tags: [dynamicTag],
+  packid: packId,
+statuspagelink: `https://www.aimavenstudio.com/status/${packId}`,
+}
+
+,
+tags,
     };
 
     console.log("[send-ready-email-ghl] 🔍 Upserting contact with payload:");
@@ -71,7 +73,7 @@ export async function POST(req: Request) {
       "[send-ready-email-ghl] ✅ Contact upserted. GHL contact ID =",
       contactId
     );
-    console.log("[send-ready-email-ghl] 🏷️ Trigger tag used:", dynamicTag);
+    console.log("[send-ready-email-ghl] 🏷️ Trigger tags used:", tags);
 
     // 6️⃣ Return success; GHL Automation will now trigger via dynamic tag
     return NextResponse.json({ success: true });

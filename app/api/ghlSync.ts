@@ -31,11 +31,12 @@ export async function POST(request: Request) {
           "Content-Type": "application/json",
           "Accept": "application/json",
         },
-        body: JSON.stringify({
-          email: user.email,
-          customFields: { supabase_id: user.id },
-        }),
-      });
+  body: JSON.stringify({
+    email: user.email,
+    customFields: { supabase_id: user.id },
+    tags: ["user_created"],  // <-- Add this line
+  }),
+});
 
       if (!resp.ok) {
         const text = await resp.text();

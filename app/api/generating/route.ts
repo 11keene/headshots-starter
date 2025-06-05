@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-05-28.basil" });
 
-// same waitForUploads helper you already have…
+// Helper: wait until 4 uploads are in Supabase
 async function waitForUploads(supabase: any, packId: string, maxAttempts = 5, delayMs = 2000) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const { data: uploads, error } = await supabase
@@ -28,11 +28,12 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const session_id = url.searchParams.get("session_id");
   const packId = url.searchParams.get("packId");
+
   if (!session_id || !packId) {
     return NextResponse.json({ error: "Missing session_id or packId" }, { status: 400 });
   }
 
-  // 1) Verify Stripe session
+  // Step 1: Confirm Stripe payment
   const session = await stripe.checkout.sessions.retrieve(session_id, { expand: ["payment_intent"] });
   if (session.payment_status !== "paid") {
     return NextResponse.json({ error: "Payment not completed" }, { status: 402 });
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "packId mismatch" }, { status: 400 });
   }
 
-  // 2) Fetch intake to get gender
+  // Step 2: Get intake gender
   const { data: packRow, error: packErr } = await supabase
     .from("packs")
     .select("intake")
@@ -52,7 +53,7 @@ export async function GET(req: Request) {
   }
   const gender = (packRow.intake?.gender as string) || "woman";
 
-  // 3) Wait for at least 4 uploads to appear
+  // Step 3: Wait for uploads to be ready
   let imageUrls: string[];
   try {
     imageUrls = await waitForUploads(supabase, packId);
@@ -60,7 +61,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 
-  // 4) Create Astria tune
+  // Step 4: Create Astria Tune
   const tuneForm = new FormData();
   tuneForm.append("tune[title]", `${session.metadata.user_id}-${packId}`);
   tuneForm.append("tune[name]", gender);
@@ -78,7 +79,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Tune creation failed" }, { status: 500 });
   }
 
-  // 5) Generate GPT prompts (re‐use your existing /api/generate-prompts)
+  // Step 5: Generate prompts
   const promptRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/generate-prompts`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -89,7 +90,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Prompt generation failed" }, { status: 500 });
   }
 
-  // 6) Send each prompt to Astria
+  // Step 6: Send prompts to Astria & wait for images
   for (const promptText of prompts) {
     const astriaPrompt = `sks ${gender} ${promptText}`;
     const sendRes = await fetch(`https://api.astria.ai/tunes/${tuneId}/prompts`, {
@@ -110,15 +111,63 @@ export async function GET(req: Request) {
     });
     const sendData = await sendRes.json();
     const promptId = sendData?.id;
-    if (promptId) {
+    if (!promptId) continue;
+
+    // Step 6b: Wait for 3 images to be returned for this prompt
+    let imageUrls: string[] = [];
+    for (let i = 0; i < 20; i++) {
+      const statusRes = await fetch(`https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`, {
+        headers: { Authorization: `Bearer ${process.env.ASTRIA_API_KEY}` },
+      });
+      const statusData = await statusRes.json();
+      if (statusData?.images?.length === 3) {
+        imageUrls = statusData.images;
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 3000)); // wait 3s
+    }
+
+    if (imageUrls.length !== 3) {
+      console.warn(`⚠️ Only got ${imageUrls.length} images for prompt ${promptId}`);
+      continue;
+    }
+
+    // Step 6c: Insert each image into Supabase
+    for (const imageUrl of imageUrls) {
       await supabase.from("generated_images").insert({
         prompt_id: promptId,
         pack_id: packId,
-        image_url: "",
+        image_url: imageUrl,
         url: `https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`,
         created_at: new Date().toISOString(),
       });
     }
+  }
+
+  // ✅ Final Check: Log image count and trigger GHL email if ready
+  const { data: uploadedImages, error: imageErr } = await supabase
+    .from("generated_images")
+    .select("image_url")
+    .eq("pack_id", packId);
+
+  if (imageErr) {
+    console.error("[Final Check] Error fetching image count:", imageErr);
+  } else if (uploadedImages.length === 45) {
+    console.log(`✅ All 45 images uploaded to Supabase for pack ${packId}`);
+    console.log("✅ Triggering GHL email...");
+
+    await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/send-ready-email-ghl`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userEmail: session.customer_email,
+        firstName: "",
+        lastName: "",
+        packId,
+      }),
+    });
+  } else {
+    console.warn(`⚠️ Only ${uploadedImages.length} images uploaded to Supabase for pack ${packId}`);
   }
 
   return NextResponse.json({ success: true });
