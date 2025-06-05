@@ -1,84 +1,102 @@
-// File: app/status/[packId]/page.tsx
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-type GeneratedImageRow = {
-  prompt_id: string;
-  image_url: string | null;
-  created_at: string;
-};
+interface GeneratedImageRow {
+  pack_id: string;
+  image_url: string;
+}
 
 export default function StatusPage({ params }: { params: { packId: string } }) {
-  const supabase = createClientComponentClient();
   const { packId } = params;
+  const supabase = createClientComponentClient();
+  const [images, setImages] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
 
-  // Hold an array of { prompt_id, image_url, created_at }
-  const [images, setImages] = useState<GeneratedImageRow[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  useEffect(() => {
+    async function loadGeneratedImages() {
+      try {
+        const { data: rows, error: supaErr } = await supabase
+          .from("generated_images")
+          .select("image_url")
+          .eq("pack_id", packId);
 
-  // Fetch all generated_images rows for this packId
-  async function fetchImages() {
-    const { data, error } = await supabase
-      .from("generated_images")
-      .select("prompt_id, image_url, created_at")
-      .eq("pack_id", packId)
-      .order("created_at", { ascending: true });
+        if (supaErr) throw supaErr;
 
-    if (error) {
-      console.error("Error fetching generated_images:", error);
-      return;
+        if (!rows || rows.length === 0) {
+          setError("Your images are still being generated. Please check back shortly.");
+          setLoading(false);
+          return;
+        }
+
+        const urls = (rows as GeneratedImageRow[])
+          .filter((row) => row.image_url)
+          .map((row) => row.image_url);
+
+        setImages(urls);
+        setLoading(false);
+      } catch (e: any) {
+        console.error("[StatusPage] Error loading images:", e);
+        setError("There was an error loading your images. Please try again later.");
+        setLoading(false);
+      }
     }
-    if (data) {
-      setImages(data as GeneratedImageRow[]);
-    }
-    setIsLoading(false);
+
+    loadGeneratedImages();
+  }, [packId, supabase]);
+
+  if (loading) {
+    return <div style={{ textAlign: "center", marginTop: 50 }}>Loading your images…</div>;
   }
 
-  // Poll every 5 seconds to check if any rows have received their image_url
-  useEffect(() => {
-    fetchImages(); // initial load
-
-    const interval = setInterval(() => {
-      fetchImages();
-    }, 5000); // every 5s
-
-    return () => clearInterval(interval);
-  }, [packId]);
+  if (error) {
+    return (
+      <div style={{ textAlign: "center", marginTop: 50, color: "red" }}>
+        {error}
+      </div>
+    );
+  }
 
   return (
-    <main className="p-4">
-      <h1 className="text-2xl font-semibold mb-4">Your AI-Generated Images</h1>
-
-      {isLoading && (
-        <p className="text-gray-600">Loading status…</p>
-      )}
-
-      {!isLoading && images.length === 0 && (
-        <p className="text-gray-600">
-          No generated images found yet. Please wait a moment.
-        </p>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-        {images.map((row, idx) => (
+    <main style={{ padding: "2rem" }}>
+      <h1 style={{ textAlign: "center" }}>Your images are ready!</h1>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: "1rem",
+          marginTop: "2rem",
+        }}
+      >
+        {images.map((img, idx) => (
           <div
-            key={row.prompt_id}
-            className="border rounded-lg overflow-hidden bg-gray-50"
+            key={idx}
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: 8,
+              padding: 8,
+              textAlign: "center",
+            }}
           >
-            {row.image_url ? (
-              <img
-                src={row.image_url}
-                alt={`Generated prompt ${idx + 1}`}
-                className="w-full h-auto object-cover"
-              />
-            ) : (
-              <div className="h-48 flex items-center justify-center bg-gray-200 text-gray-500">
-                <span>Waiting…</span>
-              </div>
-            )}
+            <img
+              src={img}
+              alt={`Generated #${idx + 1}`}
+              style={{ width: "100%", height: "auto", borderRadius: 4 }}
+            />
+            <a
+              href={img}
+              download={`image_${idx + 1}.png`}
+              style={{
+                display: "inline-block",
+                marginTop: 8,
+                color: "#006aff",
+                textDecoration: "none",
+              }}
+            >
+              Download Image #{idx + 1}
+            </a>
           </div>
         ))}
       </div>

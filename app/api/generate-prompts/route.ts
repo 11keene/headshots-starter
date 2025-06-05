@@ -10,91 +10,145 @@ import type { ChatCompletionMessageParam } from "openai/resources/chat/completio
 // Initialize OpenAI client
 // ────────────────────────────────────────────────────────────────────────────────
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!, // Make sure this is set in your .env.local
+  apiKey: process.env.OPENAI_API_KEY!, // ensure this is set
 });
 
 // ────────────────────────────────────────────────────────────────────────────────
-// Helper to build ChatGPT messages (instructions only – no “example valid” block).
-// This forces the model to output exactly 15 prompts in a JSON array of 15 strings.
+// Build the “system” prompt based on packType.  We no longer include any
+// “example” JSON in the instructions—just “generate exactly 15 prompts”.
 // ────────────────────────────────────────────────────────────────────────────────
 function buildPromptMessages(
   intakeData: Record<string, any> | null,
   packType: string
 ): ChatCompletionMessageParam[] {
-  const gptInstructions = {
+  // only instructions—no “example JSON”
+  const gptInstructions: Record<string, string> = {
     professional: `
-This GPT takes a completed client intake form (in JSON) and produces exactly 15 tailored, photorealistic AI image prompts.  
-Each of the 15 prompts must be directly based on the client’s answers (gender, body type, wardrobe, hair, setting, mood, brand colors, industry, etc.).  
-You must output a single JSON array of exactly 15 strings—no bullet points, no markdown fences, no explanation, only a valid JSON array of 15 elements.
+This GPT takes completed client intake form answers and generates a tailored set of 15 photorealistic AI image prompts for AI Maven Studio.
 
-Each prompt (string) must:
-- Be customized to the client’s data (real person, not stock).
-- Vary in scene (studio, outdoor, editorial, conceptual, etc.), lighting, framing, and emotion.
-- Include at least 8 different headshot-style prompts (close, chest-up, waist-up, or 3/4 body) across the 15.
-- Avoid action poses (no walking, running, mid-step).
-- At least 13 of the 15 prompts must include a setting or environment.
-- For repeated background categories, vary the specific sub-environment (e.g. if two “Natural Outdoor” prompts, one could be garden, another forest).
-- Vary lighting style (warm, cool, rim, ambient) so they don’t all look the same.
-- If wardrobe categories overlap (e.g. “formal” vs “casual”), distribute them across different prompts so no prompt mixes categories unless explicitly stated by the client.
+Each prompt is based entirely on the client’s personal responses, including gender, body type, wardrobe selections, hairstyle, background setting, mood/vibe, brand colors, industry, and styling preferences. The GPT must act as a creative director, elevating the client's vision while staying true to their intent and identity.
 
-Creative Director Role:
-- Do not add extra text—only output a JSON array of 15 prompt strings.
-- Do not include text outside the JSON array.
+🔁 Output Requirements:
+Each time an intake form is processed, the GPT must generate exactly 15 unique image prompts.
 
-Use the intakeData exactly as given. If any field is missing, still produce 15 prompts based on whatever is provided.
+Each prompt must:
+- Be directly tailored to the client's answers — this is a real person, not a stock model.
+- Vary in scene interaction, framing, lighting, and emotional tone.
+- Include at least 8 headshots (close range, chest-up, waist-up, or 3/4 body) across the 15 prompts.
+- Avoid action poses entirely — no walking, hand-raising, or dynamic limb movement.
+- At least 13 of the 15 prompts must include some element of setting or environment. Limit traditional still portrait-style prompts to a maximum of 2.
+- When multiple prompts use the same general setting category (e.g., “Natural Outdoor” or “Home/Indoor”), vary the specific scene types (e.g., beach, cliffside, garden, kitchen nook, reading chair) to ensure visual depth and prompt freshness that makes sense to the logic of the profession/vibe.
+- In studio or conceptual settings, vary lighting style, temperature, or symbolism (e.g., red spotlight with mist, side lighting with shadows, ambient color glow). Avoid using the same visual tone or lighting setup more than once — especially in moody or dramatic studio scenes.
 
-GPT Logic Mapping:
-1. Gender: controls pronouns, styling language.
-2. Body Type: mention “petite,” “curvy,” “broad-shouldered,” etc. in each prompt’s description.
-3. Hair: For women, use hair texture (e.g. straight, wavy, curly, coily, locs). For men, “bald,” “buzz cut,” “medium,” “long,” or “locs.”
-4. Wardrobe: If multiple categories (e.g. blazer vs casual), distribute them among prompts.
-5. Background: Rotate through studio, natural, urban, conceptual.
-6. Mood/Vibe: drives lighting and expression.
-7. Brand Colors: mention subtle accents in props, lighting, or clothing.
-8. Industry: incorporate “technology,” “healthcare,” etc. into the scene.
-9. Photo Usage: if “LinkedIn,” make it formal headshot; if “social,” looser.
-10. Avoid: follow any “things to avoid” the client listed.
-11. Additional Notes: personalize at least one prompt with notes.
+🎮 Creative Director Role:
+You are not designing generic prompts. You are producing a custom branding shoot based on a real person’s creative brief.  
+- Interpret the intake answers as truth—do not overwrite, substitute, or ignore client choices.  
+- Stay within the styling, mood, and wardrobe vision the client described.  
+- You may creatively enhance their vision with emotional nuance, subtle environmental interaction, or storytelling flourishes—but never deviate from their core selections.  
+- If any intake field is missing, do not ask follow-up questions; simply generate the best possible 15 prompts.
 
-Each of the 15 strings returned must stand on its own as a complete prompt. Output only a JSON array of 15 elements, like:
+📚 Reference Materials Available:
+- A PDF containing the 14 intake form questions and their answer options.  
+- Visual styling guides and moodboards for wardrobe, backgrounds, and industries.
 
-["prompt-string-1", "prompt-string-2", …, "prompt-string-15"]
+Use these materials to stay accurate and on-brand.
+
+📋 GPT Logic Mapping: How to Use Each Intake Answer  
+1. Gender: Controls styling language, hair options, body type matching, and model references.  
+2. Age Range: Subtly influences tone and styling maturity—never mention age directly.  
+3. Body Type: Informs posing, clothing fit, camera angle—explicitly name the selected body type in every single prompt.  
+4. Hair (Updated):  
+   - Women: use hair *texture* (straight, wavy, curly, coily, locs).  
+   - Men: use “choose which best represents your hair” (bald, buzz cut, medium, long, locs).  
+5. Wardrobe Style: Rotate through each selected wardrobe category—never mix categories in one prompt.  
+6. Professional Uniform: Use exactly as described—no improvisation.  
+7. Background Style: Rotate distinct sub-environments within each chosen setting category.  
+8. Mood/Vibe: Drives posture, lighting, and energy.  
+9. Brand Colors: Appear subtly in props, lighting, or accents—never overpower.  
+10. Things to Avoid: Must be excluded entirely.  
+11. Industry/Profession: Guides context and outfit styling.  
+12. Photo Usage: Informs composition, crop, and intention.  
+13. Creative Flair: If YES, include up to 3 expressive prompts with styled realism.  
+14. Additional Notes: Treat as essential—personalize at least one prompt with any free-form notes.
+
+💪 Posing & Posture:  
+Avoid all action poses; favor confident, grounded stances, subtle environmental engagement, and emotionally expressive positioning appropriate for the client’s profession.
+
+🎨 Studio & Backdrop:  
+Use high-end, editorial-style setups—avoid low-budget or generic references.
+
+👣 Footwear & Styling:  
+Respect setting-specific rules (e.g., barefoot only if it makes sense).
+
+📸 Camera Angle:  
+Avoid overhead or flat-lay unless artistically warranted.
+
+✨ Goal Reinforcement:  
+Every prompt must communicate the visual and professional goal of the image.
+
+✅ GPT Must Emphasize:  
+- Client Personalization  
+- Creative Freshness  
+- Visual Realism + Professional Polish  
+- Emotional Impact  
+- Flattering & Inclusive Styling  
+
+🚫 GPT Must Avoid:  
+- Action-based poses or gestures  
+- Randomizing demographics or styling  
+- Repeating poses or phrases  
+- Overriding the client’s intent  
+- Including logos, text, or branded elements  
+- Overcomplicating scenes with clutter or excess props  
+
+💬 GPT Tone:  
+Confident, creative, supportive, and intuitive—like a branding expert.  
     `.trim(),
 
     "multi-purpose": `
-This GPT acts as a creative director to convert a completed intake form into exactly 15 photorealistic AI image prompts.  
-Output a single JSON array of 15 strings—no markdown, no extra explanation—only JSON.
+This GPT acts as a professional creative director for AI Maven Studio’s Multi-Purpose Pack. Convert completed client intake forms into 15 photorealistic image prompts. Each prompt is tailored to one of the client’s listed roles and matched to its mood in precise order, capturing emotional tone and personality.
 
-Instructions for each of the 15:
-- Tailor each prompt to one of the client’s roles (e.g. “entrepreneur,” “parent,” etc.) and match to its mood.
-- Provide exact pose, styling, setting, lighting, and props (step-by-step clarity).
-- No ambiguity—be precise.
-- At least 8 of the 15 prompts must be headshots (close, chest-up, waist-up, or 3/4 body).
-- Avoid action poses.
-- Distribute wardrobe categories across the 15, not mixing them in a single prompt.
-- Ensure a variety of backgrounds (studio, outdoor, conceptual).
-- Use any client “additional notes” for at least one prompt.
-- Use hair options as defined (straight, wavy, curly, coily, locs for women; bald, buzz cut, medium, long, locs for men).
-- Include subtle brand color accents.
-- Honor “things to avoid” verbatim.
-- If any intake fields are missing, use what’s available to produce 15 prompts.
+Each prompt must be meticulously detailed with exact pose, styling, setting, lighting, and prop usage, assuming the rendering AI (Astria) requires step-by-step clarity. There must be no ambiguity or generalities.
 
-Output exactly:
-["prompt-1", "prompt-2", …, "prompt-15"]
+📝 Prompt Criteria:
+- Generate exactly 15 total prompts.
+- No action poses (e.g., walking, gesturing, turning, or mid-step movements).
+- Subject may still engage with the environment (e.g., seated at a desk, holding a prop, looking out a window).
+- Include at least 8 headshot-style prompts (close-up, chest-up, waist-up, or 3/4 body framing).
+- All poses must be still, poised, and intentional.
+- At least one prompt must match a selected photo usage (e.g., LinkedIn, media kit, social).
+
+🛍️ Wardrobe, Props & Background:
+- Rotate clearly through client’s wardrobe, prop, and background categories without overlap or redundancy.
+- Strictly honor all styling exclusions (e.g., no low contrast, no casual styling unless requested).
+- Conceptual prompts must use grounded, visually coherent symbolism—no surreal or floating ambiguity.
+
+🔍 Intake Data Handling:
+- If any intake information is missing, do NOT follow up with questions. Generate 15 prompts to the best of your ability using what’s provided.
+
+✂️ Hair Texture Updates:
+- Women’s hair texture: straight, wavy, curly, coily, locs.
+- Men’s hair: “Choose which best represents your hair” (bald, buzz cut, medium, long, locs).
+
+🎯 GPT Tone:
+- Strategic, clear, refined visual vocabulary.
+- Prompts should create a professional visual narrative emphasizing empowerment and identity clarity.
+
+    By following these instructions, produce 15 highly detailed, professional image prompts tailored to the client’s roles and moods.
     `.trim(),
   };
 
+  // pick the instructions for this packType (default to “professional” if unknown)
   const chosenInstructions =
     gptInstructions[packType as "professional" | "multi-purpose"] ||
-    gptInstructions.professional;
+    gptInstructions["professional"];
 
   const systemMessage: ChatCompletionMessageParam = {
     role: "system",
     content: chosenInstructions,
   };
 
-  // We still send the raw JSON intake from your DB as the “user” message
-  // so GPT can reference each field.
+  // the “user” message simply gives GPT the intake JSON
   const safeIntake = intakeData ?? {};
   const userMessage: ChatCompletionMessageParam = {
     role: "user",
@@ -109,21 +163,21 @@ Output exactly:
 }
 
 // ────────────────────────────────────────────────────────────────────────────────
-// POST handler for /api/generate-prompts — now calls OpenAI to generate 15 prompts.
+// POST handler for /api/generate-prompts — now correctly asks OpenAI for one JSON array
+// of length 15 and parses it.  
 // ────────────────────────────────────────────────────────────────────────────────
 export async function POST(req: Request) {
   try {
-    // 1) Parse incoming JSON and ensure packId is present
+    // 1) parse incoming JSON
     const body = await req.json();
     console.log("[generate-prompts] incoming body:", body);
     const { packId } = body as { packId?: string };
-
     if (!packId) {
       console.error("[generate-prompts] ❌ Missing packId");
       return NextResponse.json({ error: "Missing packId" }, { status: 400 });
     }
 
-    // 2) Fetch the pack row (to read pack_type + intake) from Supabase
+    // 2) fetch pack row from Supabase so we know pack_type + intake
     const supabase = createRouteHandlerClient({ cookies });
     const { data: packRow, error: packErr } = await supabase
       .from("packs")
@@ -137,98 +191,134 @@ export async function POST(req: Request) {
     }
 
     const packType: string = packRow.pack_type;
-    const intakeData: Record<string, any> | null = packRow.intake as Record<
-      string,
-      any
-    >;
+    const intakeData: Record<string, any> | null = packRow.intake as
+      | Record<string, any>
+      | null;
 
     console.log("[generate-prompts] packType =", packType);
     console.log("[generate-prompts] intakeData =", intakeData);
 
-    // 3) Build the system+user messages for GPT
+    // 3) Build the system/user messages
     const messages = buildPromptMessages(intakeData, packType);
 
-    // 4) Call OpenAI to generate exactly 15 prompts in a JSON array
+    // 4) Call OpenAI *once* (n: 1) and ask it to return a JSON array of length 15
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o", // or "gpt-4" whichever you have access to
-      messages,
-      temperature: 0.2,
-      max_tokens: 500, // increase max_tokens so the entire 15-element array can fit
-      n: 1, // we ask for exactly one completion that contains 15 strings
-    });
+  model: "gpt-4o", // or "gpt-4"
+  response_format: { type: "json_object" }, // 👈 CRUCIAL
+  messages: [
+    {
+      role: "system",
+      content: "You are an expert AI prompt generator. Return ONLY a JSON array of 15 strings. No explanation, no markdown, no headers — just a JSON array of image prompts."
+    },
+    {
+      role: "user",
+      content: `Here is the intake: ${JSON.stringify(intakeData)}`
+    }
+  ]
+});
 
+
+    // rawContent should now look like:
+    //   [
+    //     "first prompt text …",
+    //     "second prompt text …",
+    //     … up to 15 items …
+    //   ]
     const rawContent = completion.choices?.[0]?.message?.content;
     if (!rawContent) {
       console.error("[generate-prompts] ❌ No content from OpenAI.");
-      return NextResponse.json({ error: "OpenAI returned no content." }, { status: 500 });
+      return NextResponse.json(
+        { error: "OpenAI returned no content." },
+        { status: 500 }
+      );
     }
-
     console.log("[generate-prompts] rawContent from OpenAI:", rawContent);
 
-    // 5) Strip any markdown fences, then extract the JSON array substring
+    // 5) strip fences/trailing text and extract the “[…]” block
     let jsonText = rawContent.trim();
     if (jsonText.startsWith("```")) {
-      // If GPT wrapped it in triple backticks, remove them:
       const parts = jsonText.split("\n");
       parts.shift();
-      if (parts[parts.length - 1].trim() === "```") parts.pop();
+      if (parts[parts.length - 1].trim() === "```") {
+        parts.pop();
+      }
       jsonText = parts.join("\n").trim();
     }
-
-    // Find the first “[” and last “]” and slice out that full JSON array.
     const firstBracket = jsonText.indexOf("[");
     const lastBracket = jsonText.lastIndexOf("]");
     if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
       jsonText = jsonText.substring(firstBracket, lastBracket + 1);
     }
 
-    // 6) Parse into an array of strings, ensure length == 15
+    // 6) parse and validate it’s exactly a 15-element array
     let promptsArray: string[];
     try {
-      promptsArray = JSON.parse(jsonText);
-      if (!Array.isArray(promptsArray) || promptsArray.length !== 15) {
-        throw new Error(
-          `Parsed result is not a 15-element array (got ${JSON.stringify(promptsArray)})`
-        );
-      }
-    } catch (parseErr) {
-      console.error(
-        "[generate-prompts] ❌ Could not parse JSON array (expecting 15 strings). JSON text was:",
-        jsonText,
-        parseErr
-      );
-      return NextResponse.json(
-        { error: "OpenAI did not return a valid 15-element JSON array." },
-        { status: 500 }
-      );
-    }
+  const parsed = JSON.parse(jsonText);
+
+  if (Array.isArray(parsed)) {
+    promptsArray = parsed;
+  } else if (
+    parsed &&
+    typeof parsed === "object" &&
+    Object.keys(parsed).every((key) => !isNaN(Number(key)))
+  ) {
+    // Convert { "0": "...", "1": "...", ... } → [ "...", "..." ]
+    promptsArray = Object.keys(parsed)
+      .sort((a, b) => Number(a) - Number(b))
+      .map((key) => parsed[key]);
+  } else {
+    throw new Error("Parsed result is not a valid array or object with numbered keys");
+  }
+
+  if (
+    !Array.isArray(promptsArray) ||
+    promptsArray.length !== 15 ||
+    !promptsArray.every((el) => typeof el === "string")
+  ) {
+    throw new Error("Parsed result is not a 15-element string array");
+  }
+} catch (parseErr) {
+  console.error(
+    "[generate-prompts] ❌ Could not parse JSON array. JSON text was:",
+    jsonText,
+    parseErr
+  );
+  return NextResponse.json(
+    { error: "OpenAI did not return a valid 15-element JSON array." },
+    { status: 500 }
+  );
+}
 
     console.log("[generate-prompts] promptsArray =", promptsArray);
 
-    // 7) Insert all 15 prompts into Supabase “prompts” table
+    // 7) insert those 15 prompts into Supabase “prompts” table
     const rowsToInsert = promptsArray.map((promptText) => ({
       pack_id: packId,
       prompt_text: promptText,
       created_at: new Date().toISOString(),
     }));
-
-    const { error: insertErr } = await supabase.from("prompts").insert(rowsToInsert);
+    const { error: insertErr } = await supabase
+      .from("prompts")
+      .insert(rowsToInsert);
     if (insertErr) {
       console.error("[generate-prompts] ❌ Supabase insert error:", insertErr);
-      // We still return the prompts to the client, even if insert fails
+      // we still return the array below even if insert fails
     } else {
       console.log("[generate-prompts] ✅ Stored 15 prompts in database");
     }
 
-    // 8) Return the 15 prompts to the caller
+    // 8) return that 15-element array to the caller
     return NextResponse.json({ prompts: promptsArray }, { status: 200 });
   } catch (e: any) {
     console.error("[generate-prompts] ❌ Unexpected error:", e);
-    return NextResponse.json({ error: e.message || "Something went wrong." }, { status: 500 });
+    return NextResponse.json(
+      { error: e.message || "Something went wrong." },
+      { status: 500 }
+    );
   }
 }
 
-// Optional: block direct GET requests
+// Optional: block GET requests on this route
 export async function GET() {
   return new NextResponse("Method Not Allowed", { status: 405 });
 }

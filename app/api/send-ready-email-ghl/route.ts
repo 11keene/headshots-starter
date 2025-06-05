@@ -1,5 +1,3 @@
-// File: app/api/send-ready-email-ghl/route.ts
-
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -27,7 +25,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3️⃣ Build the “upsert contact” payload, including the photos_ready tag
+    // 3️⃣ Generate a unique timestamped tag for this contact update
+    const dynamicTag = `photos_ready_${Date.now()}`;
+
+    // 4️⃣ Build the upsert contact payload with custom fields and dynamic tag
     const contactPayload = {
       email: userEmail,
       firstName,
@@ -37,15 +38,13 @@ export async function POST(req: Request) {
         packId,
         statusLink: `https://aimavenstudio.com/status/${packId}`,
       },
-      tags: ["photos_ready"], // <— this alone triggers your Tag‐Based Automation in GHL
+      tags: [dynamicTag],
     };
 
-    console.log(
-      "[send-ready-email-ghl] 🔍 Upserting contact with payload:",
-      JSON.stringify(contactPayload)
-    );
+    console.log("[send-ready-email-ghl] 🔍 Upserting contact with payload:");
+    console.log(JSON.stringify(contactPayload, null, 2));
 
-    // 4️⃣ Send POST to HighLevel’s /v1/contacts
+    // 5️⃣ Send POST to HighLevel’s /v1/contacts
     const upsertRes = await fetch("https://rest.gohighlevel.com/v1/contacts", {
       method: "POST",
       headers: {
@@ -72,8 +71,9 @@ export async function POST(req: Request) {
       "[send-ready-email-ghl] ✅ Contact upserted. GHL contact ID =",
       contactId
     );
+    console.log("[send-ready-email-ghl] 🏷️ Trigger tag used:", dynamicTag);
 
-    // 5️⃣ Return success; GHL’s Automation (triggered by “photos_ready” tag) will send the email
+    // 6️⃣ Return success; GHL Automation will now trigger via dynamic tag
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("[send-ready-email-ghl] ❌ Unexpected error:", err);

@@ -4,21 +4,21 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
-import { randomUUID } from "crypto";
 
-// Make sure your .env.local has STRIPE_SECRET_KEY set
+// Make sure STRIPE_SECRET_KEY is defined in .env.local
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-05-28.basil",
 });
 
 export async function POST(req: Request) {
-  // 1) Initialize Supabase (server-side) so we can look up the authenticated user
+  // 1) Initialize Supabase server client to look up the authenticated user
   const supabase = createRouteHandlerClient({ cookies });
 
-  // 2) Read the request body (expected JSON)
+  // 2) Read the JSON request body
   const body = await req.json();
-const { stripePriceId, packType, packId: existingPackId } = body;
-  // 3) Fetch the current user from Supabase (must be authenticated)
+  const { stripePriceId, packType, packId: existingPackId } = body;
+
+  // 3) Ensure the user is logged in
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -29,39 +29,46 @@ const { stripePriceId, packType, packId: existingPackId } = body;
   const user_id = user.id;
 
   try {
-// 1) Use the existing packId (created during intake)
-   const packId = existingPackId;
+    // 4) Verify that the packId actually exists
+    const { data: packCheck, error: packErr } = await supabase
+      .from("packs")
+      .select("id")
+      .eq("id", existingPackId)
+      .single();
 
-   // (Optional) You could verify it actually exists:
-   const { data: packCheck, error: packErr } = await supabase
-     .from("packs")
-     .select("id")
-     .eq("id", packId)
-     .single();
-   if (packErr || !packCheck) {
-     console.error("Pack not found:", packErr);
-     return new NextResponse("Invalid packId", { status: 400 });
-   }
+    if (packErr || !packCheck) {
+      console.error("Pack not found:", packErr);
+      return new NextResponse("Invalid packId", { status: 400 });
+    }
 
-   // 2) Create Stripe Checkout Session with the correct packId in metadata
-   const session = await stripe.checkout.sessions.create({
-     payment_method_types: ["card"],
-     mode: "payment",
-     success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/status/${packId}`,
-     cancel_url: `http://localhost:3000/cancelled`,
-     line_items: [
-       { price: stripePriceId, quantity: 1 },
-     ],
-     metadata: {
-       user_id: user_id,
-       packId: packId,
-       packType: packType,
-     },
-     customer_email: user.email,
-   });
+    // 5) Build the success/cancel URLs
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL; // should be "http://localhost:3000"
+    if (!baseUrl) {
+      console.error("Missing NEXT_PUBLIC_SITE_URL in .env.local");
+      return new NextResponse("Server misconfiguration", { status: 500 });
+    }
 
+    // 6) Create the Stripe Checkout Session, embedding metadata
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      success_url: `${baseUrl}/status/${existingPackId}`,
+      cancel_url: `${baseUrl}/cancelled`, 
+      line_items: [
+        {
+          price: stripePriceId,
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        user_id: user_id,
+        packId: existingPackId,
+        packType: packType,
+      },
+      customer_email: user.email,
+    });
 
-    // 7) Return the session URL back to the front end so it can redirect
+    // 7) Return the URL so the front end can redirect
     return NextResponse.json({ url: session.url }, { status: 200 });
   } catch (err: any) {
     console.error("Stripe session error:", err);
