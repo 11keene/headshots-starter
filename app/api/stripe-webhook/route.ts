@@ -5,9 +5,9 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { headers, cookies } from "next/headers";
 import Stripe from "stripe";
 
-// ─── Disable automatic body parsing so we can verify the raw payload
 export const config = {
   api: {
+    // Disable Next.js’s automatic body parser so we can verify Stripe’s raw webhook signature
     bodyParser: false,
   },
 };
@@ -17,16 +17,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 /**
- * Helper that retries fetching rows from the `uploads` table for a given packId.
- * It will try up to maxAttempts times (default: 10), waiting delayMs milliseconds between attempts.
- * If after all attempts no rows are found, it throws an Error.
+ * Helper that waits for at least one row in `uploads` for a given packId.
+ * Retries up to maxAttempts times (default 300 ≈ 10 minutes at 2 s intervals).
  */
 async function waitForUploads(
   supabase: any,
   packId: string,
-  maxAttempts = 10,
+  maxAttempts = 300,
   delayMs = 2000
-): Promise<Array<{ url: string }>> {
+): Promise<string[]> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     console.log(`[Webhook][Debug] Querying uploads for packId="${packId}" (attempt ${attempt})`);
     const { data: uploads, error } = await supabase
@@ -35,51 +34,56 @@ async function waitForUploads(
       .eq("pack_id", packId);
 
     if (error) {
-      console.error(`[Webhook] Supabase query error on attempt ${attempt}:`, error);
+      console.error(`[Webhook] Supabase error on attempt ${attempt}:`, error);
       break;
     }
 
     if (uploads && uploads.length > 0) {
       console.log(`[Webhook] Found ${uploads.length} uploaded image(s) on attempt ${attempt}.`);
-      return uploads.map((u: { url: string }) => ({ url: u.url as string }));
+      // Return an array of URLs (strings)
+      return uploads.map((u: any) => u.url as string);
     }
 
+    // Otherwise, wait then retry
     console.log(
-      `[Webhook] Attempt ${attempt}: only found ${uploads?.length || 0} images. Retrying in ${
-        delayMs / 1000
-      }s...`
+      `[Webhook] Attempt ${attempt}: found ${uploads?.length || 0} images. Retrying in ${delayMs / 1000}s…`
     );
-    await new Promise((resolve) => setTimeout(resolve, delayMs));
+    await new Promise((r) => setTimeout(r, delayMs));
   }
 
   throw new Error("No uploaded images found");
 }
 
 /**
- * This function does all of the “heavy work” once a checkout.session.completed arrives:
- * 1) fetch intake → 2) waitForUploads → 3) create Astria Tune → 4) generate prompts → 5) send to Astria → 6) save to generated_images.
- * We deliberately do NOT await it inside the POST handler, so we can respond to Stripe immediately.
+ * After Stripe checkout completes, this background function will:
+ *   1) load the intake (for “name” = gender),
+ *   2) wait for the user’s uploaded images,
+ *   3) create an Astria tune by sending exactly { name, title, image_urls }.
+ *   4) generate prompts via OpenAI and send each prompt to Astria’s /tunes/{tuneId}/prompts.
+ *   5) save each prompt_id in Supabase’s generated_images.
+ *
+ * We do NOT await this in the main POST handler, so Stripe sees 200 immediately.
  */
 async function processCheckoutSession(event: Stripe.Event) {
-  // Initialize Supabase client for server‐side
+  // Initialize Supabase on the server side
   const supabase = createRouteHandlerClient({ cookies });
 
-  // Extract the session object and metadata
+  // 1) Extract session + metadata from Stripe
   const session = event.data.object as Stripe.Checkout.Session;
   const metadata = session.metadata || {};
   const userId = metadata.user_id as string | undefined;
   const packId = metadata.packId as string | undefined;
-  const packType = metadata.packType as string | undefined;
+  const packType = metadata.packType as string | undefined; // not strictly needed here, but kept for logging
 
   console.log("🎯 [Background] Checkout completed metadata:", metadata);
 
-  if (!userId || !packId || !packType) {
-    console.error("❌ [Background] Webhook error: missing metadata fields");
+  if (!userId || !packId) {
+    console.error("❌ [Background] Missing user_id or packId in metadata");
     return;
   }
 
   try {
-    // 1. Fetch the `packs` row to get `intake`
+    // 2) Fetch the pack’s "intake" JSON column to read gender (for Astria’s “name”)
     const { data: packRow, error: packErr } = await supabase
       .from("packs")
       .select("intake")
@@ -90,53 +94,79 @@ async function processCheckoutSession(event: Stripe.Event) {
       throw new Error("Could not find pack or intake data");
     }
     const intake = (packRow.intake as Record<string, any>) || {};
+    // “name” for Astria must be something like “woman” or “man”
     const gender = (intake.gender as string) || "woman";
     console.log("🧠 [Background] Intake loaded. Gender:", gender);
 
-    // 2. Wait (with retry) for at least one upload to appear
-    const uploadedRows = await waitForUploads(supabase, packId, /*maxAttempts*/ 300, /*delayMs*/ 2000);
-    const imageUrls = uploadedRows.map((r) => r.url);
+    // 3) Wait (with retries) for at least 1 uploaded image row in `uploads`
+    const imageUrls = await waitForUploads(supabase, packId, 300, 2000);
     console.log("🖼️ [Background] Final list of image URLs:", imageUrls);
 
-    // 3. Create Astria Tune
-    const tuneForm = new FormData();
-    tuneForm.append("tune[title]", `${userId}-${packId}`);
-    tuneForm.append("tune[name]", gender); // “woman” or “man”
-    tuneForm.append("tune[branch]", "fast");
-    imageUrls.forEach((url) => tuneForm.append("tune[images][]", url));
+    // 4) Create an Astria tune by sending JSON with only { name, title, image_urls }
+    //    “title” can be any unique identifier (we’ll use `${userId}-${packId}`).
+    const tunePayload = {
+      tune: {
+        name: gender,                          // required
+        title: `${userId}-${packId}`,          // required (UUID-ish)
+        image_urls: imageUrls,                 // required
+      },
+    };
 
     const tuneRes = await fetch("https://api.astria.ai/tunes", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${process.env.ASTRIA_API_KEY}`,
+        "Content-Type": "application/json",
       },
-      body: tuneForm,
+      body: JSON.stringify(tunePayload),
     });
 
-    const tuneData = await tuneRes.json();
-    const tuneId = tuneData?.id as string | undefined;
+    // Attempt to parse JSON. If parse fails, read as text so we can log in full.
+    let tuneData: any;
+    try {
+      tuneData = await tuneRes.json();
+    } catch {
+      const rawText = await tuneRes.text();
+      tuneData = { raw: rawText };
+    }
+
+    if (!tuneRes.ok) {
+      console.error(
+        `❌ [Background] Astria /tunes returned HTTP ${tuneRes.status}. Full body:`,
+        tuneData
+      );
+      throw new Error(`Tune creation failed (HTTP ${tuneRes.status})`);
+    }
+
+    // Astria should now return an “id” for the newly created tune
+    const tuneId = (tuneData as any).id as string | undefined;
     if (!tuneId) {
-      console.error("❌ [Background] Astria tune creation failed:", tuneData);
-      throw new Error("Tune creation failed");
+      console.error("❌ [Background] Astria tune creation returned no ID:", tuneData);
+      throw new Error("Tune creation failed (no ID in response)");
     }
     console.log("🧠 [Background] Astria Tune created:", tuneId);
 
-    // 4. Call your own GPT route to generate prompts
-    const promptRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/generate-prompts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ packId }),
-    });
+    // 5) Generate prompts via your GPT endpoint
+    const promptRes = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL}/api/generate-prompts`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packId }),
+      }
+    );
 
     const promptJson = await promptRes.json();
     const prompts = (promptJson.prompts as string[]) || [];
-    if (!Array.isArray(prompts)) {
-      console.error("❌ [Background] Prompt generation failed:", promptJson);
-      throw new Error("Prompt generation failed");
+    console.log("📝 [Background] Prompts array is:", prompts);
+
+    if (!Array.isArray(prompts) || prompts.length === 0) {
+      console.error("❌ [Background] Prompt generation failed or returned no prompts:", promptJson);
+      throw new Error("Prompt generation failed or empty");
     }
     console.log(`📝 [Background] Received ${prompts.length} prompt(s) from GPT.`);
 
-    // 5. Send each prompt to Astria
+    // 6) For each prompt, send it to Astria’s /tunes/{tuneId}/prompts endpoint
     for (const promptText of prompts) {
       const astriaPrompt = `sks ${gender} ${promptText}`;
       console.log("✨ [Background] Sending to Astria:", astriaPrompt);
@@ -148,32 +178,45 @@ async function processCheckoutSession(event: Stripe.Event) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: astriaPrompt,
-          num_images: 3,
+          text:             astriaPrompt,
+          num_images:       3,
           super_resolution: true,
-          inpaint_faces: true,
+          inpaint_faces:    true,
+           width: 896,
+        height: 1152,
+        sampler: "euler_a",
         }),
       });
 
-      const promptData = await sendRes.json();
+      let promptData: any;
+      try {
+        promptData = await sendRes.json();
+      } catch {
+        const rawText = await sendRes.text();
+        promptData = { raw: rawText };
+      }
+
       const promptId = (promptData as any)?.id as string | undefined;
       if (!promptId) {
         console.error("❌ [Background] Prompt submission to Astria failed:", promptData);
         continue;
       }
 
-      // 6. Save to `generated_images`
-      const { error: genErr } = await supabase.from("generated_images").insert({
-        prompt_id: promptId,
-        pack_id: packId,
-        image_url: "", // will be updated later by Astria webhook or polling
-        url: `https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`,
-        created_at: new Date().toISOString(),
-      });
+      // 7) Save each Astria prompt ID into Supabase’s generated_images table
+      const { error: genErr } = await supabase
+        .from("generated_images")
+        .insert({
+          prompt_id: promptId,
+          pack_id:   packId,
+          image_url: "", // Astria will fill this later (via webhook or polling)
+          url:       `https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`,
+          created_at: new Date().toISOString(),
+        });
+
       if (genErr) {
         console.error("❌ [Background] Could not insert into generated_images:", genErr);
       } else {
-        console.log("📸 [Background] Prompt saved to Supabase (generated_images):", promptId);
+        console.log("📸 [Background] Saved Astria prompt_id:", promptId);
       }
     }
 
@@ -184,14 +227,14 @@ async function processCheckoutSession(event: Stripe.Event) {
 }
 
 export async function POST(req: Request) {
-  // 1) Read raw body + stripe-signature
+  // 1) Read the raw request body & get Stripe's signature header
   const rawBody = await req.text();
   const sig = headers().get("stripe-signature")!;
 
   let event: Stripe.Event;
   try {
     if (process.env.NODE_ENV === "development") {
-      // Skip signature verification in dev
+      // In dev mode, skip verification and parse JSON directly
       event = JSON.parse(rawBody) as Stripe.Event;
       console.log("🔧 (Dev) Skipped Stripe signature check.");
     } else {
@@ -207,23 +250,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // 2) If it’s not a checkout completion, just return 200 immediately
+  // 2) Only respond to checkout.session.completed
   if (event.type !== "checkout.session.completed") {
     console.log("ℹ️ Not a checkout completion event:", event.type);
     return NextResponse.json({ received: true });
   }
 
-  // 3) Launch the heavy work in the background, but do NOT await it
+  // 3) Kick off the heavy work in the background (do NOT await)
   processCheckoutSession(event).catch((err) => {
-    // Any unexpected top‐level error
     console.error("❌ [Background] Unhandled error:", err);
   });
 
-  // 4) Immediately acknowledge Stripe with a 200
+  // 4) Immediately ack Stripe with HTTP 200 so it stops retrying
   return NextResponse.json({ received: true });
 }
 
-// Optional: block GET requests
 export async function GET() {
   return new NextResponse("Method Not Allowed", { status: 405 });
 }

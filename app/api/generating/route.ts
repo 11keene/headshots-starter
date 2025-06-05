@@ -4,7 +4,7 @@ import Stripe from "stripe";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-04-30.basil" });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-05-28.basil" });
 
 // same waitForUploads helper you already have…
 async function waitForUploads(supabase: any, packId: string, maxAttempts = 5, delayMs = 2000) {
@@ -103,6 +103,9 @@ export async function GET(req: Request) {
         num_images: 3,
         super_resolution: true,
         inpaint_faces: true,
+        width: 896,
+        height: 1152,
+        sampler: "euler_a",
       }),
     });
     const sendData = await sendRes.json();
