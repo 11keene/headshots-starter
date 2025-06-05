@@ -233,6 +233,17 @@ async function processCheckoutSession(event: any) {
       throw new Error("Tune creation returned no ID");
     }
     console.log("[create-astria-job] Astria Tune created with ID:", tuneId);
+// Save the tuneId to the pack record
+const { error: tuneSaveError } = await supabase
+  .from("packs")
+  .update({ tune_id: tuneId })
+  .eq("id", packId);
+
+if (tuneSaveError) {
+  console.error("❌ Failed to save tune_id to packs table:", tuneSaveError);
+} else {
+  console.log(`✅ Saved tune_id ${tuneId} to pack ${packId}`);
+}
 
     // ───────▶ STEP B: WAIT FOR THE TUNE TO BE “ready” ◀──────
     await waitForTuneReady(tuneId);
