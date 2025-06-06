@@ -1,4 +1,4 @@
-// pages/api/astria/create-tune.ts
+// app/api/astria/create-tune.ts
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 

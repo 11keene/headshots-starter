@@ -441,15 +441,11 @@ export default function IntakeForm({ pack, onComplete }: IntakeFormProps) {
   const searchParams = useSearchParams();
 const rawGender = (searchParams?.get("gender") || "").toLowerCase(); // "" | "man" | "woman"
 const [genderParam, setGenderParam] = useState<"man" | "woman" | null>(null);
-
-useEffect(() => {
-  if (rawGender === "man" || rawGender === "woman") {
-    setGenderParam(rawGender as "man" | "woman");
-  }
-}, [rawGender]);
-
-
-
+  useEffect(() => {
+    if (rawGender === "man" || rawGender === "woman") {
+      setGenderParam(rawGender as "man" | "woman");
+    }
+  }, [rawGender]);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [uniformText, setUniformText] = useState("");
@@ -457,6 +453,20 @@ useEffect(() => {
   const otherRef = React.useRef<HTMLDivElement | null>(null);
   const uniformRef = React.useRef<HTMLDivElement | null>(null);
   const [brandColorOther, setBrandColorOther] = useState("");
+   
+useEffect(() => {
+    if (genderParam) {
+      setAnswers((prev) => ({ ...prev, gender: [genderParam] }));
+      setStep(1); // skip the “What is your gender?” question
+    }
+  }, [genderParam]);
+
+  // Clear any prior localStorage (so stale “man” or “woman” doesn’t persist)
+  useEffect(() => {
+    setStep(0);
+    localStorage.removeItem(`intake-${pack}`);
+    setAnswers({});
+  }, [pack]);
 // ─── STEP A: Create a Supabase client and grab the current user’s session ───
   const supabase = createClientComponentClient();
   const session = useSession();
@@ -468,7 +478,7 @@ useEffect(() => {
 }, []);   // ← empty deps → only on initial mount
 
   
-  useEffect(() => {
+ useEffect(() => {
     const saved = localStorage.getItem(`intake-${pack}`);
     if (saved) setAnswers(JSON.parse(saved));
   }, [pack]);
@@ -504,7 +514,7 @@ const next = async () => {
     // Build a JSON object of all intake answers
     // (This matches your `intake jsonb` column in Supabase)
     const intakePayload = {
-      gender: answers.gender?.[0] || null,
+        gender: answers.gender?.[0] || null, // ALWAYS “man” or “woman”
       age: answers.age?.[0] || null,
       hairLength: answers.hairLength || null,
       hairTexture: answers.hairTexture || null,
@@ -538,10 +548,11 @@ const next = async () => {
     }
 
     // Redirect to upload page with the real UUID
-    router.push(`/overview/packs/${createdPack.id}/next?gender=${answers.gender?.[0]}`);
-  }
-};
-
+     router.push(
+        `/overview/packs/${createdPack.id}/next?gender=${answers.gender?.[0]}`
+      );
+    }
+  };
 
 const back = () => {
   if (step > 0) {
