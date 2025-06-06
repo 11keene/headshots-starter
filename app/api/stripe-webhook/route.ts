@@ -205,7 +205,7 @@ const supabase = createRouteHandlerClient({
   const session = event.data.object as Stripe.Checkout.Session;
   const metadata = session.metadata || {};
   const userId = metadata.user_id as string | undefined;
-const packId = metadata.pack_id as string | undefined;
+const packId = metadata.packId  as string | undefined;
   const gender = metadata.gender as string | undefined;       // e.g. "woman"
   const packType = metadata.packType as string | undefined;   // e.g. "headshots"
 
