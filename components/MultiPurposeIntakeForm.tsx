@@ -551,7 +551,7 @@ const session = useSession();
             user_id: session?.user?.id ?? "",
             pack_type: pack,         // the original slug, e.g. "multi-purpose"
             intake: intakePayload,   // everything as a single JSONB column
-            created_at: new Date(),  // timestamp
+            created_at: new Date(),  // timestampz
           })
           .select("id")
           .single();
