@@ -11,7 +11,7 @@ const supabase = createClient(
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const tuneId = body.tune_id;
+    const tuneId   = body.tune_id;
     const trainedAt = body.trained_at;
 
     console.log("[Astria Webhook] Received:", { tuneId, trainedAt });
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Tune not ready yet" });
     }
 
-    // 1️⃣ Find the pack based on tuneId
+    // 1️⃣ Find the pack (and user) based on tuneId
     const { data: pack, error: packErr } = await supabase
       .from("packs")
       .select("id, user_id")
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     const { id: packId, user_id: userId } = pack;
 
-    // 2️⃣ Fetch all prompt results for this Tune
+    // 2️⃣ Fetch all prompt results for this Tune (15 prompts × 3 images each)
     const promptRes = await fetch(`https://api.astria.ai/tunes/${tuneId}/prompts.json`, {
       headers: {
         Authorization: `Bearer ${process.env.ASTRIA_API_KEY}`,
@@ -47,6 +47,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid prompt response" }, { status: 500 });
     }
 
+    // Flatten every prompt’s images into a single array of URLs (45 total)
     const allImages: string[] = promptsData.flatMap((prompt: any) => prompt.images || []);
 
     if (allImages.length === 0) {
@@ -56,37 +57,43 @@ export async function POST(req: Request) {
 
     console.log(`[Astria Webhook] Preparing to insert ${allImages.length} images to Supabase`);
 
-    // Get already-inserted image URLs for this pack
-const { data: existingImages } = await supabase
-  .from("generated_images")
-  .select("image_url")
-  .eq("pack_id", packId);
+    // 3️⃣ Fetch any URLs that are already in generated_images for this pack
+    const { data: existingImages } = await supabase
+      .from("generated_images")
+      .select("image_url")
+      .eq("pack_id", packId);
 
-const existingUrls = new Set((existingImages || []).map((img) => img.image_url));
+    const existingUrls = new Set((existingImages || []).map((img) => img.image_url));
 
-// Filter only new (non-duplicate) URLs
-const newUrls = allImages.filter((url) => !existingUrls.has(url));
+    // 4️⃣ Keep only those URLs that aren’t already present
+    const newUrls = allImages.filter((url) => !existingUrls.has(url));
 
-if (newUrls.length === 0) {
-  console.log("🟢 All images already uploaded — skipping insert.");
-} else {
-  const insertData = newUrls.map((url) => ({
-    user_id: userId,
-    pack_id: packId,
-    image_url: url,
-    created_at: new Date().toISOString(),
-  }));
+    if (newUrls.length === 0) {
+      console.log("🟢 All images already uploaded — skipping insert.");
+    } else {
+      // 5️⃣ Build an array of row‐objects that includes every one of the “new” URLs
+      const insertData = newUrls.map((url) => ({
+        user_id:    userId,
+        pack_id:    packId,
+        image_url:  url.trim(),
+        created_at: new Date().toISOString(),
+      }));
 
-  const { error: insertErr } = await supabase.from("generated_images").insert(insertData);
-  if (insertErr) {
-    console.error("❌ Failed to insert images to Supabase:", insertErr);
-    return NextResponse.json({ error: "Insert failed" }, { status: 500 });
-  }
+      // 6️⃣ Bulk‐insert ALL of those URLs in a single call
+      const { error: insertErr, data: insertedRows } = await supabase
+        .from("generated_images")
+        .insert(insertData) as { error: any, data: any[] | null };
 
-  console.log(`✅ Inserted ${newUrls.length} new images`);
-}
+      if (insertErr) {
+        console.error("❌ Failed to insert images to Supabase:", insertErr);
+        return NextResponse.json({ error: "Insert failed" }, { status: 500 });
+      }
 
-    // 3️⃣ Trigger GHL email
+      // insertedRows may be null or an array; ensure it's an array for .length
+      console.log(`✅ Inserted ${Array.isArray(insertedRows) ? insertedRows.length : 0} new images`);
+    }
+
+    // 7️⃣ (Optional) Trigger your “talent‐ready” email
     const { data: user } = await supabase
       .from("users")
       .select("email, first_name, last_name")
@@ -100,7 +107,7 @@ if (newUrls.length === 0) {
         body: JSON.stringify({
           userEmail: user.email,
           firstName: user.first_name,
-          lastName: user.last_name,
+          lastName:  user.last_name,
           packId,
         }),
       });

@@ -1,283 +1,323 @@
-// File: app/api/create-astria-job/route.ts
+// ──────────────────────────────────────────────────────────────────────────────
+// File: app/api/stripe-webhook/route.ts
+// ──────────────────────────────────────────────────────────────────────────────
 
 import { NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { headers, cookies } from "next/headers";
+import Stripe from "stripe";
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Initialize the Stripe client
+// ──────────────────────────────────────────────────────────────────────────────
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-05-28.basil",
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Disable Next.js body parser so we can verify Stripe’s raw webhook signature
+// ──────────────────────────────────────────────────────────────────────────────
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 /**
- * Wait until Supabase has at least one `uploads` row for this packId.
- * Retries up to maxAttempts with delayMs between attempts.
+ * Helper: Poll Supabase `uploads` table until at least one URL appears for this packId.
+ * Retries up to maxAttempts (default 300 ≈ 10 min at 2 s intervals). Returns URLs.
  */
 async function waitForUploads(
   supabase: any,
   packId: string,
-  maxAttempts = 10,
-  delayMs = 1500
+  maxAttempts = 300,
+  delayMs = 2000
 ): Promise<string[]> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     console.log(
-      `[create-astria-job] Checking uploads for packId="${packId}" (attempt ${attempt})`
+      `[waitForUploads] Checking uploads for packId="${packId}" (attempt ${attempt}/${maxAttempts})`
     );
     const { data: rows, error } = await supabase
       .from("uploads")
       .select("url")
       .eq("pack_id", packId);
 
-    if (error) throw error;
-    if (rows && rows.length > 0) {
+    if (error) {
+      console.error(`[waitForUploads] Supabase error:`, error);
+      throw error;
+    }
+
+    if (Array.isArray(rows) && rows.length > 0) {
+      console.log(
+        `[waitForUploads] Found ${rows.length} upload(s) for packId="${packId}".`
+      );
       return rows.map((r: any) => r.url as string);
     }
+
+    console.log(
+      `[waitForUploads] No uploads yet (found ${rows.length}). Retrying in ${delayMs / 1000}s…`
+    );
     await new Promise((r) => setTimeout(r, delayMs));
   }
-  throw new Error("No uploaded images found for pack " + packId);
+
+  throw new Error(
+    `No uploaded images found for pack ${packId} after ${maxAttempts} attempts`
+  );
 }
 
 /**
- * Poll an Astria prompt endpoint until it returns at least one generated image.
- * Once images appear, return that array of URLs.
+ * Helper: Poll Astria’s Tune endpoint until “ready” (or has a `trained_at` timestamp).
+ * Retries up to maxAttempts (default 240 ≈ 20 min at 5 s intervals).
+ */
+async function waitForTuneReady(
+  tuneId: string,
+  maxAttempts = 240,  // 240×5 s = 1200 s = 20 min
+  delayMs = 5000
+): Promise<void> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    console.log(
+      `⌛ [waitForTuneReady] Attempt ${attempt}/${maxAttempts} for tuneId="${tuneId}"`
+    );
+
+    let res;
+    try {
+      res = await fetch(`https://api.astria.ai/tunes/${tuneId}`, {
+        headers: {
+          Authorization: `Bearer ${process.env.ASTRIA_API_KEY}`,
+        },
+      });
+    } catch (err) {
+      console.warn(
+        `⚠️ [waitForTuneReady] Fetch attempt ${attempt} threw an error:`,
+        err
+      );
+      if (attempt === maxAttempts) throw err;
+      console.log(`🔄 [waitForTuneReady] Retrying in ${delayMs / 1000}s…`);
+      await new Promise((r) => setTimeout(r, delayMs));
+      continue;
+    }
+
+    if (!res.ok) {
+      const raw = await res.text();
+      console.error(
+        `❌ [waitForTuneReady] Astria HTTP ${res.status} for tune ${tuneId}, body:`,
+        raw
+      );
+      throw new Error(`Astria returned HTTP ${res.status} for tune ${tuneId}`);
+    }
+
+    let data: any = {};
+    try {
+      data = await res.json();
+    } catch {
+      console.warn(
+        `⚠️ [waitForTuneReady] Couldn’t parse JSON (attempt ${attempt}), raw:`,
+        await res.text()
+      );
+    }
+
+    if (data?.status === "ready" || data?.trained_at) {
+      console.log(`✅ [waitForTuneReady] Tune ${tuneId} is ready.`);
+      return;
+    }
+
+    console.log(
+      `🔄 [waitForTuneReady] Tune ${tuneId} status="${
+        data.status || "unknown"
+      }" (attempt ${attempt}). Retrying in ${delayMs / 1000}s…`
+    );
+    await new Promise((r) => setTimeout(r, delayMs));
+  }
+
+  throw new Error(
+    `🔴 [waitForTuneReady] Timeout: Tune ${tuneId} not ready after ${maxAttempts} attempts`
+  );
+}
+
+/**
+ * Helper: Poll Astria’s Prompt endpoint until it returns an array of image URLs.
+ * Retries up to maxAttempts (default 60 ≈ 3 min at 3 s intervals).
  */
 async function waitForPromptImages(
   tuneId: string,
   promptId: string,
-  pollInterval = 3000,
-  maxPolls = 20
+  maxAttempts = 60,   // 60×3 s = 180 s = 3 min
+  delayMs = 3000
 ): Promise<string[]> {
-  for (let i = 0; i < maxPolls; i++) {
-    const res = await fetch(`https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${process.env.ASTRIA_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-    });
-    let json: any;
-    try {
-      json = await res.json();
-    } catch {
-      const text = await res.text();
-      console.warn(
-        `[waitForPromptImages] Unable to parse JSON for prompt ${promptId}:`,
-        text
-      );
-      json = {};
-    }
-
-    // Astria’s response will include an `images` array once ready:
-    //   { id: 123, status: "ready", images: ["https://cdn.astria.ai/…jpg", …] }
-    if (Array.isArray(json.images) && json.images.length > 0) {
-      return json.images;
-    }
-
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     console.log(
-      `[waitForPromptImages] Prompt ${promptId} status="${
-        json.status || "unknown"
-      }". Retrying in ${pollInterval / 1000}s…`
+      `⌛ [waitForPromptImages] Attempt ${attempt}/${maxAttempts} for promptId="${promptId}"`
     );
-    await new Promise((r) => setTimeout(r, pollInterval));
-  }
-  throw new Error(`Prompt ${promptId} never returned images after polling.`);
-}
-
-/**
- * Wait until the Astria Tune is ready.
- * Polls the Astria API for the tune status until it is "ready" or times out.
- */
-async function waitForTuneReady(tuneId: string): Promise<void> {
-  const MAX_WAIT_MINUTES = 60;
-  const RETRY_INTERVAL_MS = 5000;
-  const MAX_ATTEMPTS = (MAX_WAIT_MINUTES * 60 * 1000) / RETRY_INTERVAL_MS;
-
-  let attempt = 0;
-
-  while (attempt < MAX_ATTEMPTS) {
-    try {
-      const res = await fetch(`https://api.astria.ai/tunes/${tuneId}`, {
+    const res = await fetch(
+      `https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`,
+      {
         headers: {
           Authorization: `Bearer ${process.env.ASTRIA_API_KEY}`,
           "Content-Type": "application/json",
         },
-      });
-
-      const contentType = res.headers.get("content-type");
-      let data: any;
-
-      if (contentType?.includes("application/json")) {
-        data = await res.json();
-      } else {
-        const raw = await res.text();
-        console.error(`[waitForTuneReady] ❌ Astria returned non-JSON:`, raw);
-        throw new Error("Non-JSON response from Astria");
       }
-console.log(`[waitForTuneReady] 🔍 Raw Astria response for tune ${tuneId}:`, data);
+    );
 
-console.log(`[waitForTuneReady] 🔍 Raw Astria response for tune ${tuneId}:`, data);
-
-if (data?.trained_at) {
-  console.log(`[waitForTuneReady] ✅ Tune ${tuneId} is trained and ready.`);
-  return;
-}
-
-console.log(`[waitForTuneReady] Tune ${tuneId} not ready yet. Retrying in 5s…`);
-
-
-if (status === "failed") {
-  throw new Error(`[waitForTuneReady] ❌ Tune ${tuneId} failed according to Astria.`);
-}
-
-
-      if (status === "failed") {
-        console.error(`[waitForTuneReady] ❌ Tune ${tuneId} failed.`);
-        throw new Error("Tune failed.");
-      }
-    } catch (err) {
-      console.error(`[waitForTuneReady] ❌ Error checking tune status:`, err);
+    if (!res.ok) {
+      console.error(
+        `❌ [waitForPromptImages] Astria HTTP ${res.status} for prompt ${promptId}`
+      );
+      throw new Error(`Astria returned HTTP ${res.status} for prompt ${promptId}`);
     }
 
-    attempt++;
-    await new Promise((resolve) => setTimeout(resolve, RETRY_INTERVAL_MS));
+    let data: any = {};
+    try {
+      data = await res.json();
+    } catch {
+      console.warn(
+        `⚠️ [waitForPromptImages] Couldn’t parse JSON (attempt ${attempt}), raw:`,
+        await res.text()
+      );
+      data = {};
+    }
+
+    if (Array.isArray(data.images) && data.images.length > 0) {
+      console.log(
+        `✅ [waitForPromptImages] Prompt ${promptId} returned ${data.images.length} image(s).`
+      );
+      return data.images as string[];
+    }
+
+    console.log(
+      `🔄 [waitForPromptImages] Prompt ${promptId} status="${
+        data.status || "unknown"
+      }" (attempt ${attempt}). Retrying in ${delayMs / 1000}s…`
+    );
+    await new Promise((r) => setTimeout(r, delayMs));
   }
 
-  throw new Error(`[waitForTuneReady] ❌ Timeout: Tune ${tuneId} not ready after ${MAX_WAIT_MINUTES} minutes.`);
+  throw new Error(
+    `🔴 [waitForPromptImages] Timeout: Prompt ${promptId} never returned images after ${maxAttempts} attempts`
+  );
 }
 
-
 /**
- * After a Stripe checkout.session.completed, do:
- *   1) fetch intake → 2) waitForUploads → 3) create Astria Tune (LoRa/Flux settings)
- *   4) waitForTuneReady → 5) generate prompts via GPT → 6) send all prompts to Astria
- *   7) poll each prompt until images appear → 8) save actual image URL into “generated_images”.
+ * Main background process that runs when Stripe fires “checkout.session.completed.”
+ * Steps:
+ *   1) Wait for user uploads
+ *   2) Create an Astria Tune (JSON payload)
+ *   3) Wait for that Tune to be “ready”
+ *   4) Generate GPT prompts
+ *   5) For each prompt: send to Astria, wait for images, bulk-insert
  */
-async function processCheckoutSession(event: any) {
-  // 1) Initialize Supabase on the server side
+async function processCheckoutSession(event: Stripe.Event) {
   const supabase = createRouteHandlerClient({ cookies });
-
-  // 2) Extract Stripe session + metadata
-  const session = event.data.object as any; // Stripe.Checkout.Session
+  const session = event.data.object as Stripe.Checkout.Session;
   const metadata = session.metadata || {};
   const userId = metadata.user_id as string | undefined;
   const packId = metadata.packId as string | undefined;
+  const gender = metadata.gender as string | undefined;       // e.g. "woman"
+  const packType = metadata.packType as string | undefined;   // e.g. "headshots"
 
   console.log("🎯 [Background] Checkout completed metadata:", metadata);
-  if (!userId || !packId) {
-    console.error("❌ [Background] Missing user_id or packId in metadata");
-    return;
+  if (!userId || !packId || !gender) {
+    console.error("❌ [Background] Missing metadata. Aborting.");
+    throw new Error("Missing user_id, packId, or gender in metadata");
   }
 
+  // 1) Wait for the user’s six uploaded source images
+  const imageUrls = await waitForUploads(supabase, packId, 300, 2000);
+  console.log("🖼️ [Background] Final list of image URLs:", imageUrls);
+
+  // 2) Create an Astria tune using JSON
+  //     — note: base_tune_id must be a numeric ID from your Astria gallery (e.g. 690204).
+  console.log("📨 [Background] Creating Astria tune with images:", imageUrls);
+
+  const tunePayload = {
+    tune: {
+      title:          `${userId}-${packId}`,   // required, e.g. a UUID
+      name:           gender,                  // required (e.g. "woman")
+      branch:         "flux1",                  // enum: "sd15", "sdxl1", or "fast"
+         base_tune:   "flux.1 dev",                           // must be exactly “flux.1 dev”
+                 // ← REPLACE with your actual numeric base tune ID
+      model_type:     "lora",                  // enum: "lora", "pti", "faceid", or null
+      preset:         "flux-lora-portrait",    // one of Astria’s presets
+      face_detection: true,                    // boolean optional
+      image_urls:     imageUrls,               // required: array of at least 1 URL
+      // token:        "ohwx",                 // optional; omit if you want default
+    },
+  };
+
+  const tuneRes = await fetch("https://api.astria.ai/tunes", {
+    method: "POST",
+    headers: {
+      "Content-Type":  "application/json",
+      "Authorization": `Bearer ${process.env.ASTRIA_API_KEY}`,
+    },
+    body: JSON.stringify(tunePayload),
+  });
+
+  let tuneData: any;
   try {
-    // 3) Fetch “packs” row to get intake JSON (to read gender)
-    const { data: packRow, error: packErr } = await supabase
-      .from("packs")
-      .select("intake")
-      .eq("id", packId)
-      .single();
-
-    if (packErr || !packRow) {
-      throw new Error("Could not find pack or intake data");
-    }
-    const intake = (packRow.intake as Record<string, any>) || {};
-    // Astria “name” must be exactly “woman” or “man”
-    const gender = (intake.gender as string) || "woman";
-    console.log("🧠 [Background] Intake loaded. Gender:", gender);
-
-    // 4) Wait until Supabase has at least one upload row for this packId
-    const imageUrls = await waitForUploads(
-      supabase,
-      packId,
-      /*maxAttempts*/ 300,
-      /*delayMs*/ 2000
+    tuneData = await tuneRes.json();
+  } catch {
+    tuneData = { raw: await tuneRes.text() };
+    console.warn(
+      "⚠️ [Background] Couldn’t parse Astria tune response JSON, raw:",
+      tuneData.raw
     );
-    console.log("🖼️ [Background] Final list of image URLs:", imageUrls);
+  }
 
-    // ───────▶ STEP A: CREATE ASTRIA TUNE (LoRa / Flux settings) ───────
-    // We send exactly { name, title, base_tune_id, model_type, branch, preset, face_detection, image_urls }
-    const tunePayload = {
-      tune: {
-        name: gender,                            // “woman” or “man”
-        title: `${userId}-${packId}`,            // unique-ish string
-        base_tune: "flux.1 dev",              // ⚠️ Flux: “flux.1 dev”
-        model_type: "lora",                      // ⚠️ LoRa model
-        branch: "flux1",                         // ⚠️ branch name
-        preset: "flux-lora-portrait",            // ⚠️ preset
-        face_detection: true,                    // ⚠️ face detection on
-        image_urls: imageUrls,                   // array of user uploads
-      },
-    };
+  if (!tuneRes.ok || !tuneData.id) {
+    console.error(
+      `❌ [Background] Astria /tunes failed (HTTP ${tuneRes.status}):`,
+      tuneData
+    );
+    throw new Error(`Tune creation failed (HTTP ${tuneRes.status})`);
+  }
 
-    const tuneRes = await fetch("https://api.astria.ai/tunes", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.ASTRIA_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(tunePayload),
-    });
+  const tuneId = (tuneData as any).id as string;
+  console.log(`✅ [Background] Astria Tune created. ID = ${tuneId}`);
 
-    let tuneData: any;
-    try {
-      tuneData = await tuneRes.json();
-    } catch {
-      const raw = await tuneRes.text();
-      tuneData = { raw };
-    }
-    if (!tuneRes.ok) {
-      console.error(
-        `❌ Astria /tunes returned HTTP ${tuneRes.status}. Full body:`,
-        tuneData
-      );
-      throw new Error(`Tune creation failed (HTTP ${tuneRes.status})`);
-    }
+  // 3) Wait for that tune to be “ready” (up to 20 minutes)
+  console.log(
+    `⏳ [Background] Waiting up to 20 minutes for Astria Tune ${tuneId} to be ready…`
+  );
+  await waitForTuneReady(tuneId, 240, 5000);
 
-    const tuneId = (tuneData as any)?.id as string | undefined;
-    if (!tuneId) {
-      console.error("❌ Astria tune creation returned no ID:", tuneData);
-      throw new Error("Tune creation returned no ID");
-    }
-    console.log("[create-astria-job] Astria Tune created with ID:", tuneId);
-// Save the tuneId to the pack record
-const { error: tuneSaveError } = await supabase
-  .from("packs")
-  .update({ tune_id: tuneId })
-  .eq("id", packId);
+  // 4) Fetch GPT-generated prompts
+  console.log(`📩 [Background] Requesting GPT prompts for packId="${packId}"`);
+  const promptRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/generate-prompts`, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ packId, gender, packType, userId }),
+  });
 
-if (tuneSaveError) {
-  console.error("❌ Failed to save tune_id to packs table:", tuneSaveError);
-} else {
-  console.log(`✅ Saved tune_id ${tuneId} to pack ${packId}`);
-}
+  let promptJson: any;
+  try {
+    promptJson = await promptRes.json();
+  } catch {
+    promptJson = { raw: await promptRes.text() };
+  }
 
-    // ───────▶ STEP B: WAIT FOR THE TUNE TO BE “ready” ◀──────
-    await waitForTuneReady(tuneId);
+  const prompts = (promptJson.prompts as string[]) || [];
+  if (!Array.isArray(prompts) || prompts.length === 0) {
+    console.error(
+      "❌ [Background] Prompt generation failed or returned no prompts:",
+      promptJson
+    );
+    throw new Error("Prompt generation failed or returned no prompts");
+  }
+  console.log(`📝 [Background] Received ${prompts.length} prompt(s) from GPT.`);
 
-    // ───────▶ STEP C: GENERATE GPT PROMPTS via your /api/generate-prompts ○◐ ───────
-    const promptRes = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL}/api/generate-prompts`,
+  // 5) For each of those 15 prompts:
+  //    a) Create an Astria prompt (requests 3 images)
+  //    b) Poll until Astria returns the images (up to 3 minutes)
+  //    c) Bulk-insert those URLs into Supabase.generated_images
+  for (const promptText of prompts) {
+    const astriaPrompt = `sks ${gender} ${promptText}`;
+    console.log("✨ [Background] Sending to Astria (prompt):", astriaPrompt);
+
+    // 5a) POST the new prompt (asks for 3 images)
+    const sendRes = await fetch(
+      `https://api.astria.ai/tunes/${tuneId}/prompts`,
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packId }),
-      }
-    );
-
-    const promptJson = await promptRes.json();
-    const prompts = (promptJson.prompts as string[]) || [];
-    console.log("📝 [Background] Prompts array is:", prompts);
-
-    if (!Array.isArray(prompts) || prompts.length === 0) {
-      console.error(
-        "❌ [Background] Prompt generation failed or returned no prompts:",
-        promptJson
-      );
-      throw new Error("Prompt generation failed or empty");
-    }
-    console.log(`📝 [Background] Received ${prompts.length} prompt(s) from GPT.`);
-
-    // ───────▶ STEP D: FOR EACH PROMPT → POST TO Astria /tunes/{tuneId}/prompts ◀──────
-    for (const promptText of prompts) {
-      const astriaPrompt = `sks ${gender} ${promptText}`;
-      console.log("✨ [Background] Sending to Astria (prompt):", astriaPrompt);
-
-      const sendRes = await fetch(`https://api.astria.ai/tunes/${tuneId}/prompts`, {
-        method: "POST",
+        method:  "POST",
         headers: {
           Authorization: `Bearer ${process.env.ASTRIA_API_KEY}`,
           "Content-Type": "application/json",
@@ -291,140 +331,136 @@ if (tuneSaveError) {
           height:           1152,
           sampler:          "euler_a",
         }),
-      });
-
-      let promptData: any;
-      try {
-        promptData = await sendRes.json();
-      } catch {
-        const raw = await sendRes.text();
-        promptData = { raw };
       }
+    );
 
-      if (!sendRes.ok) {
-        console.error(
-          `❌ Astria /tunes/${tuneId}/prompts returned HTTP ${sendRes.status}. Full body:`,
-          promptData
-        );
-        continue; // skip to next prompt
-      }
-
-      const promptId = (promptData as any)?.id as string | undefined;
-      if (!promptId) {
-        console.error("❌ Astria prompt creation returned no ID:", promptData);
-        continue;
-      }
-      console.log(
-        `[create-astria-job] Astria prompt created with ID: ${promptId}`
+    let promptData: any;
+    try {
+      promptData = await sendRes.json();
+    } catch {
+      promptData = { raw: await sendRes.text() };
+      console.warn(
+        `⚠️ [Background] Couldn’t parse Astria prompt JSON for "${promptText}", raw:`,
+        promptData.raw
       );
-
-      // ───────▶ STEP E: INSERT a placeholder row into Supabase.generated_images ◀──────
-      // We fill `image_url` later once the prompt’s images are ready.
-      const { error: genErr } = await supabase.from("generated_images").insert({
-        prompt_id: promptId,
-        pack_id:   packId,
-        image_url: "", // placeholder
-        url:       `https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`,
-        created_at: new Date().toISOString(),
-      });
-      if (genErr) {
-        console.error(
-          "❌ Supabase insert into generated_images failed:",
-          genErr
-        );
-        // Even if that fails, we still attempt to poll Astria
-      } else {
-        console.log(
-          `[create-astria-job] Saved placeholder for Astria promptId ${promptId}`
-        );
-      }
-
-      // ───────▶ STEP F: POLL until that prompt’s images array appears ◀──────
-      try {
-        const images = await waitForPromptImages(tuneId, promptId, 3000, 20);
-        // Once images appear, pick the first (or however many you like)
-        const firstUrl = images[0];
-        console.log(
-          `[create-astria-job] Prompt ${promptId} returned images:`,
-          images
-        );
-
-        // ───────▶ STEP G: UPDATE Supabase.generated_images.image_url with the first image URL ◀──────
-        const { error: updateErr } = await supabase
-          .from("generated_images")
-          .update({ image_url: firstUrl })
-          .eq("prompt_id", promptId);
-        if (updateErr) {
-          console.error(
-            `❌ Supabase update generated_images for prompt ${promptId} failed:`,
-            updateErr
-          );
-        } else {
-          console.log(
-            `[create-astria-job] Updated generated_images.image_url for prompt ${promptId}`
-          );
-        }
-      } catch (pollErr) {
-        console.error(
-          `❌ Polling images for prompt ${promptId} failed:`,
-          pollErr
-        );
-      }
     }
 
-    console.log("✅ [Background] All prompts sent and images saved.");
-  } catch (err: any) {
-    console.error("❌ [Background] Webhook error:", err);
+    if (!sendRes.ok) {
+      console.error(
+        `❌ [Background] Astria /tunes/${tuneId}/prompts returned HTTP ${sendRes.status}:`,
+        promptData
+      );
+      continue; // skip this prompt if Astria returns an error
+    }
+
+    const promptId = (promptData as any)?.id as string | undefined;
+    if (!promptId) {
+      console.error(
+        "❌ [Background] Astria prompt creation returned no ID:",
+        promptData
+      );
+      continue;
+    }
+    console.log(`[create-astria-job] Astria prompt created with ID: ${promptId}`);
+
+    // 5b) Poll Astria until it returns at least one image URL (up to 3 minutes)
+    let images: string[] = [];
+    try {
+      console.log(
+        `⏳ [Background] Waiting up to 3 minutes for prompt ${promptId} images…`
+      );
+      images = await waitForPromptImages(tuneId, promptId, 60, 3000);
+      console.log(
+        `[Background] Prompt ${promptId} returned ${images.length} image(s).`
+      );
+    } catch (err) {
+      console.error(
+        `❌ [Background] Polling images for prompt ${promptId} failed:`,
+        err
+      );
+      continue;
+    }
+
+    // 5c) Bulk-insert each returned URL into Supabase.generated_images
+    const insertData = images.map((url) => ({
+      prompt_id:  promptId,
+      pack_id:    packId,
+      image_url:  url.trim(),
+      url:        `https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`,
+      created_at: new Date().toISOString(),
+    }));
+    console.log(
+      `[Background] Inserting ${insertData.length} images for prompt ${promptId}...`
+    );
+    const { error: bulkInsertErr } = await supabase
+      .from("generated_images")
+      .insert(insertData);
+
+    if (bulkInsertErr) {
+      console.error(
+        `❌ [Background] Failed to insert images for prompt ${promptId}:`,
+        bulkInsertErr
+      );
+    } else {
+      console.log(
+        `✅ [Background] Inserted ${insertData.length} images for prompt ${promptId}`
+      );
+    }
   }
+
+  console.log("✅ [Background] All prompts sent and images saved.");
 }
 
 /**
- * The main Stripe Webhook POST handler. We do NOT await processCheckoutSession,
- * so we immediately reply “200” to Stripe. The heavy work happens in the background.
+ * Main Next.js webhook handler (POST).
+ * 1) Verify Stripe signature
+ * 2) Only handle checkout.session.completed
+ * 3) Kick off processCheckoutSession(event) in the background
+ * 4) Return 200 OK immediately so Stripe stops retrying
  */
 export async function POST(req: Request) {
-  // 1) Read raw body + stripe-signature
+  // 1) Read the raw body & Stripe signature
   const rawBody = await req.text();
-  const sig = req.headers.get("stripe-signature")!;
+  const sig = headers().get("stripe-signature")!;
+  console.log("🔷 [Stripe Webhook] RawBody length:", rawBody.length);
+  console.log("🔷 [Stripe Webhook] Signature header:", sig);
 
-  let event: any;
+  let event: Stripe.Event;
   try {
     if (process.env.NODE_ENV === "development") {
-      // Skip signature verification in dev
-      event = JSON.parse(rawBody);
-      console.log("🔧 (Dev) Skipped Stripe signature check.");
+      // Skip verification locally
+      event = JSON.parse(rawBody) as Stripe.Event;
+      console.log("🔧 [Stripe Webhook] (Dev) Skipped signature check. Event:", event.type);
     } else {
-      event = new (await import("stripe")).Stripe(
-        process.env.STRIPE_SECRET_KEY!,
-        { apiVersion: "2025-05-28.basil" }
-      ).webhooks.constructEvent(
+      event = stripe.webhooks.constructEvent(
         rawBody,
         sig,
         process.env.STRIPE_WEBHOOK_SECRET!
       );
+      console.log("✅ [Stripe Webhook] Signature verified. Event:", event.type);
     }
-    console.log("✅ Stripe webhook received:", event.type);
   } catch (err) {
-    console.error("❌ Stripe signature verification failed:", err);
+    console.error("❌ [Stripe Webhook] Signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // 2) If it’s not a checkout completion, immediately respond 200
+  // 2) Only respond to checkout.session.completed events
   if (event.type !== "checkout.session.completed") {
-    console.log("ℹ️ Not a checkout completion event:", event.type);
+    console.log("ℹ️ [Stripe Webhook] Ignoring event type:", event.type);
     return NextResponse.json({ received: true });
   }
 
-  // 3) Launch the heavy work in the background (do NOT await)
+  // 3) Launch the background work (don’t await it)
+  console.log("▶️ [Stripe Webhook] Handling checkout.session.completed");
   processCheckoutSession(event).catch((err) => {
     console.error("❌ [Background] Unhandled error:", err);
   });
 
-  // 4) Acknowledge Stripe with HTTP 200 right away
+  // 4) Immediately acknowledge Stripe with HTTP 200
   return NextResponse.json({ received: true });
 }
 
-// Optional: block GET requests on this route
+// Explicitly reject GET requests; only POST is allowed
 export async function GET() {
   return new NextResponse("Method Not Allowed", { status: 405 });
 }
