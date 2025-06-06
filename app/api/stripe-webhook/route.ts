@@ -14,14 +14,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-05-28.basil",
 });
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Disable Next.js body parser so we can verify Stripe’s raw webhook signature
-// ──────────────────────────────────────────────────────────────────────────────
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+
 
 /**
  * Helper: Poll Supabase `uploads` table until at least one URL appears for this packId.
