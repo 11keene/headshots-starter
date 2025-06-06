@@ -758,8 +758,19 @@ const choose = (val: any) => {
     setAnswers(a => ({ ...a, [question.key]: [o.value] }));
 
     // 2️⃣ update the URL param shallowly so questionSet flips
-    router.push(`/custom-intake?packType=${encodeURIComponent(pack)}&gender=${o.value}`);
-    // 3️⃣ now immediately advance to the next question
+ // 2) compute the correct packType based on which gender was picked:
+               //    if user clicked “man” → packType="custom-intake-man"
+               //    if user clicked “woman” → packType="custom-intake-woman"
+               const newPackType =
+                 o.value === "man"
+                   ? "custom-intake-man"
+                   : "custom-intake-woman";    // 3️⃣ now immediately advance to the next question
+                   // Now push a URL that matches the chosen gender:
+               router.push(
+                 `/custom-intake?packType=${encodeURIComponent(
+                  newPackType
+                 )}&gender=${o.value}`
+               );
     next();
     return;
   } else {
