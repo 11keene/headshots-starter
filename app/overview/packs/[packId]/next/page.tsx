@@ -31,7 +31,6 @@ export default function UploadPage() {
   const rawGender = searchParams.get("gender")?.toLowerCase() || null;
   // We store it here (you can use it in your upload logic if needed).
   // If somehow someone goes directly to this URL without ?gender, rawGender === null.
-  // You could default to "woman" or throw an error, but we'll just leave it as is.
   // In practice your intake always PUSHES ?gender=man or ?gender=woman.
   const gender = rawGender === "woman" ? "woman" : rawGender === "man" ? "man" : null;
 
@@ -210,8 +209,8 @@ export default function UploadPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         stripePriceId,
-       packId: packId,      // pass in the correct packId
-   packType,
+        packId: packId,      // pass in the correct packId
+        packType,
       }),
     })
       .then((r) => r.json())
@@ -237,6 +236,41 @@ export default function UploadPage() {
       <p className="text-gray-600 mb-6">
         Select at least <span className="font-semibold">4–6</span> photos (max 10).
       </p>
+
+<div className="mb-6 rounded-lg border-2 border-muted-gold bg-charcoal p-4 flex items-start gap-3">
+  {/* 👁️‍🗨️ Icon in muted-gold */}
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-6 w-6 text-muted-gold stroke-current"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+    />
+  </svg>
+
+  <div className="flex-1">
+    <h2 className="text-lg font-semibold text-muted-gold">
+      For best results, upload high-quality photos!
+    </h2>
+    <p className="mt-1 text-sm text-ivory">
+      Our AI does its best work when you give it clear, well-lit images. Think: sharp focus, good lighting, no heavy filters—<strong>what you give is what you get</strong>. 📸✨
+    </p>
+  </div>
+</div>
+
+      {/* ─────────────────────────────────────────────────────────── */}
+
 
       {/* Dropzone */}
       <div
@@ -332,21 +366,21 @@ export default function UploadPage() {
           {uploadCount} of 4 required{uploading ? " (uploading…)" : ""}
         </span>
         <Button
-  disabled={uploading || uploadCount < 4 || isLoading}
-   onClick={goNext}
- >
-  {uploading 
-     ? "Uploading…"
-     : isLoading
-       ? (
-           <>
-             <FiLoader className="animate-spin mr-2" />
-             Starting…
-           </>
-         )
-       : "Continue"
-   }
- </Button>
+          disabled={uploading || uploadCount < 4 || isLoading}
+          onClick={goNext}
+        >
+          {uploading 
+            ? "Uploading…"
+            : isLoading
+              ? (
+                  <>
+                    <FiLoader className="animate-spin mr-2" />
+                    Starting…
+                  </>
+                )
+              : "Continue"
+          }
+        </Button>
       </div>
 
       {error && (

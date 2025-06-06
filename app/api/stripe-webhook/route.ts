@@ -199,11 +199,13 @@ async function waitForPromptImages(
  *   5) For each prompt: send to Astria, wait for images, bulk-insert
  */
 async function processCheckoutSession(event: Stripe.Event) {
-  const supabase = createRouteHandlerClient({ cookies });
+const supabase = createRouteHandlerClient({
+  cookies: () => cookies(),
+});
   const session = event.data.object as Stripe.Checkout.Session;
   const metadata = session.metadata || {};
   const userId = metadata.user_id as string | undefined;
-  const packId = metadata.packId as string | undefined;
+const packId = metadata.pack_id as string | undefined;
   const gender = metadata.gender as string | undefined;       // e.g. "woman"
   const packType = metadata.packType as string | undefined;   // e.g. "headshots"
 
@@ -412,46 +414,42 @@ async function processCheckoutSession(event: Stripe.Event) {
  * 4) Return 200 OK immediately so Stripe stops retrying
  */
 export async function POST(req: Request) {
-  // 1) Read the raw body & Stripe signature
+  // 1) Read raw body
   const rawBody = await req.text();
-  const sig = headers().get("stripe-signature")!;
-  console.log("🔷 [Stripe Webhook] RawBody length:", rawBody.length);
-  console.log("🔷 [Stripe Webhook] Signature header:", sig);
+  // 2) Grab the Stripe signature header from the incoming request
+  const sig = req.headers.get("stripe-signature")!;
 
   let event: Stripe.Event;
   try {
-    if (process.env.NODE_ENV === "development") {
-      // Skip verification locally
-      event = JSON.parse(rawBody) as Stripe.Event;
-      console.log("🔧 [Stripe Webhook] (Dev) Skipped signature check. Event:", event.type);
-    } else {
-      event = stripe.webhooks.constructEvent(
-        rawBody,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET!
-      );
-      console.log("✅ [Stripe Webhook] Signature verified. Event:", event.type);
-    }
-  } catch (err) {
+    // Always do real signature verification in production
+    event = stripe.webhooks.constructEvent(
+      rawBody,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
+    console.log("✅ [Stripe Webhook] Signature verified. Event:", event.type);
+  } catch (err: any) {
     console.error("❌ [Stripe Webhook] Signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // 2) Only respond to checkout.session.completed events
+  // 3) Only handle checkout.session.completed
   if (event.type !== "checkout.session.completed") {
     console.log("ℹ️ [Stripe Webhook] Ignoring event type:", event.type);
     return NextResponse.json({ received: true });
   }
 
-  // 3) Launch the background work (don’t await it)
+  // 4) Kick off the background process (which creates tune, polls, uploads, etc.)
   console.log("▶️ [Stripe Webhook] Handling checkout.session.completed");
   processCheckoutSession(event).catch((err) => {
     console.error("❌ [Background] Unhandled error:", err);
   });
 
-  // 4) Immediately acknowledge Stripe with HTTP 200
+  // 5) Immediately return 200 OK so Stripe stops retrying
   return NextResponse.json({ received: true });
 }
+
+
 
 // Explicitly reject GET requests; only POST is allowed
 export async function GET() {

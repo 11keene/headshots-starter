@@ -460,12 +460,13 @@ useEffect(() => {
 // ─── STEP A: Create a Supabase client and grab the current user’s session ───
   const supabase = createClientComponentClient();
   const session = useSession();
- // 🔥 Only on the very first mount, reset everything so we always start at gender=step 0
- useEffect(() => {
-   setStep(0);
-   localStorage.removeItem(`intake-${pack}`);
-   setAnswers({});
- }, []);      // ← run exactly once
+// AFTER (run only once, on the very first mount)
+useEffect(() => {
+  setStep(0);
+  localStorage.removeItem(`intake-${pack}`);
+  setAnswers({});
+}, []);   // ← empty deps → only on initial mount
+
   
   useEffect(() => {
     const saved = localStorage.getItem(`intake-${pack}`);
