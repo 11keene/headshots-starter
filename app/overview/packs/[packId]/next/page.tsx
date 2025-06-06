@@ -329,7 +329,7 @@ export default function UploadPage() {
           {
             title: "Variety",
             desc: "Different outfits & backgrounds",
-            img: "/variety.png",
+            img: "/variety1.png",
           },
           {
             title: "No Blurry",
