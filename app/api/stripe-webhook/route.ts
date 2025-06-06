@@ -214,16 +214,16 @@ async function processCheckoutSession(event: Stripe.Event) {
     throw new Error("Missing user_id, packId, or gender in metadata");
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────────
   // 1) Wait for the user’s uploaded images to show up in Supabase “uploads” table
-  // ─────────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────────
   const imageUrls = await waitForUploads(supabase, packId, 300, 2000);
   console.log("🖼️ [Background] Final list of image URLs:", imageUrls);
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────────
   // 2) CALL YOUR create-tune ROUTE instead of posting to Astria directly
   //    (app/api/astria/create-tune/route.ts)
-  // ─────────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────────
   console.log("🧩 [Background] Delegating to /api/astria/create-tune …");
   try {
     const ctResponse = await fetch(
@@ -267,17 +267,17 @@ async function processCheckoutSession(event: Stripe.Event) {
     const tuneId = ctJson.tuneId as string;
     console.log(`✅ [Background] Received tuneId="${tuneId}" from create-tune`);
 
-    // ─────────────────────────────────────────────────────────────────────────────
-    // 3) Wait for that tune to be “ready” on Astria (up to 20 minutes)
-    // ─────────────────────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────────────
+    // 3) Wait for that tune to be “ready” on Astria (up to 20 min)
+    // ────────────────────────────────────────────────────────────────────────────
     console.log(
       `⏳ [Background] Waiting up to 20 minutes for Astria Tune ${tuneId} to be ready…`
     );
     await waitForTuneReady(tuneId, 240, 5000);
 
-    // ─────────────────────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────────────
     // 4) Fetch GPT-generated prompts
-    // ─────────────────────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────────────
     console.log(`📩 [Background] Requesting GPT prompts for packId="${packId}"`);
     const promptRes = await fetch(
       `${process.env.NEXT_PUBLIC_SITE_URL}/api/generate-prompts`,
@@ -305,9 +305,9 @@ async function processCheckoutSession(event: Stripe.Event) {
     }
     console.log(`📝 [Background] Received ${prompts.length} prompt(s) from GPT.`);
 
-    // ─────────────────────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────────────
     // 5) For each prompt, send to Astria and then bulk-insert results into Supabase
-    // ─────────────────────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────────────
     for (const promptText of prompts) {
       const astriaPrompt = `sks ${gender} ${promptText}`;
       console.log("✨ [Background] Sending to Astria (prompt):", astriaPrompt);
@@ -362,7 +362,7 @@ async function processCheckoutSession(event: Stripe.Event) {
       }
       console.log(`[create-astria-job] Astria prompt created with ID: ${promptId}`);
 
-      // 5b) Poll Astria until it returns at least one image URL (up to 3 minutes)
+      // 5b) Poll Astria until it returns at least one image URL (up to 3 min)
       let images: string[] = [];
       try {
         console.log(
@@ -422,17 +422,15 @@ async function processCheckoutSession(event: Stripe.Event) {
  * 4) Return 200 OK immediately so Stripe stops retrying
  */
 export async function POST(req: Request) {
-  // 1) Read raw body
+  // 1) Read the raw body text
   const rawBody = await req.text();
-  // 2) Grab the Stripe signature header from the incoming request
-  const sig = req.headers.get("stripe-signature")!;
 
   let event: Stripe.Event;
   try {
-    // Always do real signature verification in production
+    // ─── PRODUCTION: Verify signature ─────────────────────────────────────────────
     event = stripe.webhooks.constructEvent(
       rawBody,
-      sig,
+      req.headers.get("stripe-signature")!,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
     console.log("✅ [Stripe Webhook] Signature verified. Event:", event.type);
@@ -441,19 +439,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  // 3) Only handle checkout.session.completed
+  // 2) Only handle checkout.session.completed
   if (event.type !== "checkout.session.completed") {
     console.log("ℹ️ [Stripe Webhook] Ignoring event type:", event.type);
     return NextResponse.json({ received: true });
   }
 
-  // 4) Kick off the background process (which now delegates to create-tune, etc.)
+  // 3) Kick off the background process in the background
   console.log("▶️ [Stripe Webhook] Handling checkout.session.completed");
   processCheckoutSession(event).catch((err) => {
     console.error("❌ [Background] Unhandled error:", err);
   });
 
-  // 5) Immediately return 200 OK so Stripe stops retrying
+  // 4) Immediately return 200 OK so Stripe stops retrying
   return NextResponse.json({ received: true });
 }
 
