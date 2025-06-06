@@ -84,29 +84,30 @@ async function waitForTuneReady(tuneId: string): Promise<void> {
 export async function POST(req: Request) {
   const rawBody = await req.text();
   const sig = req.headers.get("stripe-signature")!;
-    console.log("🔷 [Stripe Webhook] RawBody length:", rawBody.length);
+  console.log("🔷 [Stripe Webhook] RawBody length:", rawBody.length);
   console.log("🔷 [Stripe Webhook] Signature header:", sig);
+
   let event: any;
   try {
-    if (process.env.NODE_ENV === "development") {
-      event = JSON.parse(rawBody);
-      console.log("🔧 (Dev) Skipped Stripe signature check.");
-    } else {
-      const stripe = new (await import("stripe")).Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-05-28.basil" });
-      event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-    }
+    const stripe = new (await import("stripe")).Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: "2025-05-28.basil",
+    });
+    event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET!);
     console.log("✅ Stripe webhook received:", event.type);
   } catch (err) {
     console.error("❌ Stripe signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
+
   if (event.type !== "checkout.session.completed") {
     console.log("ℹ️ Not a checkout completion event:", event.type);
     return NextResponse.json({ received: true });
   }
+
   processCheckoutSession(event).catch((err) => {
     console.error("❌ [Background] Unhandled error:", err);
   });
+
   return NextResponse.json({ received: true });
 }
 

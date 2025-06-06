@@ -84,24 +84,44 @@ export default function StatusPage({ params }: { params: { packId: string } }) {
   };
 
   // Download selected images individually
-  const downloadAll = async () => {
-    for (const url of Array.from(selected)) {
-      try {
-        const res = await fetch(url);
-        const blob = await res.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = blobUrl;
-        link.download = url.split("/").pop() || "photo.png";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(blobUrl);
-      } catch (err) {
-        console.error("Error downloading", url, err);
+async function downloadAll(selectedUrls: string[]) {
+  try {
+    for (const astriaUrl of selectedUrls) {
+      // 1) encode the Astria URL so it can be sent as a query string:
+      const encoded = encodeURIComponent(astriaUrl);
+
+      // 2) fetch from your proxy instead of directly from Astria
+      const resp = await fetch(`/api/download-proxy?url=${encoded}`);
+
+      if (!resp.ok) {
+        console.error("Download proxy returned", resp.status);
+        continue;
       }
+
+      // 3) Turn the server-side streamed response into a blob
+      const blob = await resp.blob();
+
+      // 4) Create a temporary <a> to trigger download
+      const disp = resp.headers.get("Content-Disposition") || "";
+      // Attempt to parse a “filename=” from Content-Disposition
+      let filename = "downloaded.jpg";
+      const match = /filename="?([^"]+)"?/.exec(disp);
+      if (match && match[1]) {
+        filename = match[1];
+      }
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
     }
-  };
+  } catch (err) {
+    console.error("Error in downloadAll:", err);
+  }
+}
 
   // Download everything as ZIP
   const handleDownloadZip = async () => {
@@ -189,7 +209,7 @@ export default function StatusPage({ params }: { params: { packId: string } }) {
         </button>
 
         <button
-          onClick={downloadAll}
+          onClick={() => downloadAll(Array.from(selected))}
           disabled={selected.size === 0}
           className="w-full sm:w-auto inline-flex justify-center items-center bg-sage-green hover:bg-[#66735F] text-white font-medium px-5 py-2 rounded-md gap-2 disabled:opacity-50 transition"
         >

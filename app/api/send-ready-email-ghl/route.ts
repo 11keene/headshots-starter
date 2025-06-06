@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     // 1️⃣ Parse incoming JSON
-    const { userEmail, firstName, lastName, packId } = await req.json();
+    const body = await req.json();
+    console.log("[send-ready-email-ghl] Received request:", body);
+
+    const { userEmail, firstName, lastName, packId } = body;
     if (!userEmail || !packId) {
       return NextResponse.json(
         { error: "Missing required fields: userEmail or packId" },
@@ -26,8 +29,10 @@ export async function POST(req: Request) {
     }
 
     // 3️⃣ Generate a unique timestamped tag for this contact update
-const tags = [`photos_ready`, `photos_ready_${Date.now()}`];
-
+const tags = [
+      "photos_ready",                     // the static tag your workflow listens for
+      `photos_ready_${Date.now()}`        // a brand-new tag every time (forces re‐enrollment)
+    ];
     // 4️⃣ Build the upsert contact payload with custom fields and dynamic tag
     const contactPayload = {
       email: userEmail,
