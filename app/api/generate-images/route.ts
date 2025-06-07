@@ -74,41 +74,63 @@ export async function POST(req: Request) {
     const allImageUrls: string[] = [];
 
     for (const row of promptRows) {
-      const prompt = row.prompt_text;
+const prompt = row.prompt_text;
 
-      // a) Send prompt to Astria
-      const astriaResp = await fetch(`${ASTRIA_API_URL}/tunes/${tuneId}/prompts`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${ASTRIA_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: prompt,
-          num_images: 3,
-          super_resolution: true,
-          inpaint_faces: true,
-          width: 896,
-          height: 1152,
-          sampler: "euler_a",
-        }),
-      });
+// a) Send prompt to Astria
+let astriaResp: Response;
+let astriaJson: any;
+let promptId: string | undefined;
 
-      const astriaJson = await astriaResp.json();
-      if (!astriaResp.ok) {
-        console.error("[generate-images] ❌ Astria prompt error:", astriaJson);
-        continue;
-      }
+try {
+  astriaResp = await fetch(`${ASTRIA_API_URL}/tunes/${tuneId}/prompts`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${ASTRIA_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      text: prompt,
+      num_images: 3,
+      super_resolution: true,
+      inpaint_faces: true,
+      width: 896,
+      height: 1152,
+      sampler: "euler_a",
+    }),
+  });
 
-      const promptId = astriaJson.id;
-      console.log(`[generate-images] 🚀 Prompt created: ${promptId}`);
+  // Parse safely
+  const responseText = await astriaResp.text();
+  try {
+    astriaJson = JSON.parse(responseText);
+  } catch (err) {
+    console.error("[generate-images] ❌ Failed to parse JSON:", responseText);
+    continue;
+  }
 
-      // b) Wait until the images are ready
-      const imageUrls = await pollAstriaPromptStatus(promptId);
-      console.log(`[generate-images] ✅ Prompt ${promptId} ready with ${imageUrls.length} images`);
+  if (!astriaResp.ok) {
+    console.error("[generate-images] ❌ Astria prompt error:", astriaJson);
+    continue;
+  }
 
-      // c) Store result URLs
-      allImageUrls.push(...imageUrls);
+  promptId = astriaJson.id;
+  console.log(`[generate-images] 🚀 Prompt created: ${promptId}`);
+
+  // b) Wait until the images are ready
+  if (typeof promptId === "string") {
+    const imageUrls = await pollAstriaPromptStatus(promptId);
+    console.log(`[generate-images] ✅ Prompt ${promptId} ready with ${imageUrls.length} images`);
+
+    // c) Store result URLs
+    allImageUrls.push(...imageUrls);
+  } else {
+    console.error("[generate-images] ❌ Invalid promptId received:", promptId);
+    continue;
+  }
+} catch (err) {
+  console.error("[generate-images] ❌ Error sending prompt to Astria:", err);
+  continue;
+}
     }
 
     // 4) Save all images to generated_images table
