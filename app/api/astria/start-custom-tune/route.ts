@@ -11,7 +11,7 @@ const { ASTRIA_API_URL, ASTRIA_API_KEY, ASTRIA_TUNE_CALLBACK_URL } = process.env
 
 export async function POST(req: Request) {
   const { userId, promptUrlList, preset } = await req.json();
-  // `promptUrlList` = user’s URLs; `preset` = “flux-lora-portrait”
+  // `promptUrlList` = user’s URLs; `preset` = “flux-lora-portrait”s
   const tuneRes = await fetch(`${ASTRIA_API_URL}/tunes`, {
     method: "POST",
     headers: {
