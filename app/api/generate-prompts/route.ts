@@ -6,11 +6,8 @@ import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
-// ────────────────────────────────────────────────────────────────────────────────
-// Initialize OpenAI client
-// ────────────────────────────────────────────────────────────────────────────────
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!, // ← Make sure this is set in .env.local
+  apiKey: process.env.OPENAI_API_KEY!,
 });
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -131,17 +128,15 @@ By following these instructions, produce 15 highly detailed, professional image 
   };
 
   // Pick the correct instructions. Fallback to "professional" if unknown:
-  const chosenInstructions =
+   const chosenInstructions =
     gptInstructions[packType as "professional" | "multi-purpose"] ||
     gptInstructions["professional"];
 
-  // Build the “system” message block:
   const systemMessage: ChatCompletionMessageParam = {
     role: "system",
     content: chosenInstructions,
   };
 
-  // Now build the “user” message that contains the raw intake JSON:
   const safeIntake = intakeData ?? {};
   const userMessage: ChatCompletionMessageParam = {
     role: "user",
@@ -155,12 +150,8 @@ By following these instructions, produce 15 highly detailed, professional image 
   return [systemMessage, userMessage];
 }
 
-// ────────────────────────────────────────────────────────────────────────────────
-// POST handler for /api/generate-prompts
-// ────────────────────────────────────────────────────────────────────────────────
 export async function POST(req: Request) {
   try {
-    // 1) Parse incoming JSON to get packId
     const body = await req.json();
     console.log("[generate-prompts] incoming body:", body);
     const { packId } = body as { packId?: string };
@@ -169,7 +160,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing packId" }, { status: 400 });
     }
 
-    // 2) Fetch pack row from Supabase so we know pack_type + intake
     const supabase = createRouteHandlerClient({ cookies });
     const { data: packRow, error: packErr } = await supabase
       .from("packs")
@@ -188,39 +178,34 @@ export async function POST(req: Request) {
     console.log("[generate-prompts] packType =", packType);
     console.log("[generate-prompts] intakeData =", intakeData);
 
-    // 3) Build the system+user messages (the “creative director” instructions + JSON):
     const messages = buildPromptMessages(intakeData, packType);
-
-    // 4) Add a final “wrapper” system message that tells GPT to return a JSON object with a 'prompts' array of 15 strings:
     const wrapperMessage: ChatCompletionMessageParam = {
       role: "system",
       content:
         "Now, return ONLY a raw JSON object with a single key 'prompts', whose value is an array of exactly 15 strings (_no_ explanation, no markdown, no headers). Example: { \"prompts\": [\"prompt1\", \"prompt2\", ...] }",
     };
-
-    // Insert the wrapper at the end:
     messages.push(wrapperMessage);
 
-    // 5) Call OpenAI once, instructing it to output a JSON object with the array:
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o", 
+      model: "gpt-4o",
       response_format: { type: "json_object" },
       messages: messages,
-      temperature: 0.8, // so it stays creative yet faithful
+      temperature: 0.8,
     });
 
-    // completion.choices[0].message.content should now be a JSON object with a 'prompts' array
     const rawContent = completion.choices?.[0]?.message?.content;
-    if (!rawContent) {
-      console.error("[generate-prompts] ❌ No content from OpenAI.");
+
+    // ✅ NEW: Defensive check before parsing
+    if (!rawContent || rawContent.trim().length < 10) {
+      console.error("[generate-prompts] ❌ OpenAI returned empty or too short content.");
       return NextResponse.json(
-        { error: "OpenAI returned no content." },
+        { error: "OpenAI returned invalid content." },
         { status: 500 }
       );
     }
+
     console.log("[generate-prompts] rawContent from OpenAI:", rawContent);
 
-    // 6) Parse it into a JavaScript array
     let promptsArray: string[];
     try {
       const parsed = JSON.parse(rawContent);
@@ -230,7 +215,8 @@ export async function POST(req: Request) {
         parsed.prompts.length !== 15
       ) {
         throw new Error(
-          "Parsed result does not have a 'prompts' array of 15 elements. Got: " + JSON.stringify(parsed)
+          "Parsed result does not have a 'prompts' array of 15 elements. Got: " +
+            JSON.stringify(parsed)
         );
       }
       if (!parsed.prompts.every((el: any) => typeof el === "string")) {
@@ -251,7 +237,6 @@ export async function POST(req: Request) {
 
     console.log("[generate-prompts] promptsArray =", promptsArray);
 
-    // 7) Insert those 15 prompts into Supabase “prompts” table
     const rowsToInsert = promptsArray.map((promptText) => ({
       pack_id: packId,
       prompt_text: promptText,
@@ -263,12 +248,10 @@ export async function POST(req: Request) {
 
     if (insertErr) {
       console.error("[generate-prompts] ❌ Supabase insert error:", insertErr);
-      // We still return the array even if DB insert fails
     } else {
       console.log("[generate-prompts] ✅ Stored 15 prompts in database");
     }
 
-    // 8) Return that 15-element array to the caller
     return NextResponse.json({ prompts: promptsArray }, { status: 200 });
   } catch (e: any) {
     console.error("[generate-prompts] ❌ Unexpected error:", e);
@@ -279,7 +262,6 @@ export async function POST(req: Request) {
   }
 }
 
-// Block GET requests on this route
 export async function GET() {
   return new NextResponse("Method Not Allowed", { status: 405 });
 }

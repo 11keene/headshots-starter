@@ -277,10 +277,11 @@ console.log(`📩 [Background] Requesting GPT prompts for packId="${packId}"`);
 let promptRes: Response;
 try {
   promptRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/generate-prompts`, {
-    method:  "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ packId, gender, packType, userId }),
-  });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ packId, gender, packType, userId }),
+});
+
 } catch (err) {
   console.error("❌ [Background] Fetch to /api/generate-prompts failed:", err);
   throw new Error("Could not fetch GPT prompts");
@@ -474,7 +475,13 @@ console.log(`📝 [Background] Received ${prompts.length} prompt(s) from GPT.`);
 export async function POST(req: Request) {
   // 1) Read the raw body & Stripe signature
   const rawBody = await req.text();
-  const sig = headers().get("stripe-signature")!;
+  console.log("📩 [Stripe Webhook] Incoming raw body (first 500 chars):", rawBody.slice(0, 500));
+
+const sig = headers().get("stripe-signature");
+if (!sig) {
+  console.error("❌ [Stripe Webhook] No Stripe signature header found.");
+  return NextResponse.json({ error: "Missing Stripe signature" }, { status: 400 });
+}
   console.log("🔷 [Stripe Webhook] RawBody length:", rawBody.length);
   console.log("🔷 [Stripe Webhook] Signature header:", sig);
 
