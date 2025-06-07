@@ -271,29 +271,38 @@ async function processCheckoutSession(event: Stripe.Event) {
   await waitForTuneReady(tuneId, 240, 5000);
 
   // 4) Fetch GPT-generated prompts
-  console.log(`📩 [Background] Requesting GPT prompts for packId="${packId}"`);
-  const promptRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/generate-prompts`, {
+// 4) Fetch GPT-generated prompts
+console.log(`📩 [Background] Requesting GPT prompts for packId="${packId}"`);
+
+let promptRes: Response;
+try {
+  promptRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/generate-prompts`, {
     method:  "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ packId, gender, packType, userId }),
   });
+} catch (err) {
+  console.error("❌ [Background] Fetch to /api/generate-prompts failed:", err);
+  throw new Error("Could not fetch GPT prompts");
+}
 
-  let promptJson: any;
-  try {
-    promptJson = await promptRes.json();
-  } catch {
-    promptJson = { raw: await promptRes.text() };
-  }
+let promptJson: any;
+try {
+  promptJson = await promptRes.json();
+} catch {
+  promptJson = { raw: await promptRes.text() };
+}
 
-  const prompts = (promptJson.prompts as string[]) || [];
-  if (!Array.isArray(prompts) || prompts.length === 0) {
-    console.error(
-      "❌ [Background] Prompt generation failed or returned no prompts:",
-      promptJson
-    );
-    throw new Error("Prompt generation failed or returned no prompts");
-  }
-  console.log(`📝 [Background] Received ${prompts.length} prompt(s) from GPT.`);
+const prompts = (promptJson.prompts as string[]) || [];
+if (!Array.isArray(prompts) || prompts.length === 0) {
+  console.error(
+    "❌ [Background] Prompt generation failed or returned no prompts:",
+    promptJson
+  );
+  throw new Error("Prompt generation failed or returned no prompts");
+}
+console.log(`📝 [Background] Received ${prompts.length} prompt(s) from GPT.`);
+
 
   // 5) For each of those 15 prompts:
   //    a) Create an Astria prompt (requests 3 images)
