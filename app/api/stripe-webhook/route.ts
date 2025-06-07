@@ -279,18 +279,19 @@ const payload = JSON.stringify({ packId, gender, packType, userId });
 
 let promptRes: Response;
 try {
-  promptRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/generate-prompts`, {
+  promptRes = await fetch("/api/generate-prompts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Content-Length": Buffer.byteLength(payload).toString(), // ✅ fixes mismatch
+      "Content-Length": Buffer.byteLength(payload).toString(), // ✅ fixes mismatch in some environments
     },
     body: payload,
   });
 } catch (err) {
-  console.error("❌ [Background] Fetch to /api/generate-prompts failed:", err);
-  throw new Error("Could not fetch GPT prompts");
+  console.error("[stripe-webhook] ❌ Failed to fetch prompts:", err);
+  throw err;
 }
+
 
 
 let promptJson: any;
@@ -438,9 +439,8 @@ console.log(`📝 [Background] Received ${prompts.length} prompt(s) from GPT.`);
     if (userEmail && packId) {
       console.log("[Background] 🔧 Calling /api/send-ready-email-ghl …");
 
-      const ghlRes = await fetch(
-        `${process.env.NEXT_PUBLIC_SITE_URL}/api/send-ready-email-ghl`,
-        {
+      const ghlRes = await fetch("/api/send-ready-email-ghl", {
+
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
