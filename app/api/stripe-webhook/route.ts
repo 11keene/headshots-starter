@@ -270,22 +270,28 @@ async function processCheckoutSession(event: Stripe.Event) {
   );
   await waitForTuneReady(tuneId, 240, 5000);
 
-  // 4) Fetch GPT-generated prompts
+// ⬅️ inside processCheckoutSession()
+
 // 4) Fetch GPT-generated prompts
 console.log(`📩 [Background] Requesting GPT prompts for packId="${packId}"`);
+
+const payload = JSON.stringify({ packId, gender, packType, userId });
 
 let promptRes: Response;
 try {
   promptRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/generate-prompts`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ packId, gender, packType, userId }),
-});
-
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Content-Length": Buffer.byteLength(payload).toString(), // ✅ fixes mismatch
+    },
+    body: payload,
+  });
 } catch (err) {
   console.error("❌ [Background] Fetch to /api/generate-prompts failed:", err);
   throw new Error("Could not fetch GPT prompts");
 }
+
 
 let promptJson: any;
 try {
@@ -294,15 +300,18 @@ try {
   promptJson = { raw: await promptRes.text() };
 }
 
-const prompts = (promptJson.prompts as string[]) || [];
-if (!Array.isArray(prompts) || prompts.length === 0) {
-  console.error(
-    "❌ [Background] Prompt generation failed or returned no prompts:",
-    promptJson
-  );
-  throw new Error("Prompt generation failed or returned no prompts");
+// 🛠️ Added: Log full GPT response before trying to access .prompts
+console.log("🛠️ [Background] GPT raw response:", promptJson);
+
+// 🛠️ Added: Safety check for missing or malformed .prompts
+if (!promptJson || !Array.isArray(promptJson.prompts)) {
+  console.error("❌ [Background] GPT response is missing 'prompts' array:", promptJson);
+  throw new Error("Invalid response from GPT — 'prompts' array not found");
 }
+
+const prompts = promptJson.prompts as string[];
 console.log(`📝 [Background] Received ${prompts.length} prompt(s) from GPT.`);
+
 
 
   // 5) For each of those 15 prompts:
