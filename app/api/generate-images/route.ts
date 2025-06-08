@@ -16,26 +16,42 @@ const ASTRIA_API_KEY = process.env.ASTRIA_API_KEY!;
 
 
 // Wait until the image generation is ready
-async function pollAstriaPromptStatus(promptId: string, timeoutMs = 120_000) {
+// Wait until the image generation is ready
+async function pollAstriaPromptStatus(
+  tuneId: string,
+  promptId: string,
+  timeoutMs = 120_000
+): Promise<string[]> {
   const start = Date.now();
+
   while (true) {
-    const resp = await fetch(`${ASTRIA_API_URL}/prompts/${promptId}`, {
-      headers: { Authorization: `Bearer ${ASTRIA_API_KEY}` },
-    });
+    // ✅ Correct endpoint for checking a prompt
+    const resp = await fetch(
+      `${ASTRIA_API_URL}/tunes/${tuneId}/prompts/${promptId}.json`,
+      { headers: { Authorization: `Bearer ${ASTRIA_API_KEY}` } }
+    );
+
     const data = await resp.json();
     if (!resp.ok) {
-      throw new Error(`Astria prompt status check failed: ${JSON.stringify(data)}`);
+      throw new Error(
+        `Astria prompt status check failed: ${JSON.stringify(data)}`
+      );
     }
-    if (data.ready && Array.isArray(data.result_urls) && data.result_urls.length > 0) {
-      return data.result_urls;
+
+    // ✅ Astria returns an `images` array once ready
+    if (Array.isArray(data.images) && data.images.length > 0) {
+      return data.images;
     }
+
     if (Date.now() - start > timeoutMs) {
       throw new Error("Astria prompt timed out before ready");
     }
-    console.log(`[generate-images] Waiting for prompt ${promptId} to be ready...`);
+
+    // wait 3s before retrying
     await new Promise((r) => setTimeout(r, 3000));
   }
 }
+
 
 export async function POST(req: Request) {
   try {
@@ -147,7 +163,7 @@ export async function POST(req: Request) {
       promptId = astriaJson.id;
       console.log(`[generate-images] 🚀 Prompt created: ${promptId}`);
 
-      const imageUrls = await pollAstriaPromptStatus(promptId);
+const imageUrls = await pollAstriaPromptStatus(tuneId, promptId);
       console.log(
         `[generate-images] ✅ Prompt ${promptId} ready with ${imageUrls.length} images`
       );

@@ -215,26 +215,23 @@ async function processCheckoutSession(event: Stripe.Event) {
   const imageUrls = await waitForUploads(supabase, packId, 300, 2000);
   console.log("🖼️ [Background] Final list of image URLs:", imageUrls);
 
-  // 2) Create an Astria tune using JSON
-  //     — note: base_tune_id must be a numeric ID from your Astria gallery (e.g. 690204).
+   // 2) Create an Astria tune using JSON
   console.log("📨 [Background] Creating Astria tune with images:", imageUrls);
-
   const tunePayload = {
     tune: {
-      title:          `${userId}-${packId}`,   // required, e.g. a UUID
-      name:           gender,                  // required (e.g. "woman")
-      branch:         "flux1",                 // enum: "sd15", "sdxl1", or "fast"
-      base_tune:      "flux.1 dev",            // must be exactly “flux.1 dev”
-      model_type:     "lora",                  // enum: "lora", "pti", "faceid", or null
-      preset:         "flux-lora-portrait",    // one of Astria’s presets
-      face_detection: true,                    // boolean optional
-      image_urls:     imageUrls,               // required: array of at least 1 URL
-      // token:        "ohwx",                 // optional; omit if you want default
+      title:          `${userId}-${packId}`,
+      name:           gender,
+      branch:         "flux1",
+      base_tune:      "flux.1 dev",
+      model_type:     "lora",
+      preset:         "flux-lora-portrait",
+      face_detection: true,
+      image_urls:     imageUrls,
     },
   };
 
   const tuneRes = await fetch("https://api.astria.ai/tunes", {
-    method: "POST",
+    method:  "POST",
     headers: {
       "Content-Type":  "application/json",
       "Authorization": `Bearer ${process.env.ASTRIA_API_KEY}`,
@@ -242,6 +239,7 @@ async function processCheckoutSession(event: Stripe.Event) {
     body: JSON.stringify(tunePayload),
   });
 
+  // Parse the response
   let tuneData: any;
   try {
     tuneData = await tuneRes.json();
@@ -261,16 +259,27 @@ async function processCheckoutSession(event: Stripe.Event) {
     throw new Error(`Tune creation failed (HTTP ${tuneRes.status})`);
   }
 
-  const tuneId = (tuneData as any).id as string;
+  // Extract the new tune ID
+  const tuneId = tuneData.id as string;
   console.log(`✅ [Background] Astria Tune created. ID = ${tuneId}`);
 
-  // 3) Wait for that tune to be “ready” (up to 20 minutes)
+  // 👉 Persist tune_id so /api/generate-images can read it later
+  const { error: packUpdateErr } = await supabase
+    .from("packs")
+    .update({ tune_id: tuneId })
+    .eq("id", packId);
+
+  if (packUpdateErr) {
+    console.error("[Background] ❌ Failed to write tune_id to DB:", packUpdateErr);
+  } else {
+    console.log(`[Background] ✅ Saved tune_id ${tuneId} into packs row ${packId}`);
+  }
+
+  // 3) Wait for that tune to be “ready” …
   console.log(
     `⏳ [Background] Waiting up to 20 minutes for Astria Tune ${tuneId} to be ready…`
   );
   await waitForTuneReady(tuneId, 240, 5000);
-
-// ⬅️ inside processCheckoutSession()
 
 // 4) Fetch GPT-generated prompts
 console.log(`📩 [Background] Requesting GPT prompts for packId="${packId}"`);
