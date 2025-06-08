@@ -17,37 +17,26 @@ const ASTRIA_API_KEY = process.env.ASTRIA_API_KEY!;
 
 // Wait until the image generation is ready
 // Wait until the image generation is ready
+// Wait until the image generation is ready at the specific prompt URL
 async function pollAstriaPromptStatus(
-  tuneId: string,
-  promptId: string,
+  promptUrl: string,
   timeoutMs = 120_000
 ): Promise<string[]> {
   const start = Date.now();
-
   while (true) {
-    // ✅ Correct endpoint for checking a prompt
-    const resp = await fetch(
-      `${ASTRIA_API_URL}/tunes/${tuneId}/prompts/${promptId}.json`,
-      { headers: { Authorization: `Bearer ${ASTRIA_API_KEY}` } }
-    );
-
+    const resp = await fetch(promptUrl, {
+      headers: { Authorization: `Bearer ${ASTRIA_API_KEY}` },
+    });
     const data = await resp.json();
     if (!resp.ok) {
-      throw new Error(
-        `Astria prompt status check failed: ${JSON.stringify(data)}`
-      );
+      throw new Error(`Astria prompt status check failed: ${JSON.stringify(data)}`);
     }
-
-    // ✅ Astria returns an `images` array once ready
     if (Array.isArray(data.images) && data.images.length > 0) {
       return data.images;
     }
-
     if (Date.now() - start > timeoutMs) {
       throw new Error("Astria prompt timed out before ready");
     }
-
-    // wait 3s before retrying
     await new Promise((r) => setTimeout(r, 3000));
   }
 }
@@ -160,14 +149,14 @@ export async function POST(req: Request) {
         continue;
       }
 
-      promptId = astriaJson.id;
-      console.log(`[generate-images] 🚀 Prompt created: ${promptId}`);
+      // Grab the URL Astria returns for checking this prompt
+      const promptUrl = astriaJson.url as string;
+      console.log(`[generate-images] 📌 Polling prompt at: ${promptUrl}`);
 
-const imageUrls = await pollAstriaPromptStatus(tuneId, promptId);
+     const imageUrls = await pollAstriaPromptStatus(promptUrl);
       console.log(
-        `[generate-images] ✅ Prompt ${promptId} ready with ${imageUrls.length} images`
-      );
-
+         `[generate-images] ✅ Prompt ready with ${imageUrls.length} images`
+       );
       allImageUrls.push(...imageUrls);
     } catch (err) {
       console.error("[generate-images] ❌ Error sending prompt to Astria:", err);
