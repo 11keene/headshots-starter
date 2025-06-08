@@ -215,65 +215,67 @@ async function processCheckoutSession(event: Stripe.Event) {
   const imageUrls = await waitForUploads(supabase, packId, 300, 2000);
   console.log("🖼️ [Background] Final list of image URLs:", imageUrls);
 
-   // 2) Create an Astria tune using JSON
-  console.log("📨 [Background] Creating Astria tune with images:", imageUrls);
-  const tunePayload = {
-    tune: {
-      title:          `${userId}-${packId}`,
-      name:           gender,
-      branch:         "flux1",
-      base_tune:      "flux.1 dev",
-      model_type:     "lora",
-      preset:         "flux-lora-portrait",
-      face_detection: true,
-      image_urls:     imageUrls,
-    },
-  };
-
-  const tuneRes = await fetch("https://api.astria.ai/tunes", {
-    method:  "POST",
-    headers: {
-      "Content-Type":  "application/json",
-      "Authorization": `Bearer ${process.env.ASTRIA_API_KEY}`,
-    },
-    body: JSON.stringify(tunePayload),
-  });
-
-  // Parse the response
-  let tuneData: any;
-  try {
-    tuneData = await tuneRes.json();
-  } catch {
-    tuneData = { raw: await tuneRes.text() };
-    console.warn(
-      "⚠️ [Background] Couldn’t parse Astria tune response JSON, raw:",
-      tuneData.raw
-    );
-  }
-
-  if (!tuneRes.ok || !tuneData.id) {
-    console.error(
-      `❌ [Background] Astria /tunes failed (HTTP ${tuneRes.status}):`,
-      tuneData
-    );
-    throw new Error(`Tune creation failed (HTTP ${tuneRes.status})`);
-  }
-
-  // Extract the new tune ID
-  const tuneId = tuneData.id as string;
-  console.log(`✅ [Background] Astria Tune created. ID = ${tuneId}`);
-
-  // 👉 Persist tune_id so /api/generate-images can read it later
-  const { error: packUpdateErr } = await supabase
+     // ───────────────────────────────────────────────────────────────────────────
+  // 2) Create **or reuse** an Astria Tune
+  // ───────────────────────────────────────────────────────────────────────────
+  // Fetch existing tune_id, if any
+  const { data: packData2, error: packErr2 } = await supabase
     .from("packs")
-    .update({ tune_id: tuneId })
-    .eq("id", packId);
-
-  if (packUpdateErr) {
-    console.error("[Background] ❌ Failed to write tune_id to DB:", packUpdateErr);
-  } else {
-    console.log(`[Background] ✅ Saved tune_id ${tuneId} into packs row ${packId}`);
+    .select("tune_id")
+    .eq("id", packId)
+    .single();
+  if (packErr2) {
+    console.error("[Background] ❌ Failed to retrieve pack for tune_id check:", packErr2);
+    throw new Error("Database error looking up tune_id");
   }
+
+  let tuneId = packData2.tune_id as string | null;
+  if (tuneId) {
+    console.log(`[Background] ℹ️ Reusing existing Astria tune: ${tuneId}`);
+  } else {
+    console.log("[Background] 📨 Creating new Astria tune…");
+    const tunePayload = {
+      tune: {
+        title:          `${userId}-${packId}`,
+        name:           gender,
+        branch:         "flux1",
+        base_tune:      "flux.1 dev",
+        model_type:     "lora",
+        preset:         "flux-lora-portrait",
+        face_detection: true,
+        image_urls:     imageUrls,
+      },
+    };
+
+    const tuneRes = await fetch("https://api.astria.ai/tunes", {
+      method:  "POST",
+      headers: {
+        "Content-Type":  "application/json",
+        "Authorization": `Bearer ${process.env.ASTRIA_API_KEY}`,
+      },
+      body: JSON.stringify(tunePayload),
+    });
+
+    if (!tuneRes.ok) {
+      const raw = await tuneRes.text();
+      console.error(`❌ [Background] Astria /tunes failed (${tuneRes.status}):`, raw);
+      throw new Error("Tune creation failed");
+    }
+
+    const tuneData = await tuneRes.json();
+    tuneId = tuneData.id as string;
+    console.log(`✅ [Background] Astria Tune created. ID = ${tuneId}`);
+
+    // Persist new tune_id so future runs reuse it
+    const { error: packUpdateErr } = await supabase
+      .from("packs")
+      .update({ tune_id: tuneId })
+      .eq("id", packId);
+    if (packUpdateErr) {
+      console.error("[Background] ❌ Failed to save tune_id:", packUpdateErr);
+    }
+  }
+
 
   // 3) Wait for that tune to be “ready” …
   console.log(
