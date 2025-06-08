@@ -293,18 +293,12 @@ const baseUrl = process.env.SITE_URL ?? "http://localhost:3000";
 const promptUrl = `${baseUrl}/api/generate-prompts`;
 
 // Step 3: Make the fetch call
-let promptRes: Response;
+let promptJson: any;
 try {
-  promptRes = await fetch(promptUrl, {
+  const promptRes = await fetch(promptUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      userId,
-      packId,
-      packType,
-    }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, packId, packType }),
   });
 
   if (!promptRes.ok) {
@@ -312,23 +306,13 @@ try {
     throw new Error(`Prompt fetch failed with status ${promptRes.status}: ${errorText}`);
   }
 
-  const json = await promptRes.json();
-  console.log("✅ [Stripe Webhook] Prompt fetch success:", json);
+  promptJson = await promptRes.json();
+  console.log("✅ [Stripe Webhook] Prompt fetch success:", promptJson);
 } catch (err) {
   console.error("❌ [Stripe Webhook] Failed to fetch prompts:", err);
   throw new Error("Could not fetch GPT prompts");
 }
 
-
-
-
-
-let promptJson: any;
-try {
-  promptJson = await promptRes.json();
-} catch {
-  promptJson = { raw: await promptRes.text() };
-}
 
 // 🛠️ Added: Log full GPT response before trying to access .prompts
 console.log("🛠️ [Background] GPT raw response:", promptJson);
