@@ -502,6 +502,7 @@ console.log(`📝 [Background] Received ${prompts.length} prompt(s) from GPT.`);
  * 4) Return 200 OK immediately so Stripe stops retrying
  */
 export async function POST(req: Request) {
+  console.log("🥁 [stripe-webhook] ENTERED webhook handler");
   // 1) Read the raw body & Stripe signature
   const rawBody = await req.text();
   console.log("📩 [Stripe Webhook] Incoming raw body (first 500 chars):", rawBody.slice(0, 500));
