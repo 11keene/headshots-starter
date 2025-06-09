@@ -451,32 +451,31 @@ console.log(`📝 [Background] Received ${prompts.length} prompt(s) from GPT.`);
     // c) The packId was in metadata, so we can reuse it here:
     const packId = stripeSession.metadata?.packId as string;
 
-    if (userEmail && packId) {
-      console.log("[Background] 🔧 Calling /api/send-ready-email-ghl …");
+      // …inside the final `try { … }` for sending the ready email…
+  if (userEmail && packId) {
+    console.log("[Background] 🔧 Calling send-ready-email-ghl endpoint …");
 
-      const ghlRes = await fetch("/api/send-ready-email-ghl", {
+    // Use the absolute URL from your environment
+    const siteUrl = process.env.SITE_URL!;  
+    const ghlRes = await fetch(`${siteUrl}/api/send-ready-email-ghl`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userEmail,
+        firstName,
+        lastName,
+        packId,
+      }),
+    });
 
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userEmail,
-            firstName,
-            lastName,
-            packId,
-          }),
-        }
-      );
-
-      const ghlJson = await ghlRes.json();
-      if (!ghlRes.ok) {
-        console.error(
-          "[Background] ❌ send-ready-email-ghl failed:",
-          ghlJson
-        );
-      } else {
-        console.log("[Background] ✅ send-ready-email-ghl succeeded:", ghlJson);
-      }
+    const ghlJson = await ghlRes.json();
+    if (!ghlRes.ok) {
+      console.error("[Background] ❌ send-ready-email-ghl failed:", ghlJson);
     } else {
+      console.log("[Background] ✅ send-ready-email-ghl succeeded:", ghlJson);
+    }
+  }
+ else {
       console.warn(
         "[Background] ⚠️ Missing userEmail or packId—skipping GHL trigger."
       );
