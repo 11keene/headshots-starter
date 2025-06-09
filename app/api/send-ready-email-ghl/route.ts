@@ -35,8 +35,9 @@ console.log("[send-ready-email-ghl] 🔍 Upserting contact to", `${GHL_API_URL}/
     const upsertUrl  = `${GHL_API_URL}/v1/contacts`;
     console.log("[send-ready-email-ghl] ⏳ Upsert URL:", upsertUrl);
     console.log("[send-ready-email-ghl] ⏳ Upsert payload:", JSON.stringify(contactPayload));
-const upsertRes  = await fetch(`${GHL_API_URL}/contacts`, {
-  method: "POST",
+const upsertRes = await fetch(
+  `${GHL_API_URL}/v2/locations/${GHL_LOCATION_ID}/contacts`,
+  {  method: "POST",
   headers: {
     "Content-Type":  "application/json",
     "Authorization": `Bearer ${process.env.GHL_API_KEY}`,
