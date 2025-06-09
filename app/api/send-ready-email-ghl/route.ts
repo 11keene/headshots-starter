@@ -79,6 +79,29 @@ tags,
       contactId
     );
     console.log("[send-ready-email-ghl] 🏷️ Trigger tags used:", tags);
+    // …right after you log "✅ Contact upserted. GHL contact ID = zR9CKilihXniXLWQ87rH"
+const workflowId = process.env.GHL_READY_PHOTOS_WORKFLOW_ID!; // e.g. "abc123..."
+console.log(`[send-ready-email-ghl] 🚀 Triggering GHL workflow ${workflowId} for contact ${contactId}`);
+
+const triggerRes = await fetch(`${process.env.GHL_API_URL}/v1/workflows/trigger`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${process.env.GHL_API_KEY}`,
+  },
+  body: JSON.stringify({
+    workflowId,
+    contactId,
+  }),
+});
+
+if (!triggerRes.ok) {
+  const err = await triggerRes.text();
+  console.error("[send-ready-email-ghl] ❌ Workflow trigger failed:", err);
+} else {
+  console.log("[send-ready-email-ghl] ✅ Workflow triggered successfully");
+}
+
 
     // 6️⃣ Return success; GHL Automation will now trigger via dynamic tag
     return NextResponse.json({ success: true });
