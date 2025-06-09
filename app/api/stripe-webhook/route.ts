@@ -451,38 +451,32 @@ console.log(`📝 [Background] Received ${prompts.length} prompt(s) from GPT.`);
     // c) The packId was in metadata, so we can reuse it here:
     const packId = stripeSession.metadata?.packId as string;
 
-      // …inside the final `try { … }` for sending the ready email…
- if (userEmail && packId) {
-      // — build the absolute URL to your deployed site (not localhost)
-      const siteUrl = process.env.SITE_URL || "https://headshots-starter-45ov.onrender.com";
-      const endpoint = `${siteUrl}/api/send-ready-email-ghl`;
-      console.log("[Background] 🔧 Calling send-ready-email-ghl at", endpoint);
+// ─── Trigger the Photos Ready workflow in GHL via Inbound Webhook ─────────────────
+    if (userEmail && packId) {
+      const webhookUrl = process.env.GHL_INBOUND_WEBHOOK_URL!;
+      console.log("[Background] 🔔 Firing GHL inbound webhook at", webhookUrl);
 
-      const ghlRes = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userEmail,
-        firstName,
-        lastName,
-        packId,
-      }),
-    });
+      const res = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email:       userEmail,
+          firstName,
+          lastName,
+          packId,
+          galleryUrls: imageUrls,   // match this key with your workflow mapping
+        }),
+      });
 
-// always parse *and* log the raw body so you can see error details
-      const raw = await ghlRes.text();
-      let ghlJson: any;
-      try { ghlJson = JSON.parse(raw); } catch { ghlJson = raw; }
-      console.log(`[Background] ← send-ready-email-ghl (${ghlRes.status})`, ghlJson);
-      if (!ghlRes.ok) {
-        console.error("[Background] ❌ send-ready-email-ghl failed");
+      const text = await res.text();
+      console.log(`[Background] ← GHL webhook response (${res.status}):`, text);
+     if (!res.ok) {
+        console.error("[Background] ❌ GHL webhook failed");
       } else {
-        console.log("[Background] ✅ send-ready-email-ghl succeeded");
+        console.log("[Background] ✅ GHL webhook succeeded");
       }
     } else {
-      console.warn(
-        "[Background] ⚠️ Missing userEmail or packId—skipping send-ready-email-ghl."
-      );
+      console.warn("[Background] ⚠️ Missing userEmail or packId—no webhook sent.");
     }
   } catch (emailErr) {
     console.error(
