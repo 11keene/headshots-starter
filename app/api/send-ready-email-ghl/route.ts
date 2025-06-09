@@ -90,7 +90,8 @@ tags,
 const workflowId = process.env.GHL_WORKFLOW_ID;      // e.g. 'bc7f7b63-6d76-4986-9b7c-923bff5ad037'
 const locationId = process.env.GHL_LOCATION_ID;      // e.g. 'Shob7uPkCRfPCXvcZSV3'
 const GHL_API_BASE = GHL_API_URL; // Use the env variable loaded at the top
-const triggerUrl = `${GHL_API_BASE}/v1/locations/${locationId}/workflows/${workflowId}/triggers`;
+// Option B: if GHL_API_URL already includes "/v1"
+const triggerUrl = `${process.env.GHL_API_URL}/locations/${LOCATION_ID}/workflows/${workflowId}/triggers`;
 
 console.log(`[send-ready-email-ghl] 🚀 Triggering workflow:`);  
 console.log(`  URL: ${triggerUrl}`);  
