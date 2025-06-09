@@ -2,25 +2,22 @@
 
 import { NextResponse } from "next/server";
 
-const GHL_API_URL           = process.env.GHL_API_URL!;               // e.g. "https://api.gohighlevel.com"
-const GHL_API_KEY           = process.env.GHL_API_KEY!;               // your HighLevel API Key
-const GHL_LOCATION_ID       = process.env.GHL_LOCATION_ID!;           // e.g. "Shob7uPkCRfPCXvcZSV3"
-const GHL_WORKFLOW_ID       = process.env.GHL_PHOTOS_READY_WORKFLOW!; // e.g. "bc7f7b63-6d76-4986-9b7c-923bff5ad037"
+const GHL_API_URL     = process.env.GHL_API_URL!;               // e.g. "https://rest.gohighlevel.com"
+const GHL_API_KEY     = process.env.GHL_API_KEY!;               // your HighLevel REST API key
+const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID!;           // e.g. "Shob7uPkCRfPCXvcZSV3"
+const GHL_WORKFLOW_ID = process.env.GHL_PHOTOS_READY_WORKFLOW!; // e.g. "bc7f7b63-6d76-4986-9b7c-923bff5ad037"
 
 export async function POST(req: Request) {
   try {
-    // 1️⃣ Parse incoming JSON
+    // 1️⃣ Parse & validate
     const { userEmail, firstName, lastName, packId } = await req.json();
     console.log("[send-ready-email-ghl] Received request:", { userEmail, firstName, lastName, packId });
     if (!userEmail || !packId) {
       return NextResponse.json({ error: "Missing required fields: userEmail or packId" }, { status: 400 });
     }
 
-    // 2️⃣ Build upsert payload (incl. two tags: static + timestamped)
-    const tags = [
-      "photos_ready",
-      `photos_ready_${Date.now()}`
-    ];
+    // 2️⃣ Build upsert payload
+    const tags = ["photos_ready", `photos_ready_${Date.now()}`];
     const contactPayload = {
       email:        userEmail,
       firstName,
@@ -32,11 +29,9 @@ export async function POST(req: Request) {
       },
       tags,
     };
+    console.log("[send-ready-email-ghl] 🔍 Upserting contact:", JSON.stringify(contactPayload, null, 2));
 
-    console.log("[send-ready-email-ghl] 🔍 Upserting contact with payload:");
-    console.log(JSON.stringify(contactPayload, null, 2));
-
-    // 3️⃣ Upsert contact in HighLevel
+    // 3️⃣ Upsert contact
     const upsertRes  = await fetch(`${GHL_API_URL}/v1/contacts`, {
       method:  "POST",
       headers: {
@@ -53,15 +48,14 @@ export async function POST(req: Request) {
 
     const contactId = upsertJson.contact?.id;
     console.log("[send-ready-email-ghl] ✅ Contact upserted. GHL contact ID =", contactId);
-    console.log("[send-ready-email-ghl] 🏷️ Trigger tags used:", tags);
+    console.log("[send-ready-email-ghl] 🏷️ Tags used:", tags);
 
-    // 4️⃣ Trigger the photos-ready workflow
+    // 4️⃣ Trigger the “photos_ready” workflow
     const triggerUrl = `${GHL_API_URL}/v1/locations/${GHL_LOCATION_ID}/workflows/${GHL_WORKFLOW_ID}/triggers`;
     console.log("[send-ready-email-ghl] 🚀 Triggering workflow:");
-    console.log("  URL:    ", triggerUrl);
-    console.log("  Payload:", { contactId });
+    console.log("  URL:   ", triggerUrl);
+    console.log("  Body:  ", { contactId });
 
-    let raw: string, triggerJson: any;
     const triggerRes = await fetch(triggerUrl, {
       method:  "POST",
       headers: {
@@ -70,19 +64,17 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({ contactId }),
     });
-    raw = await triggerRes.text();
-    try {
-      triggerJson = JSON.parse(raw);
-    } catch {
-      triggerJson = raw;
-    }
+    const raw = await triggerRes.text();
+    let triggerJson: any = raw;
+    try { triggerJson = JSON.parse(raw); } catch {}
     console.log(`[send-ready-email-ghl] ← GHL response (${triggerRes.status}):`, triggerJson);
+
     if (!triggerRes.ok) {
       console.error("[send-ready-email-ghl] ❌ Workflow trigger failed");
       return NextResponse.json({ error: "Workflow trigger failed" }, { status: 500 });
     }
 
-    // 5️⃣ Everything succeeded
+    // 5️⃣ All done
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("[send-ready-email-ghl] ❌ Unexpected error:", err);
