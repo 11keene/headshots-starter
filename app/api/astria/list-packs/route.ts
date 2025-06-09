@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  // 1️⃣ Fetch the list of pack metadata
+  // 1️⃣ Fetch the list of pack metadatas
   const listRes = await fetch("https://api.astria.ai/packs", {
     headers: { Authorization: `Bearer ${process.env.ASTRIA_API_KEY}` },
   });
