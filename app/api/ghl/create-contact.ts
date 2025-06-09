@@ -4,7 +4,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 const GHL_API_URL         = process.env.GHL_API_URL!;
 const GHL_API_KEY         = process.env.GHL_API_KEY!;
 const GHL_LOCATION_ID     = process.env.GHL_LOCATION_ID!;
-const GHL_WORKFLOW_ID = process.env.GHL_PHOTOS_READY_WORKFLOW!; // e.g. "bc7f7b63-6d76-4986-9b7c-923bff5ad037"
+const GHL_WELCOME_WORKFLOW = process.env.GHL_WELCOME_WORKFLOW!;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -48,21 +48,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   console.log("[create-contact] 🚀 Triggering welcome workflow:", triggerUrl, { contactId });
 console.log("  URL:   ", triggerUrl);
   console.log("  Body:  ", {
-    workflowId: GHL_WORKFLOW_ID,
+    workflowId: GHL_WELCOME_WORKFLOW,
     contactId,
   });
-      const triggerRes = await fetch(triggerUrl, {
+const triggerRes = await fetch(triggerUrl, {
     method:  "POST",
     headers: {
       "Content-Type":  "application/json",
       "Authorization": `Bearer ${GHL_API_KEY}`,
     },
     body: JSON.stringify({
-      workflowId: GHL_WORKFLOW_ID,
-     contactId,
+      workflowId: GHL_WELCOME_WORKFLOW,
+      contactId,
     }),
   });
-    
     const triggerRaw = await triggerRes.text();
     let triggerJson: any;
     try { triggerJson = JSON.parse(triggerRaw); } catch { triggerJson = triggerRaw; }
