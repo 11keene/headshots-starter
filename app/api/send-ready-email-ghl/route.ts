@@ -86,29 +86,43 @@ tags,
     );
     console.log("[send-ready-email-ghl] 🏷️ Trigger tags used:", tags);
     // …right after you log "✅ Contact upserted. GHL contact ID = zR9CKilihXniXLWQ87rH"
-const workflowId = process.env.GHL_READY_PHOTOS_WORKFLOW_ID!; // e.g. "abc123..."
-console.log(`[send-ready-email-ghl] 🚀 Triggering GHL workflow ${workflowId} for contact ${contactId}`);
+// 👉 right before the trigger:
+const workflowId = process.env.GHL_WORKFLOW_ID;      // e.g. 'bc7f7b63-6d76-4986-9b7c-923bff5ad037'
+const locationId = process.env.GHL_LOCATION_ID;      // e.g. 'Shob7uPkCRfPCXvcZSV3'
+const GHL_API_BASE = GHL_API_URL; // Use the env variable loaded at the top
+const triggerUrl = `${GHL_API_BASE}/v1/locations/${locationId}/workflows/${workflowId}/triggers`;
 
- console.log("🚀 Triggering GHL workflow", PHOTOS_READY_WORKFLOW, "for contact", contactId);
-  const triggerRes = await fetch(
-    `${GHL_API_URL}/v1/workflows/${PHOTOS_READY_WORKFLOW}/trigger`,
-    {  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${process.env.GHL_API_KEY}`,
-  },
-  body: JSON.stringify({
-    workflowId,
-    contactId,
-  }),
-});
+console.log(`[send-ready-email-ghl] 🚀 Triggering workflow:`);  
+console.log(`  URL: ${triggerUrl}`);  
+console.log(`  Payload:`, { contactId });
 
-if (!triggerRes.ok) {
-  const err = await triggerRes.text();
+let triggerResp: Response;
+let triggerJson: any;
+try {
+  triggerResp = await fetch(triggerUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.GHL_API_KEY}`,
+    },
+    body: JSON.stringify({ contactId }),
+  });
+  const raw = await triggerResp.text();     // always read the raw text
+  try {
+    triggerJson = JSON.parse(raw);
+  } catch {
+    triggerJson = raw;
+  }
+  console.log(`[send-ready-email-ghl] ← GHL response (${triggerResp.status}):`, triggerJson);
+
+  if (!triggerResp.ok) {
+    throw new Error(`GHL trigger failed with status ${triggerResp.status}`);
+  }
+} catch (err) {
   console.error("[send-ready-email-ghl] ❌ Workflow trigger failed:", err);
-} else {
-  console.log("[send-ready-email-ghl] ✅ Workflow triggered successfully");
+  // re-throw or handle as you like
 }
+
 
 
     // 6️⃣ Return success; GHL Automation will now trigger via dynamic tag
