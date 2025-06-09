@@ -40,19 +40,18 @@ const tags = [
       `photos_ready_${Date.now()}`        // a brand-new tag every time (forces re‐enrollment)
     ];
     // 4️⃣ Build the upsert contact payload with custom fields and dynamic tag
-    const contactPayload = {
-      email: userEmail,
-      firstName,
-      lastName,
-      locationId: LOCATION_ID,
-      customFields: {
-  packid: packId,
-statuspagelink: `https://www.aimavenstudio.com/status/${packId}`,
-}
+const contactPayload = {
+  email: userEmail,
+  firstName,
+  lastName,
+  locationId: LOCATION_ID,
+  customFields: {
+    packid: packId,
+    [process.env.GHL_STATUS_PAGE_FIELD!]: `https://www.aimavenstudio.com/status/${packId}`
+  },
+  tags,
+};
 
-,
-tags,
-    };
 
     console.log("[send-ready-email-ghl] 🔍 Upserting contact with payload:");
     console.log(JSON.stringify(contactPayload, null, 2));
