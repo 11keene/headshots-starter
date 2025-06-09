@@ -32,16 +32,20 @@ export async function POST(req: Request) {
     console.log("[send-ready-email-ghl] 🔍 Upserting contact:", JSON.stringify(contactPayload, null, 2));
 
     // 3️⃣ Upsert contact
-    const upsertRes  = await fetch(`${GHL_API_URL}/v1/contacts`, {
-      method:  "POST",
+    // 3️⃣ Upsert contact (scoped to location)
+    const upsertUrl  = `${GHL_API_URL}/v1/locations/${GHL_LOCATION_ID}/contacts`;
+    console.log("[send-ready-email-ghl] ⏳ Upsert URL:", upsertUrl);
+    const upsertRes  = await fetch(upsertUrl, {      method:  "POST",
       headers: {
         "Content-Type":  "application/json",
         "Authorization": `Bearer ${GHL_API_KEY}`,
       },
       body: JSON.stringify(contactPayload),
     });
-    const upsertJson = await upsertRes.json();
-    if (!upsertRes.ok) {
+const upsertRaw  = await upsertRes.text();
+    let    upsertJson: any = upsertRaw;
+    try { upsertJson = JSON.parse(upsertRaw); } catch {}
+    console.log(`[send-ready-email-ghl] ← Upsert response (${upsertRes.status}):`, upsertJson);    if (!upsertRes.ok) {
       console.error("[send-ready-email-ghl] ❌ Upsert failed:", upsertJson);
       return NextResponse.json({ error: "Failed to create or update contact in GHL" }, { status: 500 });
     }
@@ -52,8 +56,8 @@ export async function POST(req: Request) {
 
     // 4️⃣ Trigger the “photos_ready” workflow
     const triggerUrl = `${GHL_API_URL}/v1/locations/${GHL_LOCATION_ID}/workflows/${GHL_WORKFLOW_ID}/triggers`;
-    console.log("[send-ready-email-ghl] 🚀 Triggering workflow:");
-    console.log("  URL:   ", triggerUrl);
+console.log("[send-ready-email-ghl] 🚀 Triggering workflow at:", triggerUrl);   
+ console.log("  URL:   ", triggerUrl);
     console.log("  Body:  ", { contactId });
 
     const triggerRes = await fetch(triggerUrl, {
@@ -67,8 +71,8 @@ export async function POST(req: Request) {
     const raw = await triggerRes.text();
     let triggerJson: any = raw;
     try { triggerJson = JSON.parse(raw); } catch {}
-    console.log(`[send-ready-email-ghl] ← GHL response (${triggerRes.status}):`, triggerJson);
-
+ console.log(`[send-ready-email-ghl] ← Trigger response (${triggerRes.status}):`, triggerJson);
+ 
     if (!triggerRes.ok) {
       console.error("[send-ready-email-ghl] ❌ Workflow trigger failed");
       return NextResponse.json({ error: "Workflow trigger failed" }, { status: 500 });
