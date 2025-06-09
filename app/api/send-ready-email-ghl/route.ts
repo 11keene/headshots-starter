@@ -1,3 +1,9 @@
+// app/api/send-ready-email-ghl/route.ts
+
+// …above all your imports…
+const GHL_API_URL           = process.env.GHL_API_URL!;               // e.g. "https://api.gohighlevel.com"
+const PHOTOS_READY_WORKFLOW = process.env.GHL_PHOTOS_READY_WORKFLOW!; // e.g. "bc7f7b63-6d76-4986-9b7c-923bff5ad037"
+
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -83,11 +89,13 @@ tags,
 const workflowId = process.env.GHL_READY_PHOTOS_WORKFLOW_ID!; // e.g. "abc123..."
 console.log(`[send-ready-email-ghl] 🚀 Triggering GHL workflow ${workflowId} for contact ${contactId}`);
 
-const triggerRes = await fetch(`${process.env.GHL_API_URL}/v1/workflows/trigger`, {
-  method: "POST",
+ console.log("🚀 Triggering GHL workflow", PHOTOS_READY_WORKFLOW, "for contact", contactId);
+  const triggerRes = await fetch(
+    `${GHL_API_URL}/v1/workflows/${PHOTOS_READY_WORKFLOW}/trigger`,
+    {  method: "POST",
   headers: {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${process.env.GHL_API_KEY}`,
+    "Authorization": `Bearer ${process.env.GHL_API_KEY}`,
   },
   body: JSON.stringify({
     workflowId,
