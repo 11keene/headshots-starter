@@ -31,11 +31,12 @@ export async function POST(req: Request) {
     };
     console.log("[send-ready-email-ghl] 🔍 Upserting contact:", JSON.stringify(contactPayload, null, 2));
 
-    // 3️⃣ Upsert contact
-    // 3️⃣ Upsert contact (scoped to location)
-    const upsertUrl  = `${GHL_API_URL}/v1/locations/${GHL_LOCATION_ID}/contacts`;
+    // 3️⃣ Create or update contact (global endpoint)
+    const upsertUrl  = `${GHL_API_URL}/v1/contacts`;
     console.log("[send-ready-email-ghl] ⏳ Upsert URL:", upsertUrl);
-    const upsertRes  = await fetch(upsertUrl, {      method:  "POST",
+    console.log("[send-ready-email-ghl] ⏳ Upsert payload:", JSON.stringify(contactPayload));
+    const upsertRes  = await fetch(upsertUrl, {    
+       method:  "POST",
       headers: {
         "Content-Type":  "application/json",
         "Authorization": `Bearer ${GHL_API_KEY}`,
