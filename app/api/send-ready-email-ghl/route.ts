@@ -91,10 +91,7 @@ const contactPayload = {
 const workflowId = process.env.GHL_WORKFLOW_ID;      // e.g. 'bc7f7b63-6d76-4986-9b7c-923bff5ad037'
 const locationId = process.env.GHL_LOCATION_ID;      // e.g. 'Shob7uPkCRfPCXvcZSV3'
 const GHL_API_BASE = GHL_API_URL; // Use the env variable loaded at the top
-// Option B: if GHL_API_URL already includes "/v1"
-// ──────────────────────────────────────────────────────────────────────────────
 // 4️⃣ Trigger the “photos_ready” workflow
-// ──────────────────────────────────────────────────────────────────────────────
 console.log(
   "[send-ready-email-ghl] 🚀 Triggering GHL workflow",
   GHL_WORKFLOW_ID,
@@ -102,7 +99,6 @@ console.log(
   contactId
 );
 
-// your base API URL should *not* repeat /v1; we'll add it here explicitly once
 const triggerUrl = `${GHL_API_URL}/v1/locations/${GHL_LOCATION_ID}/workflows/${GHL_WORKFLOW_ID}/triggers`;
 console.log("  URL:   ", triggerUrl);
 console.log("  Body:  ", { contactId });
@@ -118,20 +114,14 @@ const triggerRes = await fetch(triggerUrl, {
 
 const raw = await triggerRes.text();
 let triggerJson: any;
-try {
-  triggerJson = JSON.parse(raw);
-} catch {
-  triggerJson = raw;
-}
+try { triggerJson = JSON.parse(raw); } catch { triggerJson = raw; }
 console.log(
   `[send-ready-email-ghl] ← GHL response (${triggerRes.status}):`,
   triggerJson
 );
 
 if (!triggerRes.ok) {
-  console.error(
-    "[send-ready-email-ghl] ❌ Workflow trigger failed"
-  );
+  console.error("[send-ready-email-ghl] ❌ Workflow trigger failed");
   throw new Error(`GHL trigger failed with status ${triggerRes.status}`);
 }
 
