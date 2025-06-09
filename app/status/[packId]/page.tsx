@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { FiCheckSquare, FiDownloadCloud, FiLoader } from "react-icons/fi";
-
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 interface GeneratedImageRow {
   pack_id: string;
   image_url: string;
@@ -84,43 +85,28 @@ export default function StatusPage({ params }: { params: { packId: string } }) {
   };
 
   // Download selected images individually
+// Download selected images as one ZIP
 async function downloadAll(selectedUrls: string[]) {
-  try {
-    for (const astriaUrl of selectedUrls) {
-      // 1) encode the Astria URL so it can be sent as a query string:
-      const encoded = encodeURIComponent(astriaUrl);
-
-      // 2) fetch from your proxy instead of directly from Astria
-      const resp = await fetch(`/api/download-proxy?url=${encoded}`);
-
-      if (!resp.ok) {
-        console.error("Download proxy returned", resp.status);
-        continue;
-      }
-
-      // 3) Turn the server-side streamed response into a blob
-      const blob = await resp.blob();
-
-      // 4) Create a temporary <a> to trigger download
-      const disp = resp.headers.get("Content-Disposition") || "";
-      // Attempt to parse a “filename=” from Content-Disposition
-      let filename = "downloaded.jpg";
-      const match = /filename="?([^"]+)"?/.exec(disp);
-      if (match && match[1]) {
-        filename = match[1];
-      }
-
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-    }
-  } catch (err) {
-    console.error("Error in downloadAll:", err);
+  if (!selectedUrls.length) {
+    alert("No images selected!");
+    return;
   }
+
+  const zip = new JSZip();
+  const folder = zip.folder("headshots");
+
+  await Promise.all(
+    selectedUrls.map(async (url, idx) => {
+      const resp = await fetch(url);
+      const blob = await resp.blob();
+      // derive extension
+      const ext = url.split(".").pop()?.split(/[#?]/)[0] || "jpg";
+      folder!.file(`headshot-${idx + 1}.${ext}`, blob);
+    })
+  );
+
+  const content = await zip.generateAsync({ type: "blob" });
+  saveAs(content, "selected-headshots.zip");
 }
 
   // Download everything as ZIP

@@ -79,7 +79,7 @@ const triggerRes = await fetch(triggerUrl, {
       return NextResponse.json({ error: "Workflow trigger failed" }, { status: 500 });
     }
 
-    // 5️⃣ All done
+    // 5️⃣ All dones
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("[send-ready-email-ghl] ❌ Unexpected error:", err);
