@@ -46,7 +46,7 @@ export async function GET(req: NextRequest, { params }: { params: { packId: stri
 
   console.log(`✅ Finished ZIP for ${packId}`);
 
-  // Step 4: Stream the ZIP to the browser
+  // Step 4: Stream the ZIP to the browsers
   const nodeStream = Readable.from(zipBuffer);
   const webStream = new ReadableStream({
     start(controller) {
