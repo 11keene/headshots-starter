@@ -29,20 +29,21 @@ export async function POST(req: Request) {
       },
       tags,
     };
-    console.log("[send-ready-email-ghl] 🔍 Upserting contact:", JSON.stringify(contactPayload, null, 2));
-
+console.log("[send-ready-email-ghl] 🔍 Upserting contact to", `${GHL_API_URL}/contacts`);
+ console.log("  Payload:", JSON.stringify(contactPayload, null, 2));
     // 3️⃣ Create or update contact (global endpoint)
     const upsertUrl  = `${GHL_API_URL}/v1/contacts`;
     console.log("[send-ready-email-ghl] ⏳ Upsert URL:", upsertUrl);
     console.log("[send-ready-email-ghl] ⏳ Upsert payload:", JSON.stringify(contactPayload));
-const upsertRes  = await fetch(`${GHL_API_URL}/v1/contacts`, {
-        method:  "POST",
-      headers: {
-        "Content-Type":  "application/json",
-        "Authorization": `Bearer ${GHL_API_KEY}`,
-      },
-      body: JSON.stringify(contactPayload),
-    });
+const upsertRes  = await fetch(`${GHL_API_URL}/contacts`, {
+  method: "POST",
+  headers: {
+    "Content-Type":  "application/json",
+    "Authorization": `Bearer ${process.env.GHL_API_KEY}`,
+  },
+  body: JSON.stringify(contactPayload),
+});
+
 const upsertRaw  = await upsertRes.text();
     let    upsertJson: any = upsertRaw;
     try { upsertJson = JSON.parse(upsertRaw); } catch {}
@@ -56,19 +57,18 @@ const upsertRaw  = await upsertRes.text();
     console.log("[send-ready-email-ghl] 🏷️ Tags used:", tags);
 
     // 4️⃣ Trigger the “photos_ready” workflow
-    const triggerUrl = `${GHL_API_URL}/v1/locations/${GHL_LOCATION_ID}/workflows/${GHL_WORKFLOW_ID}/triggers`;
-console.log("[send-ready-email-ghl] 🚀 Triggering workflow at:", triggerUrl);   
- console.log("  URL:   ", triggerUrl);
-    console.log("  Body:  ", { contactId });
+const triggerUrl = `${GHL_API_URL}/workflows/${GHL_WORKFLOW_ID}/trigger`;
+ console.log("[send-ready-email-ghl] 🚀 Triggering workflow at", triggerUrl);
+ console.log("  Body:", JSON.stringify({ contactId }));
+const triggerRes = await fetch(triggerUrl, {
+  method: "POST",
+  headers: {
+    "Content-Type":  "application/json",
+    "Authorization": `Bearer ${process.env.GHL_API_KEY}`,
+  },
+  body: JSON.stringify({ contactId }),
+});
 
-    const triggerRes = await fetch(triggerUrl, {
-      method:  "POST",
-      headers: {
-        "Content-Type":  "application/json",
-        "Authorization": `Bearer ${GHL_API_KEY}`,
-      },
-      body: JSON.stringify({ contactId }),
-    });
     const raw = await triggerRes.text();
     let triggerJson: any = raw;
     try { triggerJson = JSON.parse(raw); } catch {}
