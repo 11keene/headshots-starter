@@ -17,11 +17,16 @@ type Tab = "headshots" | "multi-purpose" | "teams";
 
 const previewImages: Record<Tab, string[]> = {
   headshots: [
-    "/adam1.png",
+    "https://sdbooth2-production.s3.amazonaws.com/jmhmm4yn07dtr687nl2ir6zgptyn",
     "https://sdbooth2-production.s3.amazonaws.com/72tpgztgtucn8g1leq8h4h8ezdsn",
     "https://sdbooth2-production.s3.amazonaws.com/b6izing8haworbs85wtd2ys2g59p",
     "/eryn.png",
-    "https://sdbooth2-production.s3.amazonaws.com/5blgk0c7e4li3r57zv9fvq1ipwgs",
+        "https://sdbooth2-production.s3.amazonaws.com/14faz1iwfc4am8e96023gzyn66uj",
+            "https://sdbooth2-production.s3.amazonaws.com/qabd979c6hr61yqdfm6h321wyyqb",
+                "https://sdbooth2-production.s3.amazonaws.com/akgabemjdyhbp097wa2j6gke66zw",
+
+
+
   ],
   "multi-purpose": [
     "https://sdbooth2-production.s3.amazonaws.com/akgabemjdyhbp097wa2j6gke66zw",
@@ -30,8 +35,10 @@ const previewImages: Record<Tab, string[]> = {
     "https://sdbooth2-production.s3.amazonaws.com/14faz1iwfc4am8e96023gzyn66uj",
   ],
   teams: [
+    
     "https://sdbooth2-production.s3.amazonaws.com/sm41olkjbp6eqqi2r3j5gn4mc0ze",
     "https://sdbooth2-production.s3.amazonaws.com/14faz1iwfc4am8e96023gzyn66uj",
+    
     "https://sdbooth2-production.s3.amazonaws.com/ybqcdvkkbwop2eccyn50x4c7vx1w",
   ],
 };

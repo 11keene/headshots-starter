@@ -169,7 +169,15 @@ const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
                 onClick={blockNav}
                 className="text-ivory font-semibold transition-colors hover:text-muted-gold"
               >
-               For Teams
+               Pricing
+              </Link>
+             
+              <Link
+                href="/teams-intake"
+                onClick={blockNav}
+                className="text-ivory font-semibold transition-colors hover:text-muted-gold"
+              >
+               Teams
               </Link>
             </nav>
           )}
