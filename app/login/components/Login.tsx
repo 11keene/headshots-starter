@@ -83,7 +83,7 @@ export default function Login() {
     <div className="flex flex-col items-center gap-4 w-full max-w-md">
       {/* Logo + Title */}
       <div className="flex items-center gap-1 mb-4">
-        <img src="/glogo.png" alt="AI Maven Logo" className="w-10 h-10 rounded-full" />
+        <img src="/logo.png" alt="AI Maven Logo" className="w-10 h-10 rounded-full" />
         <span className="text-xl font-bold">AI Maven</span>
       </div>
 

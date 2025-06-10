@@ -72,6 +72,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "resend": "^3.2.0",
+    "sonner": "^2.0.5",
     "stripe": "^18.2.1",
     "supports-color": "^9.4.0",
     "tailwind-merge": "^1.14.0",

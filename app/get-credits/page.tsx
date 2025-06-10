@@ -1,104 +1,129 @@
-// Updated Team Dashboard Page
-// File: app/teams/dashboard/page.tsx
-
+// File: app/get-credits/page.tsx
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { DashboardDropdownToggle } from "@/components/DashboardDropdownToggle";
-import { ChevronDownIcon, CheckIcon } from "@heroicons/react/20/solid";
+import { useEffect, useState } from "react";
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, ClockIcon, PaletteIcon, BadgeCheckIcon, StarIcon } from "lucide-react";
 
-export default function TeamDashboardPage() {
-  const router = useRouter();
+export default function PricingPage() {
   const supabase = createPagesBrowserClient();
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // State
-  const [teamInfo, setTeamInfo] = useState<any>(null);
-  const [inviteEmails, setInviteEmails] = useState("");
-  const [inviteLink, setInviteLink] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const dropdownRef = useRef<null | HTMLDivElement>(null);
-
-  // Load teamInfo from localStorage
+  // Redirect to login if not signed in
   useEffect(() => {
-    const stored = localStorage.getItem("teamInfo");
-    if (!stored) return router.push("/teams/intake");
-    setTeamInfo(JSON.parse(stored));
-    // generate invite link
-    const tid = JSON.parse(stored).teamId;
-    setInviteLink(`${window.location.origin}/teams/join/${tid}`);
-  }, [router]);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  // Invite via email
-  const sendInvites = async () => {
-    if (!inviteEmails.trim()) return;
-    setLoading(true);
-    const emails = inviteEmails.split(',').map(e=>e.trim()).filter(Boolean);
-    // call your API to send invites
-    await fetch('/api/teams/invite', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({ teamId: teamInfo.teamId, emails })
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setUserId(data.user.id);
+      else router.push("/login?redirectTo=/get-credits");
     });
-    setLoading(false);
-    setInviteEmails("");
-    alert('Invites sent');
-  };
+  }, [supabase, router]);
 
-  // Copy link
-  const copyLink = () => {
-    navigator.clipboard.writeText(inviteLink);
-    alert('Link copied!');
+  const handleChoosePack = () => {
+    router.push("/custom-intake?packType=professional");
   };
-
-  if (!teamInfo) return null;
 
   return (
-    <div className="min-h-screen bg-muted/10 p-8">
-      <DashboardDropdownToggle />
-      <div className="max-w-3xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold">{teamInfo.teamName} Dashboard</h1>
+    <div className="min-h-screen bg-charcoal text-white py-16">
+      <div className="container mx-auto px-4 space-y-12">
+        {/* ─── Heading ───────────────────────────────────────────── */}
+        <h1 className="text-4xl md:text-5xl font-extrabold text-center">
+          Why AI Maven? <br className="md:hidden"/> See the Difference.
+        </h1>
 
-        {/* Invite Section */}
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Invite Team Members</h2>
-          <textarea
-            rows={2}
-            className="w-full border p-2 mb-2"
-            placeholder="Enter emails, comma-separated"
-            value={inviteEmails}
-            onChange={e => setInviteEmails(e.target.value)}
-          />
-          <Button onClick={sendInvites} disabled={loading} className="mr-2">
-            {loading ? 'Sending…' : 'Send Invites'}
-          </Button>
-          <Button onClick={copyLink} variant="outline">
-            Copy Invite Link
-          </Button>
-        </Card>
+       {/* ─── Professional Pack Card ───────────────────────────── */}
+<div className="flex justify-center">
+  <Card className="max-w-md w-full bg-muted/30 p-8 border border-gray-700">
+    <h2 className="text-2xl text-white font-bold mb-2">The Professional Pack</h2>
+    <p className="text-gray-300 mb-6">
+      45 fully customized AI-generated headshots crafted from your selfies.
+      Perfect for LinkedIn, speaker bios, press kits, and more.
+    </p>
 
-        {/* Quick Actions */}
-        <div className="flex gap-4">
-          <Button className="flex-1" onClick={() => router.push('/teams/credits')}>Purchase Credits</Button>
-          <Button className="flex-1" onClick={() => router.push(`/teams/join/${teamInfo.teamId}`)}>
-            Team Member Portal
-          </Button>
-        </div>
+    <div className="flex items-baseline gap-2 mb-6">
+      <span className="text-5xl font-extrabold text-muted-gold">
+        $49.99
+      </span>
+      <span className="text-gray-400 line-through">$59.99</span>
+    </div>
+
+    <ul className="space-y-4 mb-8">
+      {[
+        {
+          label: "Under 60-minute delivery",
+          Icon: ClockIcon,
+        },
+        {
+          label: "Tailored to your industry & vibe",
+          Icon: PaletteIcon,
+        },
+        {
+          label: "Full commercial rights",
+          Icon: BadgeCheckIcon,
+        },
+        {
+          label: "Consistent, editorial-quality styling",
+          Icon: StarIcon,
+        },
+      ].map(({ label, Icon }, i) => (
+        <li key={i} className="flex items-center gap-2">
+          <Icon size={20} className="text-muted-gold" />
+          <span className="text-sm text-ivory leading-snug">{label}</span>
+        </li>
+      ))}
+    </ul>
+
+    <Button
+      onClick={handleChoosePack}
+      className="w-full bg-muted-gold text-charcoal font-semibold"
+    >
+      Choose Pack
+    </Button>
+  </Card>
+</div>
+
+{/* ─── Comparison Table ──────────────────────────────────── */}
+<div className="overflow-x-auto">
+  <table className="w-full table-fixed text-sm">
+    <colgroup>
+      <col className="w-1/3" />
+      <col className="w-1/3" />
+      <col className="w-1/3" />
+    </colgroup>
+    <thead className="bg-muted-gold">
+      <tr>
+        <th className="px-4 py-2 text-left text-charcoal uppercase tracking-wide">Feature</th>
+        <th className="px-4 py-2 text-center text-charcoal uppercase tracking-wide">Traditional Shoot</th>
+        <th className="px-4 py-2 text-center text-charcoal uppercase tracking-wide">AI Maven Studio</th>
+      </tr>
+    </thead>
+    <tbody>
+      {[
+        ["Time to Receive", "1–3 weeks (plus scheduling)", "Under 60 minutes — no waiting"],
+        ["Cost", "$250–$500+ for one look", "$49.99 for 45 images"],
+        ["Personalization", "One outfit, one location", "Fully customized via intake form"],
+        ["Convenience", "Travel, setup, retouching", "Done anywhere — no camera needed"],
+        ["Creative Control", "Photographer decides vibe", "You direct shoot via intake"],
+        ["Styling Options", "Often one backdrop/look", "Multiple outfits, scenes, moods"],
+        ["Image Variety", "5–10 similar shots", "15 unique, prompt-based looks"],
+        ["Commercial Rights", "May cost extra", "Always included — use freely"],
+      ].map(([feat, trad, ai], i) => (
+        <tr
+          key={i}
+          className={i % 2 === 0 ? "bg-charcoal text-ivory" : "bg-ivory text-charcoal"}
+        >
+      <td className="px-4 py-3 whitespace-normal break-normal hyphens-none">{feat}</td>
+     <td className="px-4 py-3 whitespace-normal break-normal hyphens-none text-center">{trad}</td>
+    <td className="px-4 py-3 whitespace-normal break-normal hyphens-none text-center">{ai}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+
       </div>
     </div>
   );

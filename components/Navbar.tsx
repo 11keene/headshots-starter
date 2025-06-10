@@ -156,86 +156,83 @@ const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
 
           {/* Nav links */}
           {isLoggedIn && pathname !== "/" && (
-            <nav className="flex justify-start items-center gap-4 -ml-4">
-              <Link
-                href="/overview"
-                onClick={blockNav}
-                className="text-ivory font-semibold transition-colors hover:text-muted-gold"
-              >
-                Home
-              </Link>
-              <Link
-                href="/get-credits"
-                onClick={blockNav}
-                className="text-ivory font-semibold transition-colors hover:text-muted-gold"
-              >
-               Pricing
-              </Link>
-             
-              <Link
-                href="/teams-intake"
-                onClick={blockNav}
-                className="text-ivory font-semibold transition-colors hover:text-muted-gold"
-              >
-               Teams
-              </Link>
-            </nav>
+<nav className="flex justify-start items-center gap-2.5 -ml-4">
+            {isLoggedIn && (
+              <>
+                <Link href="/overview" className="text-ivory font-semibold hover:text-muted-gold">
+                  Home
+                </Link>
+                <Link href="/get-credits" className="text-ivory font-semibold hover:text-muted-gold">
+                  Pricing
+                </Link>
+              </>
+            )}
+            <Link href="/teams" className="text-ivory font-semibold hover:text-muted-gold">
+              Teams
+            </Link>
+         </nav>
           )}
 
-          {/* Hamburger */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
-                <HamburgerMenuIcon className="h-6 w-6 text-muted-gold" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48 z-50">
-              {/* Dark mode toggle */}
-              <DropdownMenuItem className="flex justify-center py-2">
-                <ThemeToggle />
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+         {/* Hamburger */}
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
+      <HamburgerMenuIcon className="h-6 w-6 text-muted-gold" />
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent className="w-48 z-50">
+    {/* Dark mode toggle */}
+    <DropdownMenuItem className="flex justify-center py-2">
+      <ThemeToggle />
+    </DropdownMenuItem>
+    <DropdownMenuSeparator />
 
-              {isLoggedIn ? (
-                <>
-                  <DropdownMenuItem asChild>
-                    <Link href="/overview" onClick={blockNav}>
-                      Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                      <Link href="/get-credits" onClick={blockNav}>
-                      Pricing
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="mailto:support@aimavenstudio.com">Contact</a>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <Button
-                      variant="ghost"
-                      className="w-full text-left"
-                      onClick={async () => {
-                        await supabase.auth.signOut();
-                        router.push("/");
-                      }}
-                    >
-                      Log out
-                    </Button>
-                  </DropdownMenuItem>
-                </>
-              ) : (
-                <DropdownMenuItem asChild>
-                  <Link href="/login">
-                    <Button variant="ghost" className="w-full text-left">
-                      Log in
-                    </Button>
-                  </Link>
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+    {isLoggedIn ? (
+      <>
+        <DropdownMenuItem asChild>
+          <Link href="/overview" onClick={blockNav}>
+            Dashboard
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/get-credits" onClick={blockNav}>
+            Pricing
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/teams" onClick={blockNav}>
+            Teams
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <a href="mailto:support@aimavenstudio.com">Contact</a>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>
+          <Button
+            variant="ghost"
+            className="w-full text-left"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              router.push("/");
+            }}
+          >
+            Log out
+          </Button>
+        </DropdownMenuItem>
+      </>
+    ) : (
+      <DropdownMenuItem asChild>
+        <Link href="/login">
+          <Button variant="ghost" className="w-full text-left">
+            Log in
+          </Button>
+        </Link>
+      </DropdownMenuItem>
+    )}
+  </DropdownMenuContent>
+</DropdownMenu>
+
         </div>
       </header>
     </>

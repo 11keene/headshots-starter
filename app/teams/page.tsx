@@ -1,4 +1,4 @@
-// File: app/teams-intake/page.tsx
+// File: app/teams/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -65,9 +65,9 @@ const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
       <div className="mx-auto w-full max-w-md space-y-6">
         {/* Page Title */}
         <h1 className="text-3xl text-charcoal font-bold">Create your team</h1>
-        <p className="text-charcoal">
-          Get more than 10% off when you create your first team by June 6
-        </p>
+        <p className="mt-2 mb-6 text-charcoal">
+  Team discounts: up to 25% off depending on team size.
+</p>
 
         {/* 1) Team or Company Name (required) */}
         <div>
