@@ -13,8 +13,7 @@ export default function FAQSection() {
             Frequently Asked Questions
           </h2>
           <p className="max-w-[700px] text-charcoal text-muted-foreground text-lg">
-            Everything you need to know about our AI headshot service.
-          </p>
+Your Questions, Answered with Clarity and Care          </p>
         </div>
         <div className="mt-16">
           <FAQAccordion />

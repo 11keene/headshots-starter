@@ -1,4 +1,3 @@
-// components/Footer.tsx
 "use client";
 
 import Link from "next/link";
@@ -34,7 +33,7 @@ export default function Footer() {
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-muted-gold">Product</h3>
             <ul className="space-y-2">
-              {["How It Works","Examples","Pricing"].map((label) => (
+              {['How It Works','Examples','Pricing'].map((label) => (
                 <li key={label}>
                   <Link
                     href={`#${label.toLowerCase().replace(/ /g, "-")}`}
@@ -47,17 +46,15 @@ export default function Footer() {
             </ul>
           </div>
           <div className="space-y-4">
-            <h3 className="text-sm font-medium text-muted-gold ">Resources</h3>
+            <h3 className="text-sm font-medium text-muted-gold">Resources</h3>
             <ul className="space-y-2">
               {[
-                
-                
                 { href: "https://www.instagram.com/kammilocs/?igshid=eGl6eXRoODM5OXU4", label: "Instagram" },
               ].map(({ href, label }) => (
                 <li key={label}>
                   <Link
                     href={href}
-                    className="text-sm text-white  hover:text-ivory transition-colors"
+                    className="text-sm text-white hover:text-ivory transition-colors"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -71,9 +68,10 @@ export default function Footer() {
             <h3 className="text-sm font-medium text-muted-gold">Legal</h3>
             <ul className="space-y-2">
               {[
+                { href: "/terms", label: "Terms" },
                 { href: "mailto:support@aimavenstudio.com", label: "Contact" },
-                { href: "/LICENSE.md", label: "License" },
-                            ].map(({ href, label }) => (
+               { href: "/license",    label: "License" },
+              ].map(({ href, label }) => (
                 <li key={label}>
                   <Link
                     href={href}

@@ -96,7 +96,7 @@ export default function ModernPricing() {
                   </span>
                 </div>
 
-                <p className="mt-4 text-xs font-semibold text-ivory">
+                <p className="mt-4 text-xs font-semibold text-white">
                   {tier.description}
                 </p>
 
@@ -120,7 +120,7 @@ export default function ModernPricing() {
   return (
     <li key={i} className="flex items-center gap-3">
       <Icon size={20} className="text-sage-green flex-shrink-0" />
-      <span className="text-xs text-white leading-snug">{feat}</span>
+      <span className="text-xs text-ivory leading-snug">{feat}</span>
     </li>
   );
 })}
@@ -137,8 +137,8 @@ export default function ModernPricing() {
   </p>
 </div>
 
-                <div className="mt-auto">
-                  <Link
+<div className="mt-8">
+                    <Link
                     href={session ? "/get-credits" : `/login?redirectTo=/get-credits`}
                     className="block w-full"
                     aria-label={`Select ${tier.title} plan`}
