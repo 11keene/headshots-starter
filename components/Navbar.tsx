@@ -169,7 +169,7 @@ const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
                 onClick={blockNav}
                 className="text-ivory font-semibold transition-colors hover:text-muted-gold"
               >
-                Packs
+               For Teams
               </Link>
             </nav>
           )}
@@ -197,7 +197,7 @@ const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                       <Link href="/get-credits" onClick={blockNav}>
-                      Packs
+                      Pricing
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

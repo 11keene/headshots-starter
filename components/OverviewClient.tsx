@@ -1,4 +1,4 @@
-// File: components/OverviewClient.tsx
+// File: components/OverviewClient.tsxs
 "use client";
 
 import { useEffect, useState } from "react";
@@ -50,7 +50,8 @@ export default function OverviewClient({
   userId,
 }: OverviewClientProps) {
   const searchParams = useSearchParams();
-  const tabParam = (searchParams.get("tab") as Tab) || "headshots";
+const rawTab = searchParams.get("tab") as Tab;
+const tabParam = rawTab === "multi-purpose" ? "headshots" : rawTab || "headshots";
   const [activeTab, setActiveTab] = useState<Tab>(tabParam);
   const router = useRouter();
   const supabase = createClientComponentClient(); // no <Database> generic, so .from("packs") is allowed
@@ -67,7 +68,7 @@ export default function OverviewClient({
 
   const headerText = {
     headshots:
-      "⚡ Lightning-fast delivery – your headshots arrive in under an hour.",
+      "A new image. A clearer vision. All within the hour.",
     "multi-purpose":
       "🎩 You wear more than one hat, your headshot should too.",
     teams:
@@ -133,32 +134,32 @@ export default function OverviewClient({
 
       {/* ─── Tabs + Banner ─── */}
       <div className="px-4 mt-4">
-        <div className="flex space-x-6 md:justify-center">
-          {( ["headshots", "multi-purpose", ...(SHOW_TEAMS ? ["teams"] : [])] as Tab[] ).map(
-            (tab) => (
-              <button
-                key={tab}
-                onClick={() => {
-                  setActiveTab(tab);
-                  router.replace(`/overview?tab=${encodeURIComponent(tab)}`, {
-                    scroll: false,
-                  });
-                }}
-                className={`pb-2 font-semibold text-sm transition ${
-                  activeTab === tab
-                    ? "text-muted-gold border-b-2 border-muted-gold"
-                    : "text-charcoal hover:text-muted-gold"
-                }`}
-              >
-                {tab === "headshots"
-                  ? "Headshots"
-                  : tab === "multi-purpose"
-                  ? "Multi-Purpose"
-                  : "Teams"}
-              </button>
-            )
-          )}
-        </div>
+<div className="flex space-x-6 md:justify-center">
+  {(["headshots", ...(SHOW_TEAMS ? ["teams"] : [])] as Tab[]).map(
+    (tab) => (
+      <button
+        key={tab}
+        onClick={() => {
+          setActiveTab(tab);
+          router.replace(`/overview?tab=${encodeURIComponent(tab)}`, {
+            scroll: false,
+          });
+        }}
+        className={`pb-2 font-semibold text-sm transition ${
+          activeTab === tab
+            ? "text-muted-gold border-b-2 border-muted-gold"
+            : "text-charcoal hover:text-muted-gold"
+        }`}
+      >
+        {tab === "headshots"
+          ? "Professional Headshots"
+          : tab === "multi-purpose"
+          ? "Multi-Purpose"
+          : "Teams"}
+      </button>
+    )
+  )}
+</div>
         <div className="mt-4 font-bold text-center text-2xl text-charcoal">
           {headerText}
         </div>

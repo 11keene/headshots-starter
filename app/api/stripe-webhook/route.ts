@@ -23,6 +23,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing Stripe signature" }, { status: 400 });
   }
 
+  console.log("🔐 [Webhook] Raw body length:", rawBody.length);
+  console.log("🔐 [Webhook] Stripe signature:", sig);
+  console.log("🔐 [Webhook] REDIS_URL is:", process.env.REDIS_URL); // sanity check
+
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(
@@ -44,6 +48,8 @@ export async function POST(req: Request) {
     const gender = metadata.gender;
     const packType = metadata.packType;
 
+    console.log("📦 [Webhook] Session metadata:", metadata);
+
     if (!userId || !packId || !gender) {
       console.error("❌ [Stripe Webhook] Missing metadata: userId, packId, or gender");
       return NextResponse.json({ error: "Missing metadata" }, { status: 400 });
@@ -52,6 +58,7 @@ export async function POST(req: Request) {
     const job = JSON.stringify({ userId, packId, gender, packType, sessionId: session.id });
 
     try {
+      console.log("📦 About to push to Redis:", job);
       await redis.lpush("jobQueue", job);
       console.log("📬 Job enqueued to Redis:", job);
     } catch (err) {

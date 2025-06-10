@@ -10,14 +10,27 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export async function POST(req: Request) {
-  // 1) Initialize Supabase server client (tied to the user’s cookies)
   const supabase = createRouteHandlerClient({ cookies });
 
-  // 2) Read the JSON request body from the client
   const body = await req.json();
-  const { stripePriceId, packType, packId: existingPackId } = body;
+  const { packType, packId: existingPackId } = body;
 
-  // 3) Ensure the user is logged in
+  // 🧠 3.5) Choose the correct Stripe Price ID based on pack type
+  const PRICE_IDS: Record<"headshots" | "multi-purpose", string> = {
+    headshots: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_HEADSHOTS!,
+    "multi-purpose": process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MULTI!,
+  };
+
+  const stripePriceId = PRICE_IDS[packType as "headshots" | "multi-purpose"];
+  if (!stripePriceId) {
+    console.error("❌ Invalid or missing Stripe Price ID for packType:", packType);
+    return new NextResponse("Invalid pack type", { status: 400 });
+  }
+if (packType === "multi-purpose") {
+  console.warn("⛔ Multi-Purpose Pack is currently disabled");
+  return new NextResponse("Multi-Purpose Pack is unavailable", { status: 400 });
+}
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -28,31 +41,26 @@ export async function POST(req: Request) {
   const user_id = user.id;
 
   try {
-    // 4) Verify that the packId actually exists, and fetch its intake.gender
     const { data: packRow, error: packErr } = await supabase
       .from("packs")
-      .select("id, intake")            // Grab both id and the entire intake JSON
-      .eq("id", existingPackId)        // Look only at the row matching this ID
-      .single();                       // Expect exactly one row
+      .select("id, intake")
+      .eq("id", existingPackId)
+      .single();
 
     if (packErr || !packRow) {
       console.error("Pack not found:", packErr);
       return new NextResponse("Invalid packId", { status: 400 });
     }
 
-    // 4a) Extract the 'gender' field from the intake JSON
-    //     If intake or intake.gender is missing, fall back to "unspecified"
     const gender = (packRow.intake?.gender as string) || "unspecified";
     console.log("✔ [Create Checkout] Using gender from intake:", gender);
 
-    // 5) Build the success/cancel URLs
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
     if (!baseUrl) {
       console.error("Missing NEXT_PUBLIC_SITE_URL in .env.local");
       return new NextResponse("Server misconfiguration", { status: 500 });
     }
 
-    // 6) Create the Stripe Checkout Session, embedding metadata (including gender)
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -68,12 +76,11 @@ export async function POST(req: Request) {
         user_id:  user_id,
         packId:   existingPackId,
         packType: packType,
-        gender:   gender,       // <-- Here’s where we pass the user’s gender
+        gender:   gender,
       },
       customer_email: user.email,
     });
 
-    // 7) Return the session URL so the client can redirect the user
     return NextResponse.json({ url: session.url }, { status: 200 });
   } catch (err: any) {
     console.error("Stripe session error:", err);
