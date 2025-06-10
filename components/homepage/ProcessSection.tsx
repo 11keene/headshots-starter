@@ -9,22 +9,22 @@ import { cn } from "@/lib/utils"
 const processSteps = [
   {
     number: 1,
-    title: "Upload Your Selfies",
-    description: "Send us 6+ high-quality selfies (front-facing, natural lighting, no hats or glasses). Just be you — we’ll handle the magic.",
+    title: "Show Up As You Are",
+    description: "Send us 4+ high-quality selfies (front-facing, natural lighting, no hats, filters, or glasses). Just your real self, ready to rise. We’ll handle the rest.",
     icon: <Camera className="h-5 w-5" />,
     images: ["/Ava6.png", "/Ava5.png", "/Ava4.png"]
   },
   {
     number: 2,
-    title: " Let the AI Work Its Magic",
-    description: "In about 20 minutes, our powerful AI gets to know your features and builds your custom model. You'll be notified the moment your shoot is ready.",
+    title: " Let Purposeful AI Do the Work",
+    description: "In about 20 minutes, our powerful AI studies your features and builds your custom model — designed to honor who you are and where you’re going.",
     icon: <Sparkles className="h-5 w-5" />,
     processingImage: "/blur1.png"
   },
   {
     number: 3,
-    title: "Reveal Your Glow-Up",
-    description: "Download a full gallery of edittorial-quality headshots that feel like you — only elevated. Polished, professional, and ready to make a statement. ",
+    title: "Meet Your Next-Level Self",
+    description: "Download a full gallery of refined, editorial-quality headshots that feel like you — only more aligned, more elevated, and ready to be seen. ",
     icon: <Download className="h-5 w-5" />,
     resultImages: ["/Ava1.png", "/Ava2.png", "/Ava3.png"]
   }
@@ -134,12 +134,11 @@ export default function ProcessSection() {
           <Badge variant="outline" className="mb-2 border-muted-gold text-charcoal">
             Simple Process
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-charcoal md:text-5xl">Your Signature Look, In 3 Simple Steps
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-charcoal md:text-5xl">Step Into Alignment — In Just 3 Simple Steps
           </h2>
           <p className="max-w-[700px] text-muted-foreground text-charcoal text-lg">
          
- Our intuitive platform turns your selfies into stunning, professional-grade headshots — crafted to reflect your story, your ambition, and your brand.
-
+Our platform makes it effortless to go from everyday selfies to striking, professional-grade headshots — crafted to reflect your evolution, your energy, and your excellence.
           </p>
         </div>
         <div className="mt-16 grid gap-8 md:grid-cols-3 md:gap-12">

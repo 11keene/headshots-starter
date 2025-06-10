@@ -3,33 +3,41 @@ import { Badge } from "@/components/ui/badge"
 
 const features = [
   {
-    title: "Signature Styles (Pre-Made Packs)",
-    description: "Our themed packs are professionally curated to give you a strong visual identity with ease. Choose a look that fits your industry or personality — from Modern Business to Bold Creative, each pack is designed for maximum impact.",
+    title: " Professional Headshots",
+    subtitle: "High-Quality, Hyper-Realistic Images in Under an Hour",
+    description: `Skip the weeks-long wait and studio stress. With AI Maven Studio, you’ll receive 45 ultra-polished, professionally styled headshots — crafted to elevate your presence across LinkedIn, websites, speaking profiles, and more. Our AI delivers studio-level realism with natural lighting, sharp detail, and effortless ease — all at a fraction of the cost of a traditional photoshoot. It's your new professional image, transformed and ready in under 60 minutes.`,
     icon: <Camera className="h-6 w-6" />
   },
   {
-    title: "Custom Styles (Build Your Own)",
-    description: "Prefer more control? Choose your own direction by selecting the key elements of your shoot — like background, outfit tone, and overall vibe. Custom styles offer a flexible, elevated experience tailored just for you.",
+    title: "Custom Intake Form",
+        subtitle:"Your Vision, Your Shoot — Guided with Intention",
+    description: "Before checkout, you'll walk through a thoughtfully designed intake form that invites you to shape every element of your shoot — from hair texture to clothing style, background setting to professional field. You become the creative director of your image, and we handle the rest. This is personalization with purpose — ensuring that what you receive reflects not just what you look like, but who you are and are becoming.",
     icon: <Camera className="h-6 w-6" />
   },
   {
     title: "Crystal-Clear Quality",
-    description: "All images are delivered in high-resolution 4K, ensuring they’re crisp, clean, and print-ready.",
+            subtitle:"4K Precision That Speaks for Itself",
+
+    description: "Every image is delivered in high-resolution 4K, perfect for both print and digital use. Crisp, clean, and polished to perfection — so your presence is felt before you say a word.",
     icon: <Clock className="h-6 w-6" />
   },
   {
     title: "Lightning-Fast Delivery",
-    description: "Get your polished headshots in as little as 20 minutes. No retouch delays. No back-and-forth.",
+                subtitle:"Turnaround Measured in Minutes, Not Weeks",
+
+    description: "Your headshots are delivered in as little as 60 minutes — with no back-and-forth or retouching delays. Because when you're ready to show up, we believe your image should be too.",
     icon: <Clock className="h-6 w-6" />
   },
   {
     title: "Full Commercial Rights",
-    description: "Your headshots are yours to use freely — for business cards, billboards, social media, or speaking engagements.",
+                    subtitle:"Use Your Images Anywhere, Anytime",
+
+    description: "Your headshots are yours to use freely — from business cards to billboards, conference decks to content creation. No extra fees. No fine print. Just freedom.",
     icon: <Shield className="h-6 w-6" />
   },
   {
-    title: "AI, Perfected",
-    description: "Our advanced system produces natural, photorealistic results that feel as real as they look — always aligned with your best self.",
+    title: "Natural Results. Aligned with Your Best Self.",
+    description: "Our advanced system is trained to deliver more than just photorealism — it’s designed to reflect the energy, confidence, and professionalism you bring to the table. No uncanny filters. No awkward edits. Just you, elevated.",
     icon: <Star className="h-6 w-6" />
   },
 ]
@@ -41,8 +49,7 @@ export default function FeaturesSection() {
         <div className="text-center text-charcoal mb-12">
           <Badge variant="outline" className="mb-4 border-muted-gold text-charcoal">Features</Badge>
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-charcoal md:text-5xl">
-          Everything You Need to Look the Part — and Feel It Too
-
+Everything You Need to Look the Part — and Feel It Too
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

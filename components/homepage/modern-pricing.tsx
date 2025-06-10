@@ -38,17 +38,18 @@ export default function ModernPricing() {
   const tiers: PricingTier[] = [
     {
       title: "The Professional Pack",
-      originalPrice: "$56.24",
-      price: "$44.99",
+      originalPrice: "$53.99",
+      price: "$49.99",
       description:
-        "Designed for professionals who want a polished headshot tailored to a single role or brand identity. This is your go-to image: Perfect for LinkedIn, business websites, speaker bios, and more.",
+        "Polished. Personalized. Powerful. This is your all-in-one branding solution — built for professionals who want to show up ready.",
       features: [
-        "15 fully customized AI-generated images",
-        "Tailored to one industry or role",
-        "Personalization based on your intake (vibe, brand colors, wardrobe, setting)",
-        "Clean, minimal styling with a consistent look and feel across all images",
+        "45 stunning AI-generated headshots crafted from your selfies",
+        " Fully personalized to your profession, wardrobe, vibe, setting, and brand",
+        " Delivered in under 60 minutes — not weeks",
+        "Styled for LinkedIn, speaking, websites, and media kits",
+        "Yours to use anywhere with full commercial rights",
       ],
-      buttonText: "Choose Professional",
+      buttonText: "Create My Headshots",
     },
     
     
@@ -99,105 +100,42 @@ export default function ModernPricing() {
                   {tier.description}
                 </p>
 
-                <ul className="my-6 space-y-4">
-                  {tier.features.map((feat, i) => {
-                    // ───────────────────────────────────────────────
-                    // Step 1: convert to lowercase for case-insensitive matching
-                    const text = feat.toLowerCase();
+ <ul className="my-6 space-y-6">
+          {tier.features.map((feat, i) => {
+  const text = feat.toLowerCase();
+  let Icon = Check;             // fallback
 
-                    // Step 2: default icon is a checkmark
-                    let Icon = Check;
+  if (text.includes("ai-generated headshots")) {
+    Icon = ImageIcon;           // camera icon
+  } else if (text.includes("fully personalized")) {
+    Icon = User;                // user/person icon
+  } else if (text.includes("delivered in under")) {
+    Icon = Star;                // favorite/star icon
+  } else if (text.includes("styled for linkedin")) {
+    Icon = Mic;                 // mic icon for speaking/profile
+  } else if (text.includes("commercial rights")) {
+    Icon = Award;               // award/trophy icon
+  }
 
-                    // Step 3: pick the correct icon based on keywords in the lowercase string
-                    if (text.includes("ai-generatedimages")) {
-                      // (unlikely to match exactly without typo, but we check separately for "ai-generated images")
-                      Icon = ImageIcon;
-                    }
-                    else if (text.includes("ai-generated images")) {
-                      // “15 AI-generated images inspired by your reference image”
-                      Icon = ImageIcon;
-                    }
-                    else if (text.includes("images tailored")) {
-                      // “15 AI-generated images tailored to multiple industries or roles”
-                      Icon = ImageIcon;
-                    }
-                    else if (text.includes("each image")) {
-                      // “Each image reflects a distinct identity …”
-                      Icon = ImageIcon;
-                    }
-                    else if (text.includes("prompts")) {
-                      // “Custom prompts based on your intake form …”
-                      Icon = FileText;
-                    }
-                    else if (text.includes("unique outfits") || text.includes("outfits")) {
-                      // “Different outfits, backgrounds, and expressions …”
-                      Icon = Shirt;
-                    }
-                    else if (text.includes("unique backgrounds") || text.includes("backgrounds")) {
-                      // “15 Unique Backgrounds” or “Different outfits, backgrounds …”
-                      Icon = LayoutGrid;
-                    }
-                    else if (text.includes("inspired by your reference")) {
-                      // “15 AI-generated images inspired by your reference image”
-                      Icon = ImageIcon;
-                    }
-                    else if (text.includes("replicates") || text.includes("composition") || text.includes("pose") || text.includes("mood") || text.includes("aesthetic")) {
-                      // “Replicates the composition, pose, mood, or aesthetic …”
-                      Icon = Layers;
-                    }
-                    else if (text.includes("lighting")) {
-                      // (if you ever add “lighting” feature back)
-                      Icon = Sun;
-                    }
-                    else if (text.includes("reflects your brand")) {
-                      // “Reflects your brand tone, emotional energy, and usage goals”
-                      Icon = Palette;
-                    }
-                    else if (text.includes("speaker pages")) {
-                      // “Ideal for speaker pages, business websites, and media kits”
-                      Icon = Mic;
-                    }
-                    else if (text.includes("visual storytelling")) {
-                      // “Includes deeper visual storytelling moments …”
-                      Icon = Star;
-                    }
-                    else if (text.startsWith("15 prompts") || text.startsWith("15 prompts • 45 images")) {
-                      // The old “15 Prompts • 45 Images • 15 Unique Outfits • 15 Unique Backgrounds” 
-                      Icon = FileText;
-                    }
-                    else if (text.startsWith("15 fully customized ai-generated images")) {
-                      // “15 fully customized AI-generated images”
-                      Icon = ImageIcon;
-                    }
-                    else if (text.startsWith("tailored to")) {
-                      // “Tailored to one industry or role”
-                      Icon = Target;
-                    }
-                    else if (text.startsWith("personalization")) {
-                      // “Personalization based on your intake …”
-                      Icon = Award;
-                    }
-                    else if (text.startsWith("clean, minimal styling")) {
-                      // “Clean, minimal styling with a consistent look …”
-                      Icon = Palette;
-                    }
-                    else if (text.includes("ideal for recreating")) {
-                      // “Ideal for recreating something iconic …”
-                      Icon = Award;
-                    }
-                    // ───────────────────────────────────────────────
+  return (
+    <li key={i} className="flex items-center gap-3">
+      <Icon size={20} className="text-sage-green flex-shrink-0" />
+      <span className="text-xs text-white leading-snug">{feat}</span>
+    </li>
+  );
+})}
+        </ul>
 
-                    return (
-                      <li key={i} className="flex items-center gap-2">
-                        <div className="relative h-5 w-5">
-                          <Icon size={20} strokeWidth={2} className="text-sage-green" />
-                          {/* do NOT pass a `size` prop—letting it fill its parent */}
-                        </div>
-                        <span className="text-xs text-white leading-snug">{feat}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
+{/* ─────────── HOW IT WORKS BLOCK ─────────── */}
+<div className="mt-6 pt-4 border-t border-muted/30">
+  <h4 className="text-lg font-semibold text-white mb-2">How It Works:</h4>
+  <p className="text-sm text-ivory mb-2">
+    Before purchase, you&#8217;ll complete a <strong>guided intake form</strong> — this is your creative brief. You’ll choose everything from your wardrobe style to your professional field, background setting, hair texture, body type, and overall mood.
+  </p>
+  <p className="text-sm text-ivory">
+    From there, we create a shoot that looks and feels like you at your best. No generic avatars. No random results. Just clean, compelling, editorial-quality visuals that align with your goals — and your greatness.
+  </p>
+</div>
 
                 <div className="mt-auto">
                   <Link

@@ -39,7 +39,7 @@ export default function ScrollCTA() {
               px-4 py-2 rounded-full shadow-lg
             "
           >
-            Create your headshots now
+            Create my headshots now
             <ArrowRightIcon className="ml-2 w-5 h-5" />
           </button>
         </Link>

@@ -18,14 +18,12 @@ export default function HeroSection() {
           </Badge>
 
           <h1 className="text-4xl font-bold tracking-tighter text-charcoal sm:text-5xl md:text-6xl mb-6">
-            The AI Headshot Experience Built for Ambitious{" "}
+            The Headshot Experience for Visionaries Ready to Be Seen{" "}
             <span className="text-muted-gold">Professionals</span>
           </h1>
 
           <p className="text-charcoal text-lg md:text-xl max-w-[800px] mx-auto mb-8">
-            Welcome to AI Maven Studio — where your transformation begins. No
-            camera crew. No overpriced photo shoots. Just effortless excellence
-            — powered by AI, styled by purpose.
+       You don’t need a camera crew to look like a leader. You need alignment, purpose, and technology that sees your potential — and brings it to life.
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
@@ -39,7 +37,7 @@ export default function HeroSection() {
                   group
                 "
               >
-                Create My Headshots Now
+Show Me What’s Possible
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>

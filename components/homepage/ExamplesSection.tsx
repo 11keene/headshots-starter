@@ -11,10 +11,9 @@ export default function ExamplesSection() {
           <Badge variant="outline" className="mb-2 border-muted-gold text-charcoal">
             See the Results
           </Badge>
-          <h2 className="text-3xl text-charcoal font-bold tracking-tighter sm:text-4xl md:text-5xl">Real People. Real Impact.</h2>
+          <h2 className="text-3xl text-charcoal font-bold tracking-tighter sm:text-4xl md:text-5xl">Selfies In. Confidence Out.</h2>
           <p className="max-w-[700px] text-muted-foreground text-charcoal  text-lg">
-          See how everyday selfies become extraordinary brand statements — all within minutes.
-          Our AI doesn’t just enhance your image — it reveals your confidence, your edge, your next level.
+        See how everyday selfies are transformed into purpose-driven brand images — clear, confident, and deeply aligned. This isn’t just enhancement. It’s visibility redefined, in minutes.
           </p>
         </div>
         <div className="mt-16 grid gap-4 sm:gap-6 md:gap-8 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">

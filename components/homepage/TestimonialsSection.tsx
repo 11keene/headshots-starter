@@ -30,9 +30,10 @@ export default function TestimonialsSection() {
           <Badge variant="outline" className="mb-2 border-muted-gold text-charcoal">
             Testimonials
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tighter text-charcoal sm:text-4xl md:text-5xl">Words That Reflect the Transformation</h2>
+          <h2 className="text-3xl font-bold tracking-tighter text-charcoal sm:text-4xl md:text-5xl">Transformation You Can See — and Feel
+Updated Subheadline:</h2>
           <p className="max-w-[700px] text-muted-foreground text-charcoal text-lg">
-          Thousands of professionals have experienced what it feels like to finally see themselves in their photos — polished, powerful, and brand-ready. Here's what they’re saying:
+         Thousands of professionals have discovered what it means to be truly seen. These aren’t just headshots — they’re identity-shaping images that reflect your growth, your confidence, and the clarity of who you’re becoming. Here’s how that transformation is showing up in real lives.
           </p>
         </div>
         <div className="mt-16 grid gap-8 md:grid-cols-3">

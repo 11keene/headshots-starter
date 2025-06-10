@@ -10,11 +10,10 @@ export default function PricingSection() {
             Pricing
           </Badge>
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-charcoal md:text-5xl">
-            Premium Headshots<span className="text-muted-gold"> Without</span> the Premium Price Tag
+            Studio-Quality Headshots, <span className="text-muted-gold"> Without</span>  the Studio Price
           </h2>
           <p className="max-w-[700px] text-charcoal text-muted-foreground text-lg">
-            Why spend $200–$500 on a traditional photoshoot when you can get professional-quality results in minutes — for a fraction of the cost?
-            At AI Maven Studio, we make transformation affordable, accessible, and completely aligned with your brand.
+            Skip the $300+ photoshoots. At AI Maven Studio, you’ll get 45 hyper-realistic, professional-grade headshots — custom-built from your vision — delivered in under an hour. All for a fraction of the cost. No cameras. No waiting. No compromises.
           </p>
         </div>
 
