@@ -61,6 +61,13 @@ export async function POST(req: Request) {
   // 4) Determine if we should apply the team discount
   let applyTeamDiscount = false;
   if (teamId) {
+    
+    // Make sure the user is authenticated
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) {
+  return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+}
+
     // A) Check if caller is owner of this team
     const { data: ownerRow } = await supabase
       .from("teams")

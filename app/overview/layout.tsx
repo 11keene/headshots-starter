@@ -19,13 +19,5 @@ export default async function OverviewLayout({
     redirect('/login')
   }
 
-  return (
-    <>
-      <head>
-        {/* Preconnect to Stripe to speed up Checkout load */}
-        <link rel="preconnect" href="https://js.stripe.com" crossOrigin="" />
-      </head>
-      {children}
-    </>
-  )
+  return <>{children}</>
 }

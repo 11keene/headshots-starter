@@ -31,7 +31,7 @@ export default function TestimonialsSection() {
             Testimonials
           </Badge>
           <h2 className="text-3xl font-bold tracking-tighter text-charcoal sm:text-4xl md:text-5xl">Transformation You Can See — and Feel
-Updated Subheadline:</h2>
+</h2>
           <p className="max-w-[700px] text-muted-foreground text-charcoal text-lg">
          Thousands of professionals have discovered what it means to be truly seen. These aren’t just headshots — they’re identity-shaping images that reflect your growth, your confidence, and the clarity of who you’re becoming. Here’s how that transformation is showing up in real lives.
           </p>

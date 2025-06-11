@@ -167,9 +167,12 @@ const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
                 </Link>
               </>
             )}
-            <Link href="/teams" className="text-ivory font-semibold hover:text-muted-gold">
-              Teams
-            </Link>
+       {SHOW_TEAMS && (
+  <Link href="/teams" className="text-ivory font-semibold hover:text-muted-gold">
+    Teams
+  </Link>
+)}
+
          </nav>
           )}
 
@@ -199,11 +202,14 @@ const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
             Pricing
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/teams" onClick={blockNav}>
-            Teams
-          </Link>
-        </DropdownMenuItem>
+        {SHOW_TEAMS && (
+  <DropdownMenuItem asChild>
+    <Link href="/teams" onClick={blockNav}>
+      Teams
+    </Link>
+  </DropdownMenuItem>
+)}
+
         <DropdownMenuItem asChild>
           <a href="mailto:support@aimavenstudio.com">Contact</a>
         </DropdownMenuItem>

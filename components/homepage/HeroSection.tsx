@@ -14,12 +14,12 @@ export default function HeroSection() {
             className="mb-4 bg-muted-gold/20 text-muted-gold border-transparent"
             variant="default"
           >
-            #1 AI Headshot Generator for Bold Brands and Big Goals
+            #1 AI Headshot Generator for Bold Brands 
           </Badge>
 
           <h1 className="text-4xl font-bold tracking-tighter text-charcoal sm:text-5xl md:text-6xl mb-6">
-            The Headshot Experience for Visionaries Ready to Be Seen{" "}
-            <span className="text-muted-gold">Professionals</span>
+            The Headshot Experience for {" "}
+            <span className="text-muted-gold">Visionaries</span> Ready to Be Seen
           </h1>
 
           <p className="text-charcoal text-lg md:text-xl max-w-[800px] mx-auto mb-8">

@@ -13,16 +13,16 @@ export function DashboardDropdownToggle() {
     pathname.includes("/teams") ? "team" : "personal"
   );
 
-  useEffect(() => {
-    async function checkForTeam() {
-      const { data: { user } } = await supabase.auth.getUser();
+useEffect(() => {
+  async function checkForTeam() {
+    const { data: { user } } = await supabase.auth.getUser();
 
-      if (user) {
-        const { data } = await supabase
-          .from("teams")
-          .select("id")
-          .eq("user_id", user.id)
-          .maybeSingle();
+    if (user) {
+      const { data } = await supabase
+        .from("teams")
+        .select("id")
+        .eq("owner_id", user.id)
+        .maybeSingle();
 
         if (data) {
           setHasTeam(true);
