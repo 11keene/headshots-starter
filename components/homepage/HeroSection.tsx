@@ -18,8 +18,8 @@ export default function HeroSection() {
           </Badge>
 
           <h1 className="text-4xl font-bold tracking-tighter text-charcoal sm:text-5xl md:text-6xl mb-6">
-            The Headshot Experience for {" "}
-            <span className="text-muted-gold">Visionaries</span> Ready to Be Seen
+            Transform Your Profile.   {" "}
+            <span className="text-muted-gold">High-Quality</span> AI Headshots, Fast.
           </h1>
 
           <p className="text-charcoal text-lg md:text-xl max-w-[800px] mx-auto mb-8">
