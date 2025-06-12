@@ -17,10 +17,13 @@ export default function HeroSection() {
             #1 AI Headshot Generator for Bold Brands 
           </Badge>
 
-          <h1 className="text-4xl font-bold tracking-tighter text-charcoal sm:text-5xl md:text-6xl mb-6">
-            Transform Your Profile.   {" "}
-            <span className="text-muted-gold">High-Quality</span> AI Headshots, Fast.
-          </h1>
+          <h1 className="text-4xl font-bold tracking-tighter text-charcoal sm:text-5xl md:text-6xl mb-6 leading-tight">
+  Transform Your Profile.{'\u00A0'}
+  <span className="whitespace-nowrap text-muted-gold">High-Quality</span>{" "}
+  AI Headshots, Fast.
+</h1>
+
+
 
           <p className="text-charcoal text-lg md:text-xl max-w-[800px] mx-auto mb-8">
        You don’t need a camera crew to look like a leader. You need alignment, purpose, and technology that sees your potential — and brings it to life.
