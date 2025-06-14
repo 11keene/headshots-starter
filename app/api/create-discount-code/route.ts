@@ -1,4 +1,6 @@
 // File: app/api/create-discount-code/route.ts
+console.log("▶︎ STRIPE_SECRET_KEY:", process.env.STRIPE_SECRET_KEY);
+console.log("▶︎ STRIPE_COUPON_ID: ",  process.env.STRIPE_COUPON_ID);
 
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
