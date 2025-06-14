@@ -25,7 +25,7 @@ export default function Index() {
       script.src = "https://go.aimavenstudio.com/js/form_embed.js";
       script.async = true;
       document.body.appendChild(script);
-    }, 5000); // Show after 5 second
+    }, 15000); // Show after 5 second
 
     return () => clearTimeout(timer);
   }, []);
