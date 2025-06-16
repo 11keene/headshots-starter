@@ -20,11 +20,32 @@ import { ThemeToggle } from "@/components/homepage/theme-toggle";
 type PackTab = "headshots" | "multi-purpose" | "teams";
 
 export default function Navbar() {
+  const session = useSession();
+  const supabase = useSupabaseClient();
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = useSupabaseClient();
-  const session = useSession();
   const isLoggedIn = Boolean(session?.user);
+
+  // Proxy endpoint to avoid CORS: /api/intake-start
+  const sendIntakeStarted = async () => {
+    try {
+      if (!session?.user) return;
+      const user = session.user;
+      if (!user.email) return;
+
+      await fetch('/api/intake-start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          firstName: user.user_metadata?.full_name?.split(' ')[0] || '',
+          lastName: user.user_metadata?.full_name?.split(' ')[1] || '',
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to send intake_started proxy request', error);
+    }
+  };
 
   // Determine current pack tab from ?tab=
   const searchParams = useSearchParams();
@@ -39,48 +60,35 @@ export default function Navbar() {
       href: "/multi-purpose-intake",
     },
     teams: {
-    text: "Create Team Headshots",
-    href: "/teams-intake",    // ← This is the new page we just created
-  },
+      text: "Create Team Headshots",
+      href: "/teams-intake",
+    },
   };
   const { text: buttonText, href: buttonHref } = tabMap[currentTab];
-const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
+  const SHOW_TEAMS = false;
 
-  // ─── Age-gate state ───────────────────────────────────────────────────────────
+  // Age-gate state
   const [agreed, setAgreed] = useState(false);
   const [checked, setChecked] = useState(false);
 
-  // ─── (1) On mount (or whenever isLoggedIn flips to true),
-  //           read “ageGateSeen” from localStorage.
-  //           If it’s "true", immediately hide the banner.
   useEffect(() => {
     if (isLoggedIn) {
       const seenFlag = localStorage.getItem("ageGateSeen");
-      if (seenFlag === "true") {
-        setAgreed(true);
-      }
+      if (seenFlag === "true") setAgreed(true);
     }
   }, [isLoggedIn]);
 
-  // ─── (2) When they first log in, reset only the checkbox.
-  //           Do NOT reset `agreed`, so that if they already saw it, it stays hidden.
   useEffect(() => {
-    if (isLoggedIn) {
-      setChecked(false);
-      // Do NOT call setAgreed(false) here! We want to preserve “agreed” if previously stored.
-    }
+    if (isLoggedIn) setChecked(false);
   }, [isLoggedIn]);
 
-  // Prevent navigation until user agrees
   const blockNav = (e: React.MouseEvent) => {
-    if (pathname === "/overview" && !agreed) {
-      e.preventDefault();
-    }
+    if (pathname === "/overview" && !agreed) e.preventDefault();
   };
 
   return (
     <>
-      {/* ─── Age Verification Banner at bottom ───────────────────────────────────── */}
+      {/* Age Verification Banner */}
       {isLoggedIn && pathname === "/overview" && !agreed && (
         <div className="fixed bottom-0 left-0 w-full bg-charcoal border-t border-muted-gold p-4 z-50">
           <div className="max-w-screen-md mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -92,32 +100,22 @@ const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
                 className="w-4 h-4 text-muted-gold"
               />
               <span className="text-ivory text-sm">
-                I agree that I am the majority age 18/21+ years of age, and acknowledge the{" "}
-                <Link href="/terms" className="text-muted-gold underline">
-                  terms
-                </Link>{" "}
-                and{" "}
-                <Link href="/privacy-policy" className="text-muted-gold underline">
-                  privacy policy
-                </Link>.
+                I agree that I am 18+ years of age and accept the{' '}
+                <Link href="/terms" className="text-muted-gold underline">terms</Link> and{' '}
+                <Link href="/privacy-policy" className="text-muted-gold underline">privacy policy</Link>.
               </span>
             </label>
             <button
-              onClick={() => {
-                // ① Store the “seen” flag so they never see this again:
+              onClick={async () => {
                 localStorage.setItem("ageGateSeen", "true");
-
-                // ② Update state and navigate to the correct intake form:
                 setAgreed(true);
+                await sendIntakeStarted();
                 router.push(buttonHref);
               }}
               disabled={!checked}
-              className={`py-2 px-6 font-semibold rounded-md transition
-                ${
-                  checked
-                    ? "bg-muted-gold text-ivory hover:opacity-90"
-                    : "bg-muted/30 text-ivory cursor-not-allowed"
-                }`}
+              className={`py-2 px-6 font-semibold rounded-md transition ${
+                checked ? 'bg-muted-gold text-ivory hover:opacity-90' : 'bg-muted/30 text-ivory cursor-not-allowed'
+              }`}
             >
               {buttonText}
             </button>
@@ -125,16 +123,21 @@ const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
         </div>
       )}
 
-      {/* ─── Background “Create …” button once agreed ───────────────────────────── */}
+      {/* Background “Create …” button once agreed */}
       {isLoggedIn && pathname === "/overview" && agreed && (
         <div className="fixed bottom-0 left-0 w-full bg-muted/70 py-4 px-6 z-40">
-          <Link href={buttonHref}>
-            <Button className="w-full bg-muted-gold text-ivory">
-              {buttonText}
-            </Button>
-          </Link>
+          <Button
+            className="w-full bg-muted-gold text-ivory"
+            onClick={async () => {
+              await sendIntakeStarted();
+              router.push(buttonHref);
+            }}
+          >
+            {buttonText}
+          </Button>
         </div>
       )}
+
 
       {/* ─── Navbar ───────────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 w-full border-t-2 border-muted-gold border-b bg-charcoal backdrop-blur">
@@ -145,7 +148,7 @@ const SHOW_TEAMS = false; // 👈 Turn this to true later when ready
             className="flex items-center gap-1 text-ivory font-semibold text-sm"
           >
             <Image
-              src="/glogo.png"
+              src="/newlogo.png"
               alt="AI Maven Logo"
               width={25}
               height={35}

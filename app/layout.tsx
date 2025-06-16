@@ -54,7 +54,7 @@ export default async function RootLayout({
         {/* THIS is your new favicon link */}
         <link
           rel="icon"
-          href="/newfav.ico"
+          href="/favicon8.ico"
           type="image/x-icon"
         />
       </head>

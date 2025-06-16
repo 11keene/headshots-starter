@@ -19,7 +19,7 @@ export default function LogoOrCredits() {
         className="flex items-center gap-2 text-lg font-semibold"
       >
         <Image
-          src="/glogo.png"
+          src="/newlogo.png"
           alt="AI Maven Logo"
           width={28}
           height={28}

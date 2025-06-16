@@ -18,7 +18,7 @@ export default function Footer() {
               className="flex items-center gap-2 font-bold text-xl text-ivory"
             >
               <Image
-                src="/glogo.png"
+                src="/newlogo.png"
                 alt="AI Maven Logo"
                 width={40}
                 height={24}

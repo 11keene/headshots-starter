@@ -25,18 +25,11 @@ export default function UploadPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // ─────────────────────────────────────────────────────
-  // 0) Read the gender query‐param so you KNOW whether this is "man" or "woman"
-  // ─────────────────────────────────────────────────────
+  // ─ Gender
   const rawGender = searchParams.get("gender")?.toLowerCase() || null;
-  // We store it here (you can use it in your upload logic if needed).
-  // If somehow someone goes directly to this URL without ?gender, rawGender === null.
-  // In practice your intake always PUSHES ?gender=man or ?gender=woman.
   const gender = rawGender === "woman" ? "woman" : rawGender === "man" ? "man" : null;
 
-  // ─────────────────────────────────────────────────────
-  // 1) Grab packId from the URL /overview/packs/[packId]/next?gender=…
-  // ─────────────────────────────────────────────────────
+  // ─ Pack ID
   const { packId: _packId } = useParams();
   const packId = Array.isArray(_packId) ? _packId[0] : _packId || "";
 
@@ -51,28 +44,33 @@ export default function UploadPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 2) When `files` changes, generate previews
+  // ─────────── Proxy helper to fire upload_complete tag ───────────
+  const sendUploadComplete = async (email: string, firstName: string, lastName: string) => {
+    try {
+      await fetch('/api/upload-complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, firstName, lastName }),
+      });
+    } catch (err) {
+      console.error('Failed to send upload_complete proxy request', err);
+    }
+  };
+
+  // 2) Generate previews
   useEffect(() => {
     setPreviewUrls(files.map((f) => URL.createObjectURL(f)));
   }, [files]);
 
-  // 3) Count how many uploads already exist for this packId
+  // 3) Count existing uploads
   useEffect(() => {
     if (!packId) return;
     (async () => {
-      console.log("[UploadPage] Counting existing uploads for packId =", packId);
       const { data: existingUploads, error: countErr } = await supabase
         .from("uploads")
         .select("id")
         .eq("pack_id", packId);
-
-      if (countErr) {
-        console.error("[UploadPage] Error counting uploads:", countErr);
-      } else {
-        const count = existingUploads?.length || 0;
-        console.log(`[UploadPage] Found ${count} uploads so far.`);
-        setUploadCount(count);
-      }
+      if (!countErr) setUploadCount(existingUploads?.length || 0);
     })();
   }, [packId, supabase]);
 
@@ -80,17 +78,12 @@ export default function UploadPage() {
   const onFiles = useCallback(
     (list: FileList | null) => {
       if (!list || !userId || !packId) return;
-
-      console.log("[UploadPage] onFiles: Received", list.length, "files");
-      // Convert FileList → Array<File>, max 10
-      const arr = Array.from(list).slice(0, 10);
-      setFiles(arr);
+      setFiles(Array.from(list).slice(0, 10));
       setUploading(true);
       setError(null);
 
-      // Upload each file one by one
       Promise.all(
-        arr.map(async (file) => {
+        Array.from(list).slice(0, 10).map(async (file) => {
           try {
             // a) Build a unique storage path: userId/packId/uuid.ext
             const ext = file.name.split(".").pop();
@@ -155,6 +148,14 @@ export default function UploadPage() {
           }
         })
       )
+        .then(async () => {
+          // All uploads succeeded, now fire the webhook
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user?.email) {
+            const [firstName, lastName] = (user.user_metadata?.full_name || '').split(' ');
+            await sendUploadComplete(user.email, firstName || '', lastName || '');
+          }
+        })
         .catch((uploadErr) => {
           console.error("[UploadPage] Promise.all uploadErr:", uploadErr);
           setError(uploadErr.message || "Upload failed");
@@ -231,7 +232,7 @@ export default function UploadPage() {
       </button>
 
       <h1 className="text-2xl text-charcoal font-bold mb-2">
-        Upload your photos {gender && `(for ${gender})`}
+        Upload your photos 
       </h1>
       <p className="text-gray-600 mb-6">
         Select at least <span className="font-semibold">4–6</span> photos (max 10).

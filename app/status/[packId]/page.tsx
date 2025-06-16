@@ -1,7 +1,10 @@
+// File: app/status/[packId]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useSession } from "@supabase/auth-helpers-react";
+import { useRouter } from "next/navigation";
 import { FiCheckSquare, FiDownloadCloud, FiLoader } from "react-icons/fi";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
@@ -13,7 +16,69 @@ interface GeneratedImageRow {
 
 export default function StatusPage({ params }: { params: { packId: string } }) {
   const { packId } = params;
-  const supabase = createClientComponentClient();
+  const router = useRouter();
+const supabase = createClientComponentClient();
+const session  = useSession();
+
+ // ── Ping Zapier when images are delivered ──
+  const fireImagesDelivered = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.email) return;
+    const [firstName, lastName] = (user.user_metadata?.full_name || "").split(" ");
+    await fetch("/api/images-delivered", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: user.email, firstName, lastName, packId }),
+    });
+  };
+
+  // ── Ping Zapier when photos are ready ──
+  const firePhotosReady = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.email) return;
+    const [firstName, lastName] = (user.user_metadata?.full_name || "").split(" ");
+    await fetch("/api/photos-ready", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: user.email, firstName, lastName, packId }),
+    });
+  };
+
+  // ───── Purchase Complete Tagging ─────
+  useEffect(() => {
+    const storageKey = `purchase_complete_fired_${packId}`;
+    if (!session || localStorage.getItem(storageKey)) {
+      return;
+    }
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user?.email) {
+        const [firstName, lastName] = (user.user_metadata?.full_name || "").split(" ");
+        try {
+          await fetch("/api/purchase-complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: user.email,
+              firstName: firstName || "",
+              lastName: lastName || "",
+            }),
+          });
+          localStorage.setItem(storageKey, "true");
+        } catch (err) {
+          console.error("Failed to send purchase_complete webhook", err);
+        }
+      }
+    })();
+  }, [session, supabase, packId]);
+
+  // State for images and download
   const [images, setImages] = useState<string[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState<boolean>(true);
@@ -22,35 +87,31 @@ export default function StatusPage({ params }: { params: { packId: string } }) {
   const [selectAll, setSelectAll] = useState<boolean>(false);
   const [zipLoading, setZipLoading] = useState<boolean>(false);
 
-  // Fetch (and re-fetch every 5s) all public URLs from Supabase
+  // Fetch generated images every 5s
   async function loadGeneratedImages() {
     try {
       const { data: rows, error: supaErr } = await supabase
         .from("generated_images")
         .select("image_url")
         .eq("pack_id", packId);
-
       if (supaErr) throw supaErr;
-
       if (!rows || rows.length === 0) {
-        // no images yet
         setStillGenerating(true);
         setLoading(false);
         return;
       }
-
       const urls = (rows as GeneratedImageRow[])
         .map((r) => r.image_url)
         .filter(Boolean);
-
-      console.log(`📸 Loaded ${urls.length} images for pack ${packId}`);
       setImages(urls);
       setError("");
       setStillGenerating(false);
       setLoading(false);
     } catch (e: any) {
       console.error("[StatusPage] Error loading images:", e);
-      setError("Oops! Something went wrong retrieving your photos. Please try again in a bit.");
+      setError(
+        "Oops! Something went wrong retrieving your photos. Please try again in a bit."
+      );
       setLoading(false);
     }
   }
@@ -75,8 +136,8 @@ export default function StatusPage({ params }: { params: { packId: string } }) {
       return !prev;
     });
   };
-
-  // Download selected images as a ZIP
+  
+  // Download selected images as ZIP
   async function downloadAll(selectedUrls: string[]) {
     if (!selectedUrls.length) {
       alert("No images selected!");
@@ -94,6 +155,11 @@ export default function StatusPage({ params }: { params: { packId: string } }) {
       })
     );
     const content = await zip.generateAsync({ type: "blob" });
+
+    // Fire images delivered event after ZIP is ready, before saving
+await fireImagesDelivered();
+    await firePhotosReady();
+
     saveAs(content, "selected-headshots.zip");
     setZipLoading(false);
   }
@@ -104,6 +170,9 @@ export default function StatusPage({ params }: { params: { packId: string } }) {
       const res = await fetch(`/api/zip-download/${packId}`);
       if (!res.ok) throw new Error("Failed to fetch ZIP");
       const blob = await res.blob();
+      await fireImagesDelivered();
+            await firePhotosReady();
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -113,46 +182,41 @@ export default function StatusPage({ params }: { params: { packId: string } }) {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert("Oops! There was an error downloading your ZIP file. Please try again.");
+      alert(
+        "Oops! There was an error downloading your ZIP file. Please try again."
+      );
       console.error("[ZIP Download Error]", err);
     }
     setZipLoading(false);
   };
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Render states
-  // ─────────────────────────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-50">
-        <FiLoader className="animate-spin text-4xl text-muted-gold mb-4" />
-        <p className="text-2xl font-semibold text-gray-700">
-          Hang tight — our AI wizards are cooking up your photos!
-        </p>
-      </div>
-    );
-  }
+  // Render states...
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-50">
+      <FiLoader className="animate-spin text-4xl text-muted-gold mb-4" />
+      <p className="text-2xl font-semibold text-gray-700">
+        Hang tight — our AI wizards are cooking up your photos!
+      </p>
+    </div>
+  );
 
-  if (stillGenerating) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-50">
-        <FiLoader className="animate-spin text-5xl text-sage-green mb-4" />
-        <h2 className="text-3xl font-bold text-gray-800">🌟 Your gallery is in the works!</h2>
-        <p className="text-lg text-gray-600 max-w-md text-center">
-          Our AI is painting your masterpiece. Check back in a moment to see your new headshots!
-        </p>
-      </div>
-    );
-  }
+  if (stillGenerating) return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-50">
+      <FiLoader className="animate-spin text-5xl text-sage-green mb-4" />
+      <h2 className="text-3xl font-bold text-gray-800">🌟 Your gallery is in the works!</h2>
+      <p className="text-lg text-gray-600 max-w-md text-center">
+        Our AI is painting your masterpiece. Check back in a moment to see your new headshots!
+      </p>
+    </div>
+  );
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-red-50">
-        <h2 className="text-3xl font-bold text-red-600 mb-2">😢 Oops!</h2>
-        <p className="text-lg text-red-600 max-w-md text-center">{error}</p>
-      </div>
-    );
-  }
+  if (error) return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-red-50">
+      <h2 className="text-3xl font-bold text-red-600 mb-2">😢 Oops!</h2>
+      <p className="text-lg text-red-600 max-w-md text-center">{error}</p>
+    </div>
+  );
+  
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Images grid & download controls
