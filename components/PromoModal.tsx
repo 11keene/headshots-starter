@@ -1,56 +1,40 @@
-// File: components/PromoModal.tsx
+// File: components/AnnouncementBar.tsx
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { useState } from "react";
+import { X } from "lucide-react";
+import { motion } from "motion/react";
 
-interface PromoModalProps {
-  open: boolean;
-  onClaim: () => void;
-  onClose: () => void;
-}
+const isEnabled = process.env.NEXT_PUBLIC_ANNOUNCEMENT_ENABLED === "true";
 
-export function PromoModal({ open, onClaim, onClose }: PromoModalProps) {
+export default function AnnouncementBar() {
+  const [isVisible, setIsVisible] = useState(true);
+  if (!isEnabled || !isVisible) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-xs mx-auto p-6 bg-white rounded-2xl shadow-lg space-y-6">
-        
-        {/* Header + Description */}
-        <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold text-charcoal">
-            Welcome to Your Dashboard!
-          </h2>
-          <p className="text-sm text-gray-700">
-            Here’s your special code for 10% off:
-          </p>
-        </div>
-
-        {/* Code input */}
-        <input
-          readOnly
-          value="WELCOME10"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-center font-mono"
-        />
-
-        {/* Buttons */}
-        <div className="flex flex-col space-y-2">
-          <button
-            onClick={onClaim}
-            className="w-full px-4 py-2 bg-charcoal text-white rounded-md"
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative bg-charcoal text-white py-2 px-4 text-center text-sm"
+    >
+      <div className="container mx-auto flex items-center justify-center">
+        <p>
+          {/* this span ID is what triggers the GoHighLevel pop-up */}
+          <span
+            id="promo-link"
+            className="cursor-pointer underline decoration-muted-gold decoration-2"
           >
-            Claim Code
-          </button>
-          <button
-            onClick={onClose}
-            className="w-full px-4 py-2 border border-charcoal text-charcoal rounded-md"
-          >
-            Close
-          </button>
-        </div>
-
-      </DialogContent>
-    </Dialog>
+            🎉 Get <strong>50% off</strong> your first order (only for the first 100 people)!
+          </span>
+        </p>
+        <button
+          onClick={() => setIsVisible(false)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white"
+          aria-label="Close announcement"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    </motion.div>
   );
 }

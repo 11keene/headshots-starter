@@ -23,10 +23,6 @@ const SupabaseProvider = dynamic(
 export const metadata = {
   title: "AI Maven",
   description: "Generate awesome headshots in minutes using AI",
-  // You can also specify icons here if you prefer:
-  // icons: {
-  //   icon: "/newfav.ico",
-  // },
 };
 
 export default async function RootLayout({
@@ -51,14 +47,17 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* THIS is your new favicon link */}
-        <link
-          rel="icon"
-          href="/favicon8.ico"
-          type="image/x-icon"
-        />
+        {/* YOUR FAVICON */}
+        <link rel="icon" href="/favicon8.ico" type="image/x-icon" />
       </head>
       <body className="min-h-screen flex flex-col bg-background">
+        {/*
+          ————————————————————————————————————————————————
+          50% Off Promo Form (GoHighLevel)
+          Clicking the <AnnouncementBar /> link with id="promo-link"
+          will trigger this pop-up.
+        */}
+     
         <SupabaseProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <AnnouncementBar />
