@@ -21,12 +21,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+interface Feature {
+  icon: React.ElementType;
+  label: string;
+}
+
 interface PricingTier {
   title: string;
   price: string;
   originalPrice: string;
   description: string;
-  features: string[];
+  features: Feature[];
   buttonText: string;
   popular?: boolean;
   bestValue?: boolean;
@@ -37,23 +42,47 @@ export default function ModernPricing() {
 
   const tiers: PricingTier[] = [
     {
-      title: "The Professional Pack",
-      originalPrice: "$53.99",
-      price: "$49.99",
+      title: "Premium",
+      originalPrice: "$80",
+      price: "$45",
       description:
         "Polished. Personalized. Powerful. This is your all-in-one branding solution — built for professionals who want to show up ready.",
       features: [
-        "45 stunning AI-generated headshots crafted from your selfies",
-        " Fully personalized to your profession, wardrobe, vibe, setting, and brand",
-        " Delivered in under 60 minutes — not weeks",
-        "Styled for LinkedIn, speaking, websites, and media kits",
-        "Yours to use anywhere with full commercial rights",
+        {
+          icon: ImageIcon,
+          label: "45 stunning AI-generated headshots crafted from your selfies",
+        },
+        {
+          icon: User,
+          label:
+            "Fully personalized to your profession, wardrobe, vibe, setting, and brand",
+        },
+        {
+          icon: Star,
+          label: "Delivered in under 60 minutes — not weeks",
+        },
+        {
+          icon: Mic,
+          label:
+            "Styled for LinkedIn, speaking, websites, and media kits",
+        },
+        {
+          icon: Award,
+          label: "Yours to use anywhere with full commercial rights",
+        },
+        {
+          icon: Shirt,
+          label: "All attires and backgrounds included",
+        },
+        {
+          icon: LayoutGrid,
+          label: "Enhanced image resolution",
+        },
       ],
       buttonText: "Create My Headshots",
     },
-    
-    
   ];
+
 
   return (
     <div className="mx-auto max-w-6xl px-4">
@@ -67,7 +96,7 @@ export default function ModernPricing() {
                   "group relative flex flex-col p-6 bg-charcoal/100 border rounded-lg shadow-md transition-all ease-in-out",
                   tier.popular && "border-2 border-muted-gold",
                   "hover:scale-105 hover:shadow-xl",
-                  "hover:border-muted-gold hover:bg-charcoal/50",
+                  "hover:border-muted-gold hover:bg-charcoal/90",
                   "w-full",
                   tier.popular && "pricing-card-popular"
                 )}
@@ -83,48 +112,38 @@ export default function ModernPricing() {
                   </div>
                 )}
 
-                <h3 className="text-2xl text-white font-bold">{tier.title}</h3>
+<>
+  <h3 className="text-5xl text-sage-green font-bold text-center">
+    {tier.title}
+  </h3>
 
-                <div className="mt-2 relative">
-                  {/* struck-through original price */}
-                  <span className="absolute -top-2 right-12 md:right-1 text-lg line-through text-white">
-                    {tier.originalPrice}
-                  </span>
-                  {/* discounted price */}
-                  <span className="text-5xl text-sage-green font-extrabold">
-                    {tier.price}
-                  </span>
-                </div>
+  <div className="mt-2 relative inline-block mx-auto">
+    {/* original price, perched at top-right */}
+    <span className="absolute -top-3 left-20 text-lg line-through text-muted/70">
+      {tier.originalPrice}
+    </span>
 
-                <p className="mt-4 text-xs font-semibold text-white">
-                  {tier.description}
-                </p>
+    {/* big discounted price */}
+    <span className="block text-5xl text-ivory font-extrabold">
+      {tier.price}
+    </span>
+  </div>
 
- <ul className="my-6 space-y-6">
-          {tier.features.map((feat, i) => {
-  const text = feat.toLowerCase();
-  let Icon = Check;             // fallback
-
-  if (text.includes("ai-generated headshots")) {
-    Icon = ImageIcon;           // camera icon
-  } else if (text.includes("fully personalized")) {
-    Icon = User;                // user/person icon
-  } else if (text.includes("delivered in under")) {
-    Icon = Star;                // favorite/star icon
-  } else if (text.includes("styled for linkedin")) {
-    Icon = Mic;                 // mic icon for speaking/profile
-  } else if (text.includes("commercial rights")) {
-    Icon = Award;               // award/trophy icon
-  }
-
-  return (
-    <li key={i} className="flex items-center gap-3">
-      <Icon size={20} className="text-sage-green flex-shrink-0" />
-      <span className="text-xs text-ivory leading-snug">{feat}</span>
-    </li>
-  );
-})}
-        </ul>
+  <p className="mt-4 text-xs font-semibold text-white text-center">
+    {tier.description}
+  </p>
+  <ul className="my-6 space-y-6">
+    {tier.features.map((feat, i) => {
+      const Icon = feat.icon || Check;
+      return (
+        <li key={i} className="flex items-center gap-3">
+          <Icon size={20} className="text-sage-green flex-shrink-0" />
+          <span className="text-xs text-ivory leading-snug">{feat.label}</span>
+        </li>
+      );
+    })}
+  </ul>
+</>
 
 {/* ─────────── HOW IT WORKS BLOCK ─────────── */}
 <div className="mt-6 pt-4 border-t border-muted/30">

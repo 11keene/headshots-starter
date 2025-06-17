@@ -28,22 +28,19 @@ export default function Navbar() {
 
   // Proxy endpoint to avoid CORS: /api/intake-start
   const sendIntakeStarted = async () => {
+    if (!session?.user || !session.user.email) return;
     try {
-      if (!session?.user) return;
-      const user = session.user;
-      if (!user.email) return;
-
-      await fetch('/api/intake-start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/api/intake-start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: user.email,
-          firstName: user.user_metadata?.full_name?.split(' ')[0] || '',
-          lastName: user.user_metadata?.full_name?.split(' ')[1] || '',
+          email: session.user.email,
+          firstName: session.user.user_metadata?.full_name?.split(" ")[0] || "",
+          lastName: session.user.user_metadata?.full_name?.split(" ")[1] || "",
         }),
       });
     } catch (error) {
-      console.error('Failed to send intake_started proxy request', error);
+      console.error("Failed to send intake_started proxy request", error);
     }
   };
 
@@ -72,9 +69,8 @@ export default function Navbar() {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    if (isLoggedIn) {
-      const seenFlag = localStorage.getItem("ageGateSeen");
-      if (seenFlag === "true") setAgreed(true);
+    if (isLoggedIn && localStorage.getItem("ageGateSeen") === "true") {
+      setAgreed(true);
     }
   }, [isLoggedIn]);
 
@@ -100,9 +96,18 @@ export default function Navbar() {
                 className="w-4 h-4 text-muted-gold"
               />
               <span className="text-ivory text-sm">
-                I agree that I am 18+ years of age and accept the{' '}
-                <Link href="/terms" className="text-muted-gold underline">terms</Link> and{' '}
-                <Link href="/privacy-policy" className="text-muted-gold underline">privacy policy</Link>.
+                I agree that I am 18+ years of age and accept the{" "}
+                <Link href="/terms" className="text-muted-gold underline">
+                  terms
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/privacy-policy"
+                  className="text-muted-gold underline"
+                >
+                  privacy policy
+                </Link>
+                .
               </span>
             </label>
             <button
@@ -114,7 +119,9 @@ export default function Navbar() {
               }}
               disabled={!checked}
               className={`py-2 px-6 font-semibold rounded-md transition ${
-                checked ? 'bg-muted-gold text-ivory hover:opacity-90' : 'bg-muted/30 text-ivory cursor-not-allowed'
+                checked
+                  ? "bg-muted-gold text-ivory hover:opacity-90"
+                  : "bg-muted/30 text-ivory cursor-not-allowed"
               }`}
             >
               {buttonText}
@@ -138,7 +145,6 @@ export default function Navbar() {
         </div>
       )}
 
-
       {/* ─── Navbar ───────────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 w-full border-t-2 border-muted-gold border-b bg-charcoal backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -157,91 +163,135 @@ export default function Navbar() {
             <span>AI Maven</span>
           </Link>
 
-          {/* Nav links */}
-          {isLoggedIn && pathname !== "/" && (
-<nav className="flex justify-start items-center gap-2.5 -ml-4">
-            {isLoggedIn && (
-              <>
-                <Link href="/overview" className="text-ivory font-semibold hover:text-muted-gold">
-                  Home
-                </Link>
-                <Link href="/get-credits" className="text-ivory font-semibold hover:text-muted-gold">
-                  Pricing
-                </Link>
-              </>
-            )}
-       {SHOW_TEAMS && (
-  <Link href="/teams" className="text-ivory font-semibold hover:text-muted-gold">
-    Teams
-  </Link>
-)}
-
-         </nav>
+          {/* DESKTOP HOMEPAGE TABS */}
+          {pathname === "/" && (
+            <nav className="hidden md:flex items-center gap-6">
+              <Link
+                href="/#examples"
+                className="text-ivory font-semibold hover:text-muted-gold"
+              >
+                Examples
+              </Link>
+              <Link
+                href="/#pricing"
+                className="text-ivory font-semibold hover:text-muted-gold"
+              >
+                Pricing
+              </Link>
+              <Link
+                href="/#faq"
+                className="text-ivory font-semibold hover:text-muted-gold"
+              >
+                FAQ
+              </Link>
+            </nav>
           )}
 
-         {/* Hamburger */}
-<DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
-      <HamburgerMenuIcon className="h-6 w-6 text-muted-gold" />
-    </Button>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent className="w-48 z-50">
-    {/* Dark mode toggle */}
-    <DropdownMenuItem className="flex justify-center py-2">
-      <ThemeToggle />
-    </DropdownMenuItem>
-    <DropdownMenuSeparator />
+          {/* LOGGED-IN NAV (non-root pages, desktop hidden on mobile) */}
+          {isLoggedIn && pathname !== "/" && (
+            <nav className="hidden md:flex items-center gap-6">
+              <Link
+                href="/overview"
+                className="text-ivory font-semibold hover:text-muted-gold"
+                onClick={blockNav}
+              >
+                Home
+              </Link>
+              <Link
+                href="/get-credits"
+                className="text-ivory font-semibold hover:text-muted-gold"
+                onClick={blockNav}
+              >
+                Pricing
+              </Link>
+              {SHOW_TEAMS && (
+                <Link
+                  href="/teams"
+                  className="text-ivory font-semibold hover:text-muted-gold"
+                  onClick={blockNav}
+                >
+                  Teams
+                </Link>
+              )}
+            </nav>
+          )}
 
-    {isLoggedIn ? (
-      <>
-        <DropdownMenuItem asChild>
-          <Link href="/overview" onClick={blockNav}>
-            Dashboard
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/get-credits" onClick={blockNav}>
-            Pricing
-          </Link>
-        </DropdownMenuItem>
-        {SHOW_TEAMS && (
-  <DropdownMenuItem asChild>
-    <Link href="/teams" onClick={blockNav}>
-      Teams
-    </Link>
-  </DropdownMenuItem>
-)}
+          {/* RIGHT-HAND GROUP: Hamburger & Dashboard CTA */}
+          <div className="flex items-center space-x-2">
+            {/* HAMBURGER & DROPDOWN */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
+                  <HamburgerMenuIcon className="h-6 w-6 text-muted-gold" />
+                </Button>
+              </DropdownMenuTrigger>
 
-        <DropdownMenuItem asChild>
-          <a href="mailto:support@aimavenstudio.com">Contact</a>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <Button
-            variant="ghost"
-            className="w-full text-left"
-            onClick={async () => {
-              await supabase.auth.signOut();
-              router.push("/");
-            }}
-          >
-            Log out
-          </Button>
-        </DropdownMenuItem>
-      </>
-    ) : (
-      <DropdownMenuItem asChild>
-        <Link href="/login">
-          <Button variant="ghost" className="w-full text-left">
-            Log in
-          </Button>
-        </Link>
-      </DropdownMenuItem>
-    )}
-  </DropdownMenuContent>
-</DropdownMenu>
+              <DropdownMenuContent className="w-48 z-50">
+                {/* ONLY ON MOBILE HOMEPAGE: tabs */}
+                {pathname === "/" && (
+                  <div className="md:hidden">
+                    <DropdownMenuItem asChild>
+                      <Link href="/#examples">Examples</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/#pricing">Pricing</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/#faq">FAQ</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </div>
+                )}
 
+                {/* Dark mode toggle */}
+                <DropdownMenuItem className="flex justify-center py-2">
+                  <ThemeToggle />
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+
+                {/* Auth‐aware items */}
+                {isLoggedIn ? (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/overview" onClick={blockNav}>
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <Button
+                        variant="ghost"
+                        className="w-full text-left"
+                        onClick={async () => {
+                          await supabase.auth.signOut();
+                          router.push("/");
+                        }}
+                      >
+                        Log out
+                      </Button>
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <DropdownMenuItem asChild>
+                    <Link href="/login">
+                      <Button variant="ghost" className="w-full text-left">
+                        Log in
+                      </Button>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Dashboard CTA (desktop only) */}
+            {isLoggedIn && (
+              <Link href="/overview">
+                <Button className="hidden md:block bg-muted-gold text-ivory">
+                  Go to Dashboard
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </header>
     </>

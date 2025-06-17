@@ -3,22 +3,22 @@ import TestimonialCard from "@/components/homepage/testimonial-card"
 
 const testimonials = [
   {
-    quote: "The quality of these AI headshots is incredible. I've updated all my professional profiles and received so many compliments.",
-    author: "Sarah Johnson",
-    role: "Marketing Director",
-    avatarUrl: "/homepage/example0001.png"
+    quote: "Wow—these are amazing. The level of detail and professionalism blew me away!",
+    author: "Daniel Morgan",
+    role: "Operations Manager",
+    avatarUrl: "/Daniel1.png"
   },
   {
-    quote: "As a freelancer, having professional headshots was a game-changer for my personal brand. The process was so quick and easy!",
-    author: "Michael Chen",
-    role: "UX Designer",
-    avatarUrl: "/homepage/example0002.png"
+    quote: "The process was seamless and the results are absolutely stunning—I’ve never felt more confident sharing my headshot!",
+    author: "Olivia Martinez",
+    role: "Marketing Strategist",
+    avatarUrl: "/Olivia2.png"
   },
   {
-    quote: "I was skeptical at first, but the results blew me away. These look better than the professional photos I paid hundreds for.",
-    author: "Mark Williams",
-    role: "Software Engineer",
-    avatarUrl: "/homepage/example0003.png"
+    quote: "The results gave me chills. Seeing myself in this light is so inspirational and motivating!",
+    author: "Emily Wong",
+    role: "Nurse Practitioner",
+    avatarUrl: "/emily2.png"
   }
 ]
 
