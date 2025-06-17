@@ -211,17 +211,6 @@ export default function ThreeDBeforeAfterGallery() {
               </div>
             </div>
 
-            {/* LABEL */}
-            <motion.div
-              key={`lbl-${personIndex}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="absolute -bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-charcoal/90 px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg"
-            >
-              {current.label}
-            </motion.div>
           </div>
         </div>
       </div>

@@ -286,9 +286,7 @@ export default function Navbar() {
             {/* Dashboard CTA (desktop only) */}
             {isLoggedIn && (
               <Link href="/overview">
-                <Button className="hidden md:block bg-muted-gold text-ivory">
-                  Go to Dashboard
-                </Button>
+               
               </Link>
             )}
           </div>
