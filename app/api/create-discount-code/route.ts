@@ -1,6 +1,6 @@
 // File: app/api/create-discount-code/route.ts
 console.log("▶︎ STRIPE_SECRET_KEY:", process.env.STRIPE_SECRET_KEY);
-console.log("▶︎ STRIPE_COUPON_ID: ",  process.env.STRIPE_COUPON_ID);
+console.log("▶︎ STRIPE_FIRST_ORDER_COUPON_ID: ",  process.env.STRIPE_FIRST_ORDER_COUPON_ID);
 
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
@@ -19,9 +19,9 @@ export async function POST(req: Request) {
     }
 
     // Get base coupon ID from env
-    const couponId = process.env.STRIPE_COUPON_ID;
+    const couponId = process.env.STRIPE_FIRST_ORDER_COUPON_ID;
     if (!couponId) {
-      return NextResponse.json({ error: "Missing STRIPE_COUPON_ID in env" }, { status: 500 });
+      return NextResponse.json({ error: "Missing STRIPE_FIRST_ORDER_COUPON_ID in env" }, { status: 500 });
     }
 
     // Set expiration for 24 hours from now
