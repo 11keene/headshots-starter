@@ -251,18 +251,35 @@ const astriaPrompt = `sks ${className} ${promptText}`;
     console.error("❌ Could not load user info:", err);
   }
 
+// 6) Send “Photos Ready” to Zapier (instead of GHL inbound)
   if (userEmail) {
     const { data: allRows } = await supabase
       .from("generated_images")
-      .select("image_url")
+     .select("image_url")
       .eq("pack_id", packId);
     const galleryUrls = (allRows || []).map((r) => r.image_url);
-    await fetch(process.env.GHL_INBOUND_WEBHOOK_URL!, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: userEmail, firstName, lastName, packId, galleryUrls }),
-    });
-    console.log(`📣 GHL webhook sent to ${userEmail}`);
+
+    try {
+      const payload = { email: userEmail, firstName, lastName, packId, galleryUrls };
+      console.log("📣 Sending Photos Ready to Zapier:", payload);
+
+      const zapRes = await fetch(process.env.ZAPIER_PHOTOS_READY_HOOK!, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+       body:    JSON.stringify(payload),
+      });
+
+      if (!zapRes.ok) {
+        const text = await zapRes.text();
+        console.error(`❌ Zapier hook failed (${zapRes.status}):`, text);
+      } else {
+        console.log("✅ Zapier Photos Ready webhook sent");
+     }
+   } catch (err) {
+      console.error("❌ Error sending Zapier webhook:", err);
+    }
+  } else {
+    console.warn("⚠️ No userEmail – skipping Zapier Photos Ready hook");
   }
 
   // 7) 20-minute fallback
