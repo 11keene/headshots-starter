@@ -1,22 +1,45 @@
-import Redis from "ioredis";
+// lib/redisClient.ts
+import { Redis } from "@upstash/redis";
 
-const redis = new Redis(process.env.REDIS_URL!, {
-  maxRetriesPerRequest: null,
-  enableOfflineQueue: true, // ✅ Queue commands if disconnected
-  retryStrategy(times) {
-    return Math.min(times * 50, 2000); // Backoff retry: 50ms, 100ms, ..., max 2s
-  },
-  tls: {} // ✅ Enforce TLS when using rediss:// (required by Upstash)
-});
+type RedisClient = {
+  lpush(key: string, value: string): Promise<number>;
+  rpop(key: string): Promise<string | null>;
+  // add these two for your debug routes:
+  set(key: string, value: string): Promise<string | null>;
+  get(key: string): Promise<string | null>;
+};
 
-redis.on("error", (err) => {
-  console.error("[Redis] Connection error:", err);
-});
+let redisClient: RedisClient;
 
-setInterval(() => {
-  redis.ping().catch(() => {
-    // Retry will auto-handle this, no crash
-  });
-}, 30_000);
+if (
+  process.env.UPSTASH_REDIS_REST_URL &&
+  process.env.UPSTASH_REDIS_REST_TOKEN
+) {
+  // Runtime: real Upstash client
+  redisClient = new Redis({
+    url:   process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  }) as RedisClient;
+} else {
+  // Build-time stub: include set & get
+  redisClient = {
+    lpush: async () => {
+      console.warn("[Redis Stub] lpush in build");
+      return 0;
+    },
+    rpop: async () => {
+      console.warn("[Redis Stub] rpop in build");
+      return null;
+    },
+    set: async (key, value) => {
+      console.warn("[Redis Stub] set in build:", key, value);
+      return value;
+    },
+    get: async (key) => {
+      console.warn("[Redis Stub] get in build:", key);
+      return null;
+    },
+  };
+}
 
-export default redis;
+export default redisClient;
