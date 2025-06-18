@@ -1,3 +1,4 @@
+// lib/redisClient.ts
 import { Redis as UpstashRedis } from "@upstash/redis";
 
 type Client = {
@@ -12,27 +13,27 @@ if (
   !process.env.UPSTASH_REDIS_REST_TOKEN
 ) {
   console.warn(
-    "[Redis] No Upstash credentials found—using stub client."
+    "[Redis] ⚠️ Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN—using no-op stub."
   );
   client = {
     lpush: async () => 0,
     rpop: async () => null,
   };
 } else {
-  const real = new UpstashRedis({
+  const redis = new UpstashRedis({
     url: process.env.UPSTASH_REDIS_REST_URL,
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
   });
 
   client = {
-    lpush: real.lpush.bind(real),
+    lpush: redis.lpush.bind(redis),
     rpop: async (key: string) => {
-      // Upstash REST client sometimes returns { result: string }
-      const res = await real.rpop(key);
-      if (res && typeof res === "object" && "result" in (res as any)) {
-        return (res as any).result as string;
+      // Upstash REST sometimes returns { result: string }
+      const raw = await redis.rpop(key);
+      if (raw && typeof raw === "object" && "result" in (raw as any)) {
+        return (raw as any).result;
       }
-      return res as string | null;
+      return raw as string | null;
     },
   };
 }
