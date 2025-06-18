@@ -26,29 +26,34 @@ function PopupOverlay({ onClose }: { onClose: () => void }) {
     requestAnimationFrame(() => setVisible(true));
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const res = await fetch("/api/create-discount-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, email }),
-      });
+  try {
+    const res = await fetch("/api/create-discount-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ firstName, email }),
+    });
 
-      if (res.ok) {
-        setSuccess(true);
-      } else {
-        alert("Something went wrong. Please try again.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("An error occurred.");
-    } finally {
-      setLoading(false);
+    const json = await res.json();
+
+    if (res.ok) {
+      console.log("✅ Promo code received:", json.promoCode);
+      setSuccess(true);
+    } else {
+      console.error("❌ Server error:", json.error);
+      alert("Error: " + json.error);
     }
-  };
+  } catch (err) {
+    console.error("❌ Network error:", err);
+    alert("An unexpected error occurred. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div
@@ -86,8 +91,10 @@ function PopupOverlay({ onClose }: { onClose: () => void }) {
             </h2>
             <p className="text-sm text-black mb-4">
               Your code will be emailed after sign up.
-              <br />Check spam if you don't see it.
-              <br /><span className="font-semibold">Valid for 24 hours.</span>
+              <br />
+              Check spam if you don't see it.
+              <br />
+              <span className="font-semibold">Valid for 24 hours.</span>
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-3">

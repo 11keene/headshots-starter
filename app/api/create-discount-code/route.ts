@@ -1,11 +1,8 @@
 // File: app/api/create-discount-code/route.ts
-console.log("▶︎ STRIPE_SECRET_KEY:", process.env.STRIPE_SECRET_KEY);
-console.log("▶︎ STRIPE_FIRST_ORDER_COUPON_ID: ",  process.env.STRIPE_FIRST_ORDER_COUPON_ID);
 
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-// Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-05-28.basil",
 });
@@ -13,46 +10,65 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(req: Request) {
   try {
     const { email, firstName } = await req.json();
+    console.log("📥 Incoming request:", { email, firstName });
 
     if (!email) {
+      console.error("❌ Missing email");
       return NextResponse.json({ error: "Missing email" }, { status: 400 });
     }
 
-    // Get base coupon ID from env
     const couponId = process.env.STRIPE_FIRST_ORDER_COUPON_ID;
     if (!couponId) {
-      return NextResponse.json({ error: "Missing STRIPE_FIRST_ORDER_COUPON_ID in env" }, { status: 500 });
+      console.error("❌ Missing coupon ID");
+      return NextResponse.json({ error: "Missing STRIPE_FIRST_ORDER_COUPON_ID" }, { status: 500 });
     }
 
-    // Set expiration for 24 hours from now
-    const expiresAt = Math.floor(Date.now() / 1000) + 86400; // 24h in seconds
-
-    // Generate unique code (or you can use a more elegant randomizer)
+    const expiresAt = Math.floor(Date.now() / 1000) + 86400; // 24h from now
     const uniqueCode = `AIMAVEN-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
-    // Create promotion code
     const promo = await stripe.promotionCodes.create({
       coupon: couponId,
       code: uniqueCode,
       max_redemptions: 1,
       expires_at: expiresAt,
       metadata: {
-        source: "popup_form",
         email,
-        firstName: firstName || "",
+        firstName,
+        source: "popup",
       },
     });
+
+    console.log("✅ Promo code created:", promo.code);
+
+    // ✅ Step: send promo to Zapier (this is server-side, so NO CORS issues)
+    const zapPayload = {
+      email,
+      firstName,
+      promo_code: promo.code,
+      expiresAt: promo.expires_at,
+    };
+
+    const zapRes = await fetch("https://hooks.zapier.com/hooks/catch/21354233/uomxwm6/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(zapPayload),
+    });
+
+    const zapText = await zapRes.text();
+    console.log("📤 Zapier response:", zapRes.status, zapText);
+
+    if (!zapRes.ok) {
+      throw new Error("Zapier failed: " + zapRes.status);
+    }
 
     return NextResponse.json({
       success: true,
       promoCode: promo.code,
       expiresAt: promo.expires_at,
     });
-  } catch (error: any) {
-    console.error("Error creating promo code:", error);
-    return NextResponse.json(
-      { error: error.message || "Failed to create promo code" },
-      { status: 500 }
-    );
+
+  } catch (err: any) {
+    console.error("❌ Error in discount code route:", err);
+    return NextResponse.json({ error: err.message || "Something went wrong" }, { status: 500 });
   }
 }
