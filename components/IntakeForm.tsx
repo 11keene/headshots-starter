@@ -276,12 +276,13 @@ const MEN_QUESTIONS: Question[] = [
       { label: "Bald", value: "bald", img: "/Bald.png" },
       { label: "Buzz Cut", value: "buzz", img: "/BuzzCut.png" },
       { label: "Medium", value: "medium", img: "/MediumLength.png" },
-            { label: "Curly", value: "curly", img: "/curlyman.png" },
-                        { label: "Locs", value: "locs", img: "" },
+            { label: "Curly", value: "curly", img: "/curlymen.png" },
+                     
+      { label: "Long", value: "long", img: "/Longhair.png" },  
+            { label: "Locs", value: "locs", img: "/locsmen.png" },
 
 
 
-      { label: "Long", value: "long", img: "/Longhair.png" }
     ]
   },
   {

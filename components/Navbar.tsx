@@ -187,34 +187,26 @@ export default function Navbar() {
             </nav>
           )}
 
-          {/* LOGGED-IN NAV (non-root pages, desktop hidden on mobile) */}
-          {isLoggedIn && pathname !== "/" && (
-            <nav className="hidden md:flex items-center gap-6">
-              <Link
-                href="/overview"
-                className="text-ivory font-semibold hover:text-muted-gold"
-                onClick={blockNav}
-              >
-                Home
-              </Link>
-              <Link
-                href="/get-credits"
-                className="text-ivory font-semibold hover:text-muted-gold"
-                onClick={blockNav}
-              >
-                Pricing
-              </Link>
-              {SHOW_TEAMS && (
-                <Link
-                  href="/teams"
-                  className="text-ivory font-semibold hover:text-muted-gold"
-                  onClick={blockNav}
-                >
-                  Teams
-                </Link>
-              )}
-            </nav>
-          )}
+    {/* LOGGED-IN NAV (visible ONLY on /overview, desktop hidden on mobile) */}
+{isLoggedIn && pathname === "/overview" && (
+  <nav className="hidden md:flex items-center gap-6">
+    <Link
+      href="/overview"
+      className="text-ivory font-semibold hover:text-muted-gold"
+      onClick={blockNav}
+    >
+      Home
+    </Link>
+    <Link
+      href="/get-credits"
+      className="text-ivory font-semibold hover:text-muted-gold"
+      onClick={blockNav}
+    >
+      Pricing
+    </Link>
+  </nav>
+)}
+
 
           {/* RIGHT-HAND GROUP: Hamburger & Dashboard CTA */}
           <div className="flex items-center space-x-2">

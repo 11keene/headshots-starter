@@ -43,6 +43,8 @@ export async function POST(request: Request) {
     // ← this ties the Checkout Session back to your Supabase user
     client_reference_id:  user_id,
     metadata:             { user_email },
+  
+    allow_promotion_codes: true, // add this line
 
     success_url: successUrl,
     cancel_url:  cancelUrl,

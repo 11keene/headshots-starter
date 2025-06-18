@@ -103,26 +103,28 @@ if (!user) {
     return new NextResponse("Server misconfiguration", { status: 500 });
   }
 
-  const sessionParams: Stripe.Checkout.SessionCreateParams = {
-    payment_method_types: ["card"],
-    mode: "payment",
-    success_url: `${baseUrl}/status/${existingPackId}`,
-    cancel_url:  `${baseUrl}/cancelled`,
-    line_items: [
-      {
-        price:    stripePriceId,
-        quantity: 1,
-      },
-    ],
-    metadata: {
-      user_id:  user.id,
-      packId:   existingPackId,
-      packType,
-      gender,
-      ...(teamId ? { teamId } : {}),
+const sessionParams: Stripe.Checkout.SessionCreateParams = {
+  payment_method_types: ["card"],
+  mode: "payment",
+  success_url: `${baseUrl}/status/${existingPackId}`,
+cancel_url: `${baseUrl}/overview`,
+  line_items: [
+    {
+      price: stripePriceId,
+      quantity: 1,
     },
-    customer_email: user.email,
-  };
+  ],
+  metadata: {
+    user_id: user.id,
+    packId: existingPackId,
+    packType,
+    gender,
+    ...(teamId ? { teamId } : {}),
+  },
+  customer_email: user.email,
+  allow_promotion_codes: true, // ← ✅ This shows the promo code box!
+};
+
 
   // 6) Attach coupon if allowed
   if (applyTeamDiscount) {
