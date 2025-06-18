@@ -1,36 +1,40 @@
-// File: lib/redisClient.ts
-import { Redis } from "@upstash/redis";
+import { Redis as UpstashRedis } from "@upstash/redis";
 
-type RedisClient = {
-  lpush(key: string, value: string): Promise<number>;
+type Client = {
+  lpush(key: string, val: string): Promise<number>;
   rpop(key: string): Promise<string | null>;
 };
 
-const hasUpstash =
-  Boolean(process.env.UPSTASH_REDIS_REST_URL) &&
-  Boolean(process.env.UPSTASH_REDIS_REST_TOKEN);
+let client: Client;
 
-let redisClient: RedisClient;
-
-if (hasUpstash) {
-  // Runtime on Render (or wherever your env vars are set): use the Upstash REST client
-  redisClient = new Redis({
-    url:   process.env.UPSTASH_REDIS_REST_URL!,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-  }) as unknown as RedisClient;
+if (
+  !process.env.UPSTASH_REDIS_REST_URL ||
+  !process.env.UPSTASH_REDIS_REST_TOKEN
+) {
+  console.warn(
+    "[Redis] No Upstash credentials found—using stub client."
+  );
+  client = {
+    lpush: async () => 0,
+    rpop: async () => null,
+  };
 } else {
-  // Build‐time or missing credentials: stub out so build/static‐gen never hits a socket
-  console.warn("[Redis] No Upstash credentials—using stub client.");
-  redisClient = {
-    lpush: async () => {
-      console.warn("[Redis Stub] lpush called");
-      return 0;
-    },
-    rpop: async () => {
-      console.warn("[Redis Stub] rpop called");
-      return null;
+  const real = new UpstashRedis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+
+  client = {
+    lpush: real.lpush.bind(real),
+    rpop: async (key: string) => {
+      // Upstash REST client sometimes returns { result: string }
+      const res = await real.rpop(key);
+      if (res && typeof res === "object" && "result" in (res as any)) {
+        return (res as any).result as string;
+      }
+      return res as string | null;
     },
   };
 }
 
-export default redisClient;
+export default client;
