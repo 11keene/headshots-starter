@@ -88,10 +88,16 @@ async function waitForPromptImages(
 // ──────────────────────────────────────────────────────────────────────────────
 async function processJob(job: any) {
   console.log("🎯 Processing job:", job);
+    // -------------- NEW --------------
+  // Astria expects a class name like "pack<id-without-hyphens>"
+  const packIdNoHyphens = job.packId.replace(/-/g, "");
+  const className       = `pack${packIdNoHyphens}`;
+  // ----------------------------------
   const { userId, packId, gender, packType, sessionId } = job;
   if (packType === "multi-purpose") return;
+  
 
-  // 1) Wait for uploads
+    // 1) Wait for uploads
   const imageUrls = await waitForUploads(supabase, packId);
   console.log("🖼️ Upload URLs:", imageUrls);
 
@@ -103,10 +109,13 @@ async function processJob(job: any) {
     .single();
   if (packErr) throw packErr;
 
+  // (from step 2) we already computed:
+  // const packIdNoHyphens = packId.replace(/-/g, "");
+  // const className       = `pack${packIdNoHyphens}`;
+
   let tuneId = packRow?.tune_id;
   if (!tuneId) {
-    const sanitizedName = `Pack${packId.replace(/[^a-zA-Z0-9 ]/g, "")}`;
-    console.log(`Creating new tune for pack ${packId} with name ${sanitizedName}`);
+    console.log(`Creating new tune for pack ${packId} with className ${className}`);
 
     const tuneRes = await fetch("https://api.astria.ai/tunes", {
       method: "POST",
@@ -116,31 +125,34 @@ async function processJob(job: any) {
       },
       body: JSON.stringify({
         tune: {
-          name: sanitizedName,
-          title: `PackTune-${packId}`,
-          branch: "flux1",
-          class_name: "woman",
-          model_type: "lora",
+          name:           className,            // use hyphen-free className
+          title:          `PackTune-${packId}`,
+          branch:         "flux1",
+          model_type:     "lora",
           face_detection: true,
-          preset: "flux-lora-portrait",
-          image_urls: imageUrls,
-          token: "sks",
-          steps: 300,
-          base_tune: "flux.1 dev"
+          preset:         "flux-lora-portrait",
+          image_urls:     imageUrls,
+          token:          "sks",
+          steps:          300,
+          base_tune:      "flux.1 dev"
         },
       }),
     });
 
     if (!tuneRes.ok) {
       const errStatus = tuneRes.status;
-      const errBody = await tuneRes.text();
+      const errBody   = await tuneRes.text();
       console.error(`❌ Astria Tune creation error ${errStatus}:`, errBody);
       throw new Error(`Astria Tune failed ${errStatus}: ${errBody}`);
     }
 
     const tuneData = await tuneRes.json();
     tuneId = tuneData.id;
-    await supabase.from("packs").update({ tune_id: tuneId }).eq("id", packId);
+    await supabase
+      .from("packs")
+      .update({ tune_id: tuneId })
+      .eq("id", packId);
+
     console.log(`✅ Created tune ${tuneId} for pack ${packId}`);
   }
 
@@ -162,10 +174,10 @@ async function processJob(job: any) {
 // inside your for-each-prompt loop, after tuneId and packId are known:
 
 // 1) Reconstruct the exact tune name you used when creating it:
-const tuneName = `pack${packId}`;          // must match tune.name exactly
 
 // 2) Prefix EVERY prompt text with both `sks` and your tuneName:
-const astriaPrompt = `sks ${tuneName} ${promptText}`;
+// Reuse the exact className we passed into tune.name
+const astriaPrompt = `sks ${className} ${promptText}`;
     console.log(`Submitting prompt: ${astriaPrompt}`);
 
     const sendRes = await fetch(
@@ -273,22 +285,39 @@ const astriaPrompt = `sks ${tuneName} ${promptText}`;
 
 async function main() {
   console.log("🚀 Worker started");
-  while (true) {
-    // rpop may return string | null | object
-    const raw = await redis.rpop("jobQueue");
-    if (raw) {
-      console.log("🔄 Raw job from Redis:", raw);
-      // if it's a string, JSON.parse; if it's already an object, use it directly
-      const job = typeof raw === "string"
-        ? JSON.parse(raw)
-        : raw;
-      console.log("🎯 Processing job:", job);
-      await processJob(job);
-    } else {
-      // no job yet, wait a bit
-      await new Promise(r => setTimeout(r, 2000));
-    }
+while (true) {
+  const raw = await redis.rpop("jobQueue");
+  if (!raw) {
+    // nothing to do yet
+    await new Promise((r) => setTimeout(r, 2000));
+    continue;
   }
+
+  console.log("🔄 Raw job from Redis:", raw);
+
+  let job: {
+    userId: string;
+    packId: string;
+    gender: string;
+    packType: string;
+    sessionId: string;
+  };
+
+  if (typeof raw === "string") {
+    try {
+      job = JSON.parse(raw);
+    } catch (err) {
+      console.error("❌ Could not JSON.parse job payload:", raw, err);
+      continue; // skip this bad entry
+    }
+  } else {
+    job = raw;
+  }
+
+  console.log("🎯 Processing job:", job);
+  await processJob(job);
+}
+
 }
 
 main();
