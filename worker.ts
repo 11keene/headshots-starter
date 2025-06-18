@@ -123,7 +123,6 @@ async function processJob(job: any) {
   if (packErr) throw packErr;
   let tuneId = packRow?.tune_id;
   if (!tuneId) {
-    // Enhanced: Detailed error logging on tune creation
     const tuneRes = await fetch("https://api.astria.ai/tunes", {
       method: "POST",
       headers: {
@@ -131,11 +130,10 @@ async function processJob(job: any) {
         Authorization: `Bearer ${process.env.ASTRIA_API_KEY}`,
       },
       body: JSON.stringify({
-        tune: {
-          image_urls: imageUrls,
-          tags: ["headshot", gender, packType], // example tags
-          // add other required fields here
-        },
+        title: `Tune for pack ${packId}`,
+        name: `pack_${packId}`,
+        images: imageUrls,
+        tags: ["headshot", gender, packType],
       }),
     });
     if (!tuneRes.ok) {
@@ -166,7 +164,6 @@ async function processJob(job: any) {
   // 5) For each prompt, submit to Astria and insert images
   for (const promptText of prompts) {
     const astriaPrompt = `sks ${gender} ${promptText}`;
-    // Submit prompt with error logging
     const sendRes = await fetch(
       `https://api.astria.ai/tunes/${tuneId}/prompts`,
       {
@@ -197,7 +194,6 @@ async function processJob(job: any) {
       continue;
     }
 
-    // STEP 2A: Poll prompt images with limited retries
     let images: string[] = [];
     const maxPollAttempts = 10;
     for (let i = 1; i <= maxPollAttempts; i++) {
@@ -210,7 +206,6 @@ async function processJob(job: any) {
       console.warn(`⚠️ Only received ${images.length}/3 images for prompt ${promptId}`);
     }
 
-    // STEP 2B: Retry Supabase inserts
     const insertData = images.map((url) => ({
       prompt_id: promptId,
       pack_id: packId,
@@ -227,7 +222,6 @@ async function processJob(job: any) {
     if (!inserted) console.error(`Failed to insert images for prompt ${promptId}`);
   }
 
-  // Step 5A: Look up the user’s email
   let userEmail = "";
   let firstName = "";
   let lastName = "";
@@ -246,7 +240,6 @@ async function processJob(job: any) {
     console.error("❌ Could not load user email:", err);
   }
 
-  // Step 5B: Trigger the GHL webhook
   const webhookUrl = process.env.GHL_INBOUND_WEBHOOK_URL!;
   if (userEmail) {
     const { data: allRows } = await supabase
@@ -274,7 +267,6 @@ async function processJob(job: any) {
     console.warn("⚠️ No userEmail — skipping GHL webhook");
   }
 
-  // Step 5C: Fallback after 20 minutes
   setTimeout(async () => {
     const { data: rowsAfter20 } = await supabase
       .from("generated_images")
@@ -302,7 +294,6 @@ async function processJob(job: any) {
   }, 20 * 60 * 1000);
 }
 
-// Run the worker loop
 async function main() {
   console.log("🚀 Worker started");
   while (true) {
