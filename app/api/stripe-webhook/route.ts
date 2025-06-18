@@ -4,26 +4,23 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import redis from "@/lib/redisClient";
 
+export const config = {
+  api: { bodyParser: false },
+};
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-05-28.basil",
 });
-
-
 
 export async function POST(req: Request) {
   console.log("🥁 [stripe-webhook] ENTERED webhook handler");
 
   const rawBody = await req.text();
-  const sig = req.headers.get("stripe-signature");
-
+  const sig     = req.headers.get("stripe-signature");
   if (!sig) {
-    console.error("❌ [Stripe Webhook] No Stripe signature header found.");
-    return NextResponse.json({ error: "Missing Stripe signature" }, { status: 400 });
+    console.error("❌ Missing Stripe signature header");
+    return new NextResponse("Missing signature", { status: 400 });
   }
-
-  console.log("🔐 [Webhook] Raw body length:", rawBody.length);
-  console.log("🔐 [Webhook] Stripe signature:", sig);
-  console.log("🔐 [Webhook] REDIS_URL is:", process.env.REDIS_URL); // sanity check
 
   let event: Stripe.Event;
   try {
@@ -32,42 +29,41 @@ export async function POST(req: Request) {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-    console.log("✅ [Stripe Webhook] Signature verified. Event:", event.type);
+    console.log("✅ [Stripe Webhook] Signature verified:", event.type);
   } catch (err) {
-    console.error("❌ [Stripe Webhook] Signature verification failed:", err);
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    console.error("❌ Signature verification failed:", err);
+    return new NextResponse("Invalid signature", { status: 400 });
   }
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const metadata = session.metadata || {};
-    const userId = metadata.user_id;
-    const packId = metadata.packId;
-    const gender = metadata.gender;
-    const packType = metadata.packType;
+    const md      = session.metadata || {};
+    const userId  = md.userId   || md.user_id;
+    const packId  = md.packId   || md.pack_id;
+    const gender  = md.gender;
+    const packType= md.packType || md.pack_type;
 
-    console.log("📦 [Webhook] Session metadata:", metadata);
+    console.log("📦 [Webhook] Parsed metadata:", { userId, packId, gender, packType });
 
     if (!userId || !packId || !gender) {
-      console.error("❌ [Stripe Webhook] Missing metadata: userId, packId, or gender");
-      return NextResponse.json({ error: "Missing metadata" }, { status: 400 });
+      console.error("❌ Missing metadata fields");
+      return new NextResponse("Missing metadata", { status: 400 });
     }
 
     const job = JSON.stringify({ userId, packId, gender, packType, sessionId: session.id });
-
     try {
-      console.log("📦 About to push to Redis:", job);
+      console.log("📦 Pushing job to Redis:", job);
       await redis.lpush("jobQueue", job);
-      console.log("📬 Job enqueued to Redis:", job);
+      console.log("📬 Job enqueued to Redis");
     } catch (err) {
-      console.error("❌ Failed to enqueue job to Redis:", err);
-      return NextResponse.json({ error: "Redis enqueue failed" }, { status: 500 });
+      console.error("❌ Redis enqueue failed:", err);
+      return new NextResponse("Redis enqueue failed", { status: 500 });
     }
   } else {
     console.log("ℹ️ [Stripe Webhook] Ignored event type:", event.type);
   }
 
-  return NextResponse.json({ received: true }, { status: 200 });
+  return new NextResponse("Received", { status: 200 });
 }
 
 export async function GET() {

@@ -158,7 +158,14 @@ async function processJob(job: any) {
 
   // 5) Process each prompt
   for (const promptText of prompts) {
-    const astriaPrompt = `sks ${gender} ${promptText}`;
+// after:
+// inside your for-each-prompt loop, after tuneId and packId are known:
+
+// 1) Reconstruct the exact tune name you used when creating it:
+const tuneName = `pack${packId}`;          // must match tune.name exactly
+
+// 2) Prefix EVERY prompt text with both `sks` and your tuneName:
+const astriaPrompt = `sks ${tuneName} ${promptText}`;
     console.log(`Submitting prompt: ${astriaPrompt}`);
 
     const sendRes = await fetch(
