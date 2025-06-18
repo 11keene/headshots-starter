@@ -19,7 +19,7 @@ export default function AnnouncementBar() {
     >
       <div className="container mx-auto flex items-center justify-center">
         <p>
-🎉 Get **50% off** your first order (only for the first 100 people)!
+🎉 50% off for the first 100 people!
         </p>
         <button
           onClick={() => setIsVisible(false)}
