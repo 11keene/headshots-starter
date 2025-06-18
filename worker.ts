@@ -274,9 +274,20 @@ const astriaPrompt = `sks ${tuneName} ${promptText}`;
 async function main() {
   console.log("🚀 Worker started");
   while (true) {
-    const jobJson = await redis.rpop("jobQueue");
-    if (jobJson) await processJob(JSON.parse(jobJson));
-    else await new Promise((r) => setTimeout(r, 2000));
+    // rpop may return string | null | object
+    const raw = await redis.rpop("jobQueue");
+    if (raw) {
+      console.log("🔄 Raw job from Redis:", raw);
+      // if it's a string, JSON.parse; if it's already an object, use it directly
+      const job = typeof raw === "string"
+        ? JSON.parse(raw)
+        : raw;
+      console.log("🎯 Processing job:", job);
+      await processJob(job);
+    } else {
+      // no job yet, wait a bit
+      await new Promise(r => setTimeout(r, 2000));
+    }
   }
 }
 
