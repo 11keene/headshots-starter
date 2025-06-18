@@ -91,11 +91,11 @@ async function processJob(job: any) {
   const { userId, packId, gender, packType, sessionId } = job;
   if (packType === "multi-purpose") return;
 
-  // 1) Wait for user uploads
+  // 1) Wait for uploads
   const imageUrls = await waitForUploads(supabase, packId);
   console.log("🖼️ Upload URLs:", imageUrls);
 
-  // 2) Get or create Astria tune
+  // 2) Get or create tune
   const { data: packRow, error: packErr } = await supabase
     .from("packs")
     .select("tune_id")
@@ -106,7 +106,7 @@ async function processJob(job: any) {
   let tuneId = packRow?.tune_id;
   if (!tuneId) {
     const sanitizedName = `Pack${packId.replace(/[^a-zA-Z0-9 ]/g, "")}`;
-    console.log(`Creating tune with name: ${sanitizedName}`);
+    console.log(`Creating new tune for pack ${packId} with name ${sanitizedName}`);
 
     const tuneRes = await fetch("https://api.astria.ai/tunes", {
       method: "POST",
@@ -119,16 +119,15 @@ async function processJob(job: any) {
           name: sanitizedName,
           title: `PackTune-${packId}`,
           branch: "flux1",
-          image_urls: imageUrls,
-          token: "sks",
-          steps: 300,
           class_name: "woman",
           model_type: "lora",
           face_detection: true,
-          api: true,
           preset: "flux-lora-portrait",
-          base_tune: "Flux.1 dev"
-        }
+          image_urls: imageUrls,
+          token: "sks",
+          steps: 300,
+          base_tune: "flux.1 dev"
+        },
       }),
     });
 
@@ -142,10 +141,10 @@ async function processJob(job: any) {
     const tuneData = await tuneRes.json();
     tuneId = tuneData.id;
     await supabase.from("packs").update({ tune_id: tuneId }).eq("id", packId);
-    console.log(`✅ Tune created with ID: ${tuneId}`);
+    console.log(`✅ Created tune ${tuneId} for pack ${packId}`);
   }
 
-  // 3) Wait until tune is ready
+  // 3) Wait for tune ready
   await waitForTuneReady(tuneId);
 
   // 4) Generate GPT prompts
@@ -157,7 +156,7 @@ async function processJob(job: any) {
   if (!promptRes.ok) throw new Error("Prompt fetch failed");
   const { prompts } = await promptRes.json();
 
-  // 5) For each prompt, send to Astria and save images
+  // 5) Process each prompt
   for (const promptText of prompts) {
     const astriaPrompt = `sks ${gender} ${promptText}`;
     console.log(`Submitting prompt: ${astriaPrompt}`);
@@ -184,24 +183,20 @@ async function processJob(job: any) {
 
     if (!sendRes.ok) {
       const errText = await sendRes.text();
-      console.error(`❌ Failed to submit prompt: ${sendRes.status} ${errText}`);
+      console.error(`❌ Failed to submit prompt to Astria: ${sendRes.status} ${errText}`);
       continue;
     }
-
     const { id: promptId } = await sendRes.json();
     if (!promptId) continue;
 
-    // Poll for prompt images
     let images: string[] = [];
     for (let i = 1; i <= 10; i++) {
       images = await waitForPromptImages(tuneId, promptId);
       if (images.length === 3) break;
-      console.log(`⌛ Polling images for ${promptId} (${i}/10)`);
       await new Promise((r) => setTimeout(r, 3000));
     }
-    if (images.length !== 3) console.warn(`⚠️ Received ${images.length}/3 images for ${promptId}`);
+    if (images.length !== 3) console.warn(`⚠️ Only received ${images.length}/3 images for prompt ${promptId}`);
 
-    // Insert into Supabase
     const insertData = images.map((url) => ({
       prompt_id: promptId,
       pack_id: packId,
@@ -212,7 +207,7 @@ async function processJob(job: any) {
     await supabase.from("generated_images").insert(insertData);
   }
 
-  // 6) Gather user email for webhook
+  // 6) Fire GHL webhook
   let userEmail = "";
   let firstName = "";
   let lastName = "";
@@ -234,10 +229,9 @@ async function processJob(job: any) {
       lastName = usr.last_name;
     }
   } catch (err) {
-    console.error("❌ Error loading user info:", err);
+    console.error("❌ Could not load user info:", err);
   }
 
-  // 7) Fire GHL webhook
   if (userEmail) {
     const { data: allRows } = await supabase
       .from("generated_images")
@@ -252,7 +246,7 @@ async function processJob(job: any) {
     console.log(`📣 GHL webhook sent to ${userEmail}`);
   }
 
-  // 8) Fallback after 20 minutes
+  // 7) 20-minute fallback
   setTimeout(async () => {
     const { data: rowsAfter20 } = await supabase
       .from("generated_images")
@@ -263,16 +257,20 @@ async function processJob(job: any) {
       await fetch(process.env.GHL_INBOUND_WEBHOOK_URL!, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: userEmail,
-          firstName,
-          lastName,
-          packId,
-          galleryUrls: (rowsAfter20 ?? []).map((r) => r.image_url),
-          note: `Only ${count}/45 images after 20 minutes`,
-        }),
+        body: JSON.stringify({ email: userEmail, firstName, lastName, packId, galleryUrls: (rowsAfter20 ?? []).map((r) => r.image_url), note: `Only ${count}/45 images after 20 minutes` }),
       });
-            console.log(`⚠️ Fallback GHL webhook sent`);
-          }
-        }, 20 * 60 * 1000); // 20 minutes
-      }
+      console.log(`⚠️ Fallback GHL webhook sent`);
+    }
+  }, 20 * 60 * 1000);
+}
+
+async function main() {
+  console.log("🚀 Worker started");
+  while (true) {
+    const jobJson = await redis.rpop("jobQueue");
+    if (jobJson) await processJob(JSON.parse(jobJson));
+    else await new Promise((r) => setTimeout(r, 2000));
+  }
+}
+
+main();
