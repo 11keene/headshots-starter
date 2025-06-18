@@ -8,10 +8,10 @@ type Client = {
 
 let client: Client;
 
-if (
-  !process.env.UPSTASH_REDIS_REST_URL ||
-  !process.env.UPSTASH_REDIS_REST_TOKEN
-) {
+const url   = process.env.UPSTASH_REDIS_REST_URL?.trim();
+const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+
+if (!url || !token) {
   console.warn(
     "[Redis] ⚠️ Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN—using no-op stub."
   );
@@ -20,19 +20,17 @@ if (
     rpop: async () => null,
   };
 } else {
-  const redis = new UpstashRedis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  });
+  const redis = new UpstashRedis({ url, token });
 
   client = {
     lpush: redis.lpush.bind(redis),
     rpop: async (key: string) => {
-      // Upstash REST sometimes returns { result: string }
       const raw = await redis.rpop(key);
-      if (raw && typeof raw === "object" && "result" in (raw as any)) {
-        return (raw as any).result;
+      // Upstash REST always returns { result: T } under the hood
+      if (raw && typeof raw === "object" && "result" in raw) {
+        return (raw as any).result as string | null;
       }
+      // If the client already unwraps it, just return
       return raw as string | null;
     },
   };
