@@ -5,7 +5,6 @@ import redis from "./lib/redisClient";
 import { createClient } from "@supabase/supabase-js";
 import fetch from "node-fetch";
 
-// Create Supabase admin client
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -15,8 +14,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-05-28.basil",
 });
 
-// Helpers: wait for uploads, tune ready, prompt images
-// ──────────────────────────────────────────────────────────────────────────────
 async function waitForUploads(
   supabase: any,
   packId: string,
@@ -29,100 +26,57 @@ async function waitForUploads(
       .from("uploads")
       .select("url")
       .eq("pack_id", packId);
-
-    if (error) {
-      console.error(`[waitForUploads] Supabase error:`, error);
-      throw error;
-    }
-    if (Array.isArray(rows) && rows.length > 0) {
-      console.log(`[waitForUploads] Found ${rows.length} uploads`);
-      return rows.map((r: any) => r.url as string);
-    }
+    if (error) throw error;
+    if (rows && rows.length > 0) return rows.map((r: any) => r.url);
     await new Promise((r) => setTimeout(r, delayMs));
   }
   throw new Error(`Timeout: No uploads for pack ${packId}`);
 }
 
-async function waitForTuneReady(
-  tuneId: string,
-  maxAttempts = 240,
-  delayMs = 5000
-): Promise<void> {
+async function waitForTuneReady(tuneId: string, maxAttempts = 240, delayMs = 5000) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    console.log(`⌛ [waitForTuneReady] ${attempt}/${maxAttempts}`);
-    let res;
-    try {
-      res = await fetch(`https://api.astria.ai/tunes/${tuneId}`, {
-        headers: { Authorization: `Bearer ${process.env.ASTRIA_API_KEY}` },
-      });
-    } catch (err) {
-      console.warn(`⚠️ Fetch error:`, err);
-      await new Promise((r) => setTimeout(r, delayMs));
-      continue;
-    }
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`Astria error ${res.status}: ${body}`);
-    }
+    const res = await fetch(`https://api.astria.ai/tunes/${tuneId}`, {
+      headers: { Authorization: `Bearer ${process.env.ASTRIA_API_KEY}` },
+    });
+    if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
-    if (data.status === "ready" || data.trained_at) {
-      console.log("✅ Tune ready");
-      return;
-    }
+    if (data.status === "ready" || data.trained_at) return;
     await new Promise((r) => setTimeout(r, delayMs));
   }
   throw new Error(`Timeout: Tune ${tuneId} not ready`);
 }
 
-async function waitForPromptImages(
-  tuneId: string,
-  promptId: string,
-  maxAttempts = 60,
-  delayMs = 3000
-): Promise<string[]> {
+async function waitForPromptImages(tuneId: string, promptId: string, maxAttempts = 60, delayMs = 3000): Promise<string[]> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    console.log(`⌛ [waitForPromptImages] ${attempt}/${maxAttempts}`);
     const res = await fetch(
       `https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`,
       { headers: { Authorization: `Bearer ${process.env.ASTRIA_API_KEY}` } }
     );
-    if (!res.ok) {
-      throw new Error(`Astria prompt ${promptId} error ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`Astria prompt ${promptId} error ${res.status}`);
     const data = await res.json();
-    if (Array.isArray(data.images) && data.images.length > 0) {
-      return data.images as string[];
-    }
+    if (Array.isArray(data.images) && data.images.length > 0) return data.images;
     await new Promise((r) => setTimeout(r, delayMs));
   }
   throw new Error(`Timeout: Images for prompt ${promptId} not ready`);
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Main job processing
-// ──────────────────────────────────────────────────────────────────────────────
 async function processJob(job: any) {
   console.log("🎯 Processing job:", job);
   const { userId, packId, gender, packType, sessionId } = job;
+  if (packType === "multi-purpose") return;
 
-  if (packType === "multi-purpose") {
-    console.log("⛔ Skipped multi-purpose");
-    return;
-  }
-
-  // 1) Wait for uploads
   const imageUrls = await waitForUploads(supabase, packId);
-  console.log("🖼️ Upload URLs:", imageUrls);
 
-  // 2) Get or create tune
   const { data: packRow, error: packErr } = await supabase
     .from("packs")
     .select("tune_id")
     .eq("id", packId)
     .single();
   if (packErr) throw packErr;
+
   let tuneId = packRow?.tune_id;
   if (!tuneId) {
+    const sanitizedName = `Pack${packId.replace(/[^a-zA-Z0-9 ]/g, "")}`;
     const tuneRes = await fetch("https://api.astria.ai/tunes", {
       method: "POST",
       headers: {
@@ -130,38 +84,32 @@ async function processJob(job: any) {
         Authorization: `Bearer ${process.env.ASTRIA_API_KEY}`,
       },
       body: JSON.stringify({
-        title: `Tune for pack ${packId}`,
-        name: `pack_${packId}`,
-        images: imageUrls,
-        tags: ["headshot", gender, packType],
+        tune: {
+          name: sanitizedName,
+          title: `PackTune-${packId}`,
+          branch: "fast",
+          image_urls: imageUrls,
+          token: "ohwx",
+          steps: 50
+        },
       }),
     });
-    if (!tuneRes.ok) {
-      const errText = await tuneRes.text();
-      console.error("❌ Tune creation failed:", tuneRes.status, errText);
-      throw new Error("Tune creation failed");
-    }
+    if (!tuneRes.ok) throw new Error(await tuneRes.text());
     const tuneData = await tuneRes.json();
     tuneId = tuneData.id;
     await supabase.from("packs").update({ tune_id: tuneId }).eq("id", packId);
   }
 
-  // 3) Wait for tune ready
   await waitForTuneReady(tuneId);
 
-  // 4) Get GPT prompts
-  const promptRes = await fetch(
-    `${process.env.SITE_URL}/api/generate-prompts`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, packId, packType }),
-    }
-  );
+  const promptRes = await fetch(`${process.env.SITE_URL}/api/generate-prompts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, packId, packType }),
+  });
   if (!promptRes.ok) throw new Error("Prompt fetch failed");
   const { prompts } = await promptRes.json();
 
-  // 5) For each prompt, submit to Astria and insert images
   for (const promptText of prompts) {
     const astriaPrompt = `sks ${gender} ${promptText}`;
     const sendRes = await fetch(
@@ -183,27 +131,15 @@ async function processJob(job: any) {
         }),
       }
     );
-    if (!sendRes.ok) {
-      const errText = await sendRes.text();
-      console.error(`❌ Failed to submit prompt to Astria: ${sendRes.status} ${errText}`);
-      continue;
-    }
+    if (!sendRes.ok) continue;
     const { id: promptId } = await sendRes.json();
-    if (!promptId) {
-      console.warn(`⚠️ No prompt ID returned for prompt: ${astriaPrompt}`);
-      continue;
-    }
+    if (!promptId) continue;
 
     let images: string[] = [];
-    const maxPollAttempts = 10;
-    for (let i = 1; i <= maxPollAttempts; i++) {
+    for (let i = 0; i < 10; i++) {
       images = await waitForPromptImages(tuneId, promptId);
       if (images.length === 3) break;
-      console.log(`⌛ Waiting for images for prompt ${promptId}, attempt ${i}/${maxPollAttempts}`);
       await new Promise((r) => setTimeout(r, 3000));
-    }
-    if (images.length !== 3) {
-      console.warn(`⚠️ Only received ${images.length}/3 images for prompt ${promptId}`);
     }
 
     const insertData = images.map((url) => ({
@@ -213,13 +149,7 @@ async function processJob(job: any) {
       url: `https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`,
       created_at: new Date().toISOString(),
     }));
-    let inserted = false;
-    for (let i = 1; i <= 3; i++) {
-      const { error } = await supabase.from("generated_images").insert(insertData);
-      if (!error) { inserted = true; break; }
-      await new Promise((r) => setTimeout(r, 2000));
-    }
-    if (!inserted) console.error(`Failed to insert images for prompt ${promptId}`);
+    await supabase.from("generated_images").insert(insertData);
   }
 
   let userEmail = "";
@@ -232,12 +162,17 @@ async function processJob(job: any) {
       .select("email, first_name, last_name")
       .eq("id", userId)
       .single();
-    if (usrErr || !usr) throw usrErr ?? new Error("User not found");
-    userEmail = usr.email;
-    firstName = usr.first_name;
-    lastName  = usr.last_name;
+
+    if (usrErr || !usr) {
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      userEmail = session.customer_details?.email ?? "";
+    } else {
+      userEmail = usr.email;
+      firstName = usr.first_name;
+      lastName = usr.last_name;
+    }
   } catch (err) {
-    console.error("❌ Could not load user email:", err);
+    console.error("❌ Could not load user info:", err);
   }
 
   const webhookUrl = process.env.GHL_INBOUND_WEBHOOK_URL!;
@@ -249,22 +184,17 @@ async function processJob(job: any) {
 
     const galleryUrls = (allRows || []).map((r) => r.image_url);
 
-    console.log(`📣 Firing GHL webhook with ${galleryUrls.length} URLs`);
     fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email:       userEmail,
+        email: userEmail,
         firstName,
         lastName,
         packId,
         galleryUrls,
       }),
-    })
-      .then((res) => console.log(`✅ GHL webhook status ${res.status}`))
-      .catch((err) => console.error("❌ GHL webhook error:", err));
-  } else {
-    console.warn("⚠️ No userEmail — skipping GHL webhook");
+    });
   }
 
   setTimeout(async () => {
@@ -275,21 +205,18 @@ async function processJob(job: any) {
 
     const count = (rowsAfter20 || []).length;
     if (count < 45 && userEmail) {
-      console.log(`⚠️ Fallback: only ${count}/45 images. Sending GHL fallback email.`);
       fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email:       userEmail,
+          email: userEmail,
           firstName,
           lastName,
           packId,
           galleryUrls: rowsAfter20?.map((r) => r.image_url) || [],
-          note:        `Only ${count}/45 images completed after 20 minutes.`,
+          note: `Only ${count}/45 images completed after 20 minutes.`,
         }),
-      })
-        .then((res) => console.log(`✅ Fallback webhook status ${res.status}`))
-        .catch((err) => console.error("❌ Fallback webhook error:", err));
+      });
     }
   }, 20 * 60 * 1000);
 }
