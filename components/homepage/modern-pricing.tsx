@@ -43,8 +43,8 @@ export default function ModernPricing() {
   const tiers: PricingTier[] = [
     {
       title: "Premium",
-      originalPrice: "$80",
-      price: "$45",
+      originalPrice: "$79.99",
+      price: "$49.99",
       description:
         "Polished. Personalized. Powerful. This is your all-in-one branding solution — built for professionals who want to show up ready.",
       features: [
