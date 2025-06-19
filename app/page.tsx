@@ -135,7 +135,7 @@ export default function Index() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowPopup(true);
-    }, 15000);
+    }, 6000);
 
     return () => clearTimeout(timer);
   }, []);
