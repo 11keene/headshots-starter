@@ -11,6 +11,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(req: Request) {
   const supabase = createRouteHandlerClient({ cookies });
   const body = await req.json();
+  console.log("💳 Loaded Price ID:", process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_HEADSHOTS);
 
   // Destructure your optional teamId field
   const {
@@ -123,7 +124,7 @@ cancel_url: `${baseUrl}/overview`,
     ...(teamId ? { teamId } : {}),
   },
   customer_email: user.email,
-  allow_promotion_codes: true, // ← ✅ This shows the promo code box!
+  allow_promotion_codes: true, // ← ✅ This shows the promo code box!s
 };
 
 
