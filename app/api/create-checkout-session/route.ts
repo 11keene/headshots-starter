@@ -17,18 +17,19 @@ export async function POST(req: Request) {
     packType,
     packId: existingPackId,
     teamId,
-  }: {
-    packType: string;
-    packId:   string;
-    teamId?:  string;
-  } = body;
+}: {
+  packType: string;
+  packId:   string;
+  teamId?:  string;
+} = body;
 
-  // 1) Pick the correct Stripe Price ID
-  const PRICE_IDS: Record<"headshots" | "multi-purpose", string> = {
-    headshots:      process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_HEADSHOTS!,
-    "multi-purpose": process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MULTI!,
-  };
-  const stripePriceId = PRICE_IDS[packType as "headshots" | "multi-purpose"];
+// 1) Pick the correct Stripe Price ID
+const PRICE_IDS: Record<"headshots" | "multi-purpose", string> = {
+  headshots:      process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_HEADSHOTS!,
+  "multi-purpose": process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MULTI!,
+};
+const stripePriceId = PRICE_IDS[packType as "headshots" | "multi-purpose"];
+console.log("💳 Using Stripe price ID:", stripePriceId);
   if (!stripePriceId) {
     console.error("❌ Invalid packType:", packType);
     return new NextResponse("Invalid pack type", { status: 400 });
