@@ -171,8 +171,6 @@ await fireImagesDelivered();
       if (!res.ok) throw new Error("Failed to fetch ZIP");
       const blob = await res.blob();
       await fireImagesDelivered();
-            await firePhotosReady();
-
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -200,15 +198,16 @@ await fireImagesDelivered();
     </div>
   );
 
-  if (stillGenerating) return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-50">
-      <FiLoader className="animate-spin text-5xl text-sage-green mb-4" />
-      <h2 className="text-3xl font-bold text-gray-800">🌟 Your gallery is in the works!</h2>
-      <p className="text-lg text-gray-600 max-w-md text-center">
-        Our AI is painting your masterpiece. Check back in a moment to see your new headshots!
-      </p>
-    </div>
-  );
+if (stillGenerating) return (
+  <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-50 text-center">
+    <FiLoader className="animate-spin text-5xl text-sage-green mb-6" />
+    <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">🌟 Your gallery is in the works!</h2>
+    <p className="text-base sm:text-lg text-gray-700 max-w-md">
+      Our AI is painting your masterpiece. Check back in a moment to see your new headshots!
+    </p>
+  </div>
+);
+
 
   if (error) return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-red-50">
