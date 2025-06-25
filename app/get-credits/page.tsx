@@ -66,7 +66,7 @@ export default function PricingPage() {
 
             <div className="flex items-baseline gap-2 mb-6">
               <span className="text-5xl font-extrabold text-muted-gold">$49.99</span>
-              <span className="text-gray-400 line-through">$59.99</span>
+              <span className="text-gray-400 line-through">$79.99</span>
             </div>
 
             <ul className="space-y-4 mb-8">

@@ -117,17 +117,22 @@ export default function ModernPricing() {
     {tier.title}
   </h3>
 
-  <div className="mt-2 relative inline-block mx-auto">
-    {/* original price, perched at top-right */}
-    <span className="absolute -top-3 left-20 text-lg line-through text-muted/70">
-      {tier.originalPrice}
-    </span>
+{/* right under <h3>… */}
+<div className="mt-2 relative inline-block mx-auto">
+  {/* big, centered discounted price */}
+  <span className="block text-5xl text-ivory font-extrabold">
+    {tier.price}
+  </span>
 
-    {/* big discounted price */}
-    <span className="block text-5xl text-ivory font-extrabold">
-      {tier.price}
-    </span>
-  </div>
+  {/* small, struck original price, absolutely at the top‐right of the block above */}
+  <span className="absolute -top-1 -right-10 text-lg line-through text-warm-gray">
+    {tier.originalPrice}
+  </span>
+</div>
+
+
+
+
 
   <p className="mt-4 text-xs font-semibold text-white text-center">
     {tier.description}
