@@ -134,11 +134,10 @@ export default function ProcessSection() {
           <Badge variant="outline" className="mb-2 border-muted-gold text-charcoal">
             Simple Process
           </Badge>
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-charcoal md:text-5xl">Step Into Alignment — In Just 3 Simple Steps
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-charcoal md:text-5xl">Create Your Signature Look — In Just 3 Simple Steps
           </h2>
           <p className="max-w-[700px] text-muted-foreground text-charcoal text-lg">
-         
-Our platform makes it effortless to go from everyday selfies to striking, professional-grade headshots — crafted to reflect your evolution, your energy, and your excellence.
+            We don't just swap headshots - we build your professional brand identity.
           </p>
         </div>
         <div className="mt-16 grid gap-8 md:grid-cols-3 md:gap-12">
