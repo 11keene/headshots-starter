@@ -1,9 +1,41 @@
+// worker.ts (very top)
+process.on("unhandledRejection", (err) => {
+  console.error("[worker] 🔥 Unhandled Rejection:", err);
+  // you could even notify Slack/Sentry here
+});
+process.on("uncaughtException", (err) => {
+  console.error("[worker] 💥 Uncaught Exception:", err);
+  // and decide whether to process.exit() or keep going
+});
+
+
 // File: worker.ts
 import "dotenv/config";
+import http from "http";        // ← add this
+
 import Stripe from "stripe";
 import redis from "./lib/redisClient";
 import { createClient } from "@supabase/supabase-js";
 import fetch from "node-fetch";
+console.log("[worker] 🌐 Connecting to Redis at", process.env.REDIS_URL);
+
+// ─── Health‐check server ──────────────────────────────────────────────────────
+const HEALTH_PORT = process.env.HEALTH_PORT
+  ? parseInt(process.env.HEALTH_PORT, 10)
+  : 8081;
+
+http
+  .createServer((req, res) => {
+    if (req.url === "/healthz") {
+      res.writeHead(200, { "Content-Type": "text/plain" });
+      res.end("OK");
+    } else {
+      res.writeHead(404).end();
+    }
+  })
+  .listen(HEALTH_PORT, () =>
+    console.log(`[worker] 🚑 Health check available at http://localhost:${HEALTH_PORT}/healthz`)
+  );
 
 // Initialize Supabase admin client
 const supabase = createClient(
@@ -301,14 +333,24 @@ const astriaPrompt = `sks ${className} ${promptText}`;
 }
 
 async function main() {
-  console.log("🚀 Worker started");
-while (true) {
-  const raw = await redis.rpop("jobQueue");
-  if (!raw) {
-    // nothing to do yet
-    await new Promise((r) => setTimeout(r, 2000));
-    continue;
-  }
+console.log("🚀 Worker started");
+  console.log("[worker] 🎧 Listening for jobs on queue 'jobQueue'");while (true) {
+// replace rpop + sleep with:
+// Replace this:
+// const raw = await redis.rpop("jobQueue");
+// if (!raw) {
+//   await new Promise((r) => setTimeout(r, 2000));
+//   continue;
+// }
+
+// …with this:
+const raw = await redis.rpop("jobQueue");
+if (!raw) {
+  await new Promise((r) => setTimeout(r, 2000));
+  continue;
+}
+// raw is your payload string
+
 
   console.log("🔄 Raw job from Redis:", raw);
 
@@ -332,9 +374,17 @@ while (true) {
   }
 
   console.log("🎯 Processing job:", job);
-  await processJob(job);
-}
+ // ─── Wrap your existing processJob in try/catch ─────────────────────────
+    try {
+      console.log("🎯 Processing job:", job);
+      await processJob(job);
+      console.log("✅ Completed job:", job);
+    } catch (err) {
+      console.error("❌ Job failed:", job, err);
+      // (optional) re-enqueue or alert here
+    }
 
+}
 }
 
 main();
