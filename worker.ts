@@ -1,4 +1,14 @@
 // worker.ts (very top)
+console.log("[worker] ⚡️ Loaded worker.ts – env check:",
+  {
+    REDIS:    !!process.env.REDIS_URL,
+    SUPABASE: !!process.env.SUPABASE_URL,
+    ASTRIA:   !!process.env.ASTRIA_API_KEY,
+    OPENAI:   !!process.env.OPENAI_API_KEY,
+  }
+);
+
+
 process.on("unhandledRejection", (err) => {
   console.error("[worker] 🔥 Unhandled Rejection:", err);
   // you could even notify Slack/Sentry here
