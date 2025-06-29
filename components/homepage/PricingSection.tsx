@@ -20,7 +20,7 @@ export default function PricingSection() {
         {/* 20% Off Banner */}
         <div className="mt-8">
           <div className="bg-charcoal text-white text-center font-semibold py-2 rounded mb-6">
-            20% off all packages limited time only!
+            40% off all packages limited time only!
           </div>
           <ModernPricing />
         </div>
