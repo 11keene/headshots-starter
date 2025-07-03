@@ -1,4 +1,3 @@
-// File: app/status/[packId]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -17,14 +16,11 @@ interface GeneratedImageRow {
 export default function StatusPage({ params }: { params: { packId: string } }) {
   const { packId } = params;
   const router = useRouter();
-const supabase = createClientComponentClient();
-const session  = useSession();
+  const supabase = createClientComponentClient();
+  const session = useSession();
 
- // ── Ping Zapier when images are delivered ──
   const fireImagesDelivered = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return;
     const [firstName, lastName] = (user.user_metadata?.full_name || "").split(" ");
     await fetch("/api/images-delivered", {
@@ -34,11 +30,8 @@ const session  = useSession();
     });
   };
 
-  // ── Ping Zapier when photos are ready ──
   const firePhotosReady = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return;
     const [firstName, lastName] = (user.user_metadata?.full_name || "").split(" ");
     await fetch("/api/photos-ready", {
@@ -48,16 +41,12 @@ const session  = useSession();
     });
   };
 
-  // ───── Purchase Complete Tagging ─────
   useEffect(() => {
     const storageKey = `purchase_complete_fired_${packId}`;
-    if (!session || localStorage.getItem(storageKey)) {
-      return;
-    }
+    if (!session || localStorage.getItem(storageKey)) return;
+
     (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) {
         const [firstName, lastName] = (user.user_metadata?.full_name || "").split(" ");
         try {
@@ -78,7 +67,6 @@ const session  = useSession();
     })();
   }, [session, supabase, packId]);
 
-  // State for images and download
   const [images, setImages] = useState<string[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState<boolean>(true);
@@ -87,19 +75,20 @@ const session  = useSession();
   const [selectAll, setSelectAll] = useState<boolean>(false);
   const [zipLoading, setZipLoading] = useState<boolean>(false);
 
-  // Fetch generated images every 5s
   async function loadGeneratedImages() {
     try {
       const { data: rows, error: supaErr } = await supabase
         .from("generated_images")
         .select("image_url")
         .eq("pack_id", packId);
+
       if (supaErr) throw supaErr;
       if (!rows || rows.length === 0) {
         setStillGenerating(true);
         setLoading(false);
         return;
       }
+
       const urls = (rows as GeneratedImageRow[])
         .map((r) => r.image_url)
         .filter(Boolean);
@@ -109,9 +98,7 @@ const session  = useSession();
       setLoading(false);
     } catch (e: any) {
       console.error("[StatusPage] Error loading images:", e);
-      setError(
-        "Oops! Something went wrong retrieving your photos. Please try again in a bit."
-      );
+      setError("Oops! Something went wrong retrieving your photos. Please try again in a bit.");
       setLoading(false);
     }
   }
@@ -136,33 +123,6 @@ const session  = useSession();
       return !prev;
     });
   };
-  
-  // Download selected images as ZIP
-  async function downloadAll(selectedUrls: string[]) {
-    if (!selectedUrls.length) {
-      alert("No images selected!");
-      return;
-    }
-    setZipLoading(true);
-    const zip = new JSZip();
-    const folder = zip.folder("headshots");
-    await Promise.all(
-      selectedUrls.map(async (url, idx) => {
-        const resp = await fetch(url);
-        const blob = await resp.blob();
-        const ext = url.split(".").pop()?.split(/[#?]/)[0] || "jpg";
-        folder!.file(`headshot-${idx + 1}.${ext}`, blob);
-      })
-    );
-    const content = await zip.generateAsync({ type: "blob" });
-
-    // Fire images delivered event after ZIP is ready, before saving
-await fireImagesDelivered();
-    await firePhotosReady();
-
-    saveAs(content, "selected-headshots.zip");
-    setZipLoading(false);
-  }
 
   const handleDownloadZip = async () => {
     setZipLoading(true);
@@ -180,15 +140,12 @@ await fireImagesDelivered();
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert(
-        "Oops! There was an error downloading your ZIP file. Please try again."
-      );
+      alert("Oops! There was an error downloading your ZIP file. Please try again.");
       console.error("[ZIP Download Error]", err);
     }
     setZipLoading(false);
   };
 
-  // Render states...
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-50">
       <FiLoader className="animate-spin text-4xl text-muted-gold mb-4" />
@@ -198,16 +155,16 @@ await fireImagesDelivered();
     </div>
   );
 
-if (stillGenerating) return (
-  <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-50 text-center">
-    <FiLoader className="animate-spin text-5xl text-sage-green mb-6" />
-    <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">🌟 Your gallery is in the works!</h2>
-    <p className="text-base sm:text-lg text-gray-700 max-w-md">
-      Our AI is painting your masterpiece. Check back in a moment to see your new headshots!
-    </p>
-  </div>
-);
+  if (stillGenerating) return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-50 text-center">
+      <FiLoader className="animate-spin text-5xl text-sage-green mb-6" />
+      <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">🌟 Your gallery is in the works!</h2>
+      <p className="text-base sm:text-lg text-gray-700 max-w-md">
+Check back shortly to view your new headshots. We’ll send you an email as soon as your photos are ready — be sure to check your Spam, Junk, or Promotions folder just in case.
 
+      </p>
+    </div>
+  );
 
   if (error) return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-red-50">
@@ -215,11 +172,7 @@ if (stillGenerating) return (
       <p className="text-lg text-red-600 max-w-md text-center">{error}</p>
     </div>
   );
-  
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Images grid & download controls
-  // ─────────────────────────────────────────────────────────────────────────────
   return (
     <main className="bg-gray-900 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto text-center mb-8">
@@ -229,21 +182,52 @@ if (stillGenerating) return (
         </p>
       </div>
 
+      {/* Collapsible Instructions */}
+      <details className="bg-gray-800 text-white rounded-lg p-4 text-left text-sm mb-8 max-w-4xl mx-auto group">
+        <summary className="cursor-pointer text-sage-green font-semibold text-base outline-none">
+          📲 Tap here for instructions on how to download and save your photos
+        </summary>
+
+        <div className="mt-4 space-y-6">
+          {/* iPhone Instructions */}
+          <div>
+            <h3 className="text-md font-bold mb-2">🍏 iPhone Instructions</h3>
+            <ol className="list-decimal list-inside space-y-1">
+              <li><strong>Tap and Hold</strong> any photo to save it individually.</li>
+              <li>Or tap <strong>“Download All as ZIP”</strong> below.</li>
+              <li>Click <strong>“Download”</strong> when prompted.</li>
+              <li>Tap the <strong>blue arrow ↓</strong> in Safari's URL bar to open your downloads.</li>
+              <li>Tap the ZIP file → then tap <strong>“Preview Content.”</strong></li>
+              <li>Use the <strong>Share icon</strong> to <strong>“Save to Files.”</strong></li>
+              <li>Open the <strong>Files app</strong> → tap the ZIP to unzip.</li>
+              <li>Inside the folder, tap <strong>Select</strong> → then <strong>“Select All.”</strong></li>
+              <li>Tap the Share icon → then <strong>“Save X Images.”</strong></li>
+            </ol>
+          </div>
+
+          {/* Android Instructions */}
+          <div>
+            <h3 className="text-md font-bold mb-2">🤖 Android Instructions</h3>
+            <ol className="list-decimal list-inside space-y-1">
+              <li><strong>Tap and Hold</strong> any photo to save it individually to your gallery.</li>
+              <li>Or tap <strong>“Download All as ZIP”</strong> below.</li>
+              <li>When prompted, confirm the download and open the <strong>Files</strong> or <strong>My Files</strong> app.</li>
+              <li>Find the ZIP file in your Downloads folder and tap it to unzip.</li>
+              <li>Select all photos → tap the <strong>Share</strong> icon → then choose <strong>Save to Photos</strong>.</li>
+            </ol>
+          </div>
+
+          <p className="text-sage-green font-medium">That’s it! Your full gallery will now be saved to your phone. 🎉</p>
+        </div>
+      </details>
+
+      {/* Buttons */}
       <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
         <button
           onClick={handleSelectAll}
           className="w-full sm:w-auto px-5 py-2 border border-sage-green text-sage-green rounded-md hover:bg-sage-green hover:text-white transition"
         >
           {selectAll ? "Deselect All" : "Select All"}
-        </button>
-
-        <button
-          onClick={() => downloadAll(Array.from(selected))}
-          disabled={selected.size === 0 || zipLoading}
-          className="w-full sm:w-auto px-5 py-2 bg-sage-green text-white rounded-md disabled:opacity-50 transition inline-flex items-center gap-2"
-        >
-          <FiDownloadCloud className="text-xl" />
-          {zipLoading ? "Preparing ZIP…" : `Download Selected (${selected.size})`}
         </button>
 
         <button
@@ -256,6 +240,7 @@ if (stillGenerating) return (
         </button>
       </div>
 
+      {/* Image Grid */}
       <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {images.map((img, idx) => (
           <div
