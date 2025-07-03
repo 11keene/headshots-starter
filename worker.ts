@@ -1,7 +1,10 @@
 // worker.ts (very top)
-console.log("[worker] ⚡️ Loaded worker.ts – env check:",
-  {
-    REDIS:    !!process.env.REDIS_URL,
+import "dotenv/config";
+
+console.log("[worker] ⚡️ Loaded worker.ts – env check:",{
+// make sure to check the UPSTASH vars, not REDIS_URL
+  UPSTASH_URL:    !!process.env.UPSTASH_REDIS_REST_URL,
+  UPSTASH_TOKEN:  !!process.env.UPSTASH_REDIS_REST_TOKEN,
     SUPABASE: !!process.env.SUPABASE_URL,
     ASTRIA:   !!process.env.ASTRIA_API_KEY,
     OPENAI:   !!process.env.OPENAI_API_KEY,
@@ -20,14 +23,13 @@ process.on("uncaughtException", (err) => {
 
 
 // File: worker.ts
-import "dotenv/config";
 import http from "http";        // ← add this
 
 import Stripe from "stripe";
 import redis from "./lib/redisClient";
 import { createClient } from "@supabase/supabase-js";
 import fetch from "node-fetch";
-console.log("[worker] 🌐 Connecting to Redis at", process.env.REDIS_URL);
+console.log("[worker] 🌐 Connecting to Upstash REST Redis at", process.env.UPSTASH_REDIS_REST_URL);
 
 // ─── Health‐check server ──────────────────────────────────────────────────────
 const HEALTH_PORT = process.env.HEALTH_PORT
