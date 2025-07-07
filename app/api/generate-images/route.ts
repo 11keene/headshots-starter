@@ -57,7 +57,9 @@ export async function POST(req: Request) {
     const { data: promptRows, error: promptErr } = await supabase
       .from("prompts")
       .select("prompt_text")
-      .eq("pack_id", packId);
+      .eq("pack_id", packId)
+      .limit(15); // ✅ Added limit here
+
 
     if (promptErr) {
       console.error("[generate-images] ❌ Error fetching prompts:", promptErr);
