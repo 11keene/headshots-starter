@@ -1,4 +1,4 @@
-// File: app/api/stripe-webhook/route.ts    ← rename from `.route.tss` if needed
+// File: app/api/stripe-webhook/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import redis from "@/lib/redisClient";
@@ -8,12 +8,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export async function POST(req: Request) {
-  console.log("🥁 [stripe-webhook] ENTERED webhook handler");                      // ← (1) ENTRY LOG
+  console.log("🥁 [stripe-webhook] ENTERED webhook handler");
 
   const rawBody = await req.text();
-  const sig     = req.headers.get("stripe-signature");
+  const sig = req.headers.get("stripe-signature");
   if (!sig) {
-    console.error("❌ [stripe-webhook] Missing Stripe signature header");          // ← (2) ERROR LOG
+    console.error("❌ [stripe-webhook] Missing Stripe signature header");
     return new NextResponse("Missing signature", { status: 400 });
   }
 
@@ -24,30 +24,42 @@ export async function POST(req: Request) {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-    console.log("✅ [stripe-webhook] Signature verified:", event.type);            // ← (3) SUCCESS LOG
+    console.log("✅ [stripe-webhook] Signature verified:", event.type);
   } catch (err) {
-    console.error("❌ [stripe-webhook] Signature verification failed:", err);      // ← (4) FAIL LOG
+    console.error("❌ [stripe-webhook] Signature verification failed:", err);
     return new NextResponse("Invalid signature", { status: 400 });
   }
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    console.log("🔔 [stripe-webhook] checkout.session.completed for session:", session.id); // ← (5) SESSION LOG
+    console.log("🔔 [stripe-webhook] checkout.session.completed for session:", session.id);
 
-    const md      = session.metadata || {};
-    const userId  = md.userId   || md.user_id;
-    const packId  = md.packId   || md.pack_id;
-    const gender  = md.gender;
-    const packType= md.packType || md.pack_type;
+    const md = session.metadata || {};
+    const userId = md.userId || md.user_id;
+    const packId = md.packId || md.pack_id;
+    const gender = md.gender;
+    const packType = md.packType || md.pack_type;
 
-    console.log("📦 [stripe-webhook] Parsed metadata:", { userId, packId, gender, packType }); // ← (6)
+    console.log("📦 [stripe-webhook] Parsed metadata:", { userId, packId, gender, packType });
 
     if (!userId || !packId || !gender) {
-      console.error("❌ [stripe-webhook] Missing metadata fields");                  // ← (7)
+      console.error("❌ [stripe-webhook] Missing metadata fields");
       return new NextResponse("Missing metadata", { status: 400 });
     }
 
-    // ─── 3️⃣ STEP 3: ENQUEUE JOB INTO REDIS ─────────────────────────────
+    // 🛡 Prevent duplicate job: check Redis lock
+    const redisLockKey = `job_in_progress:${packId}`;
+    const jobExists = await redis.get(redisLockKey);
+    if (jobExists) {
+      console.log(`ℹ️ [stripe-webhook] Duplicate job detected for packId ${packId}, skipping enqueue.`);
+      return new NextResponse("Job already queued", { status: 200 });
+    }
+
+    // 🔒 Lock job for 2 hours (7200 seconds)
+await redis.set(redisLockKey, "true", { ex: 7200 });
+
+
+    // ─── STEP 3: ENQUEUE JOB INTO REDIS ─────────────────────────────
     const jobPayload = JSON.stringify({
       userId,
       packId,
@@ -56,13 +68,9 @@ export async function POST(req: Request) {
       sessionId: session.id,
     });
 
-    console.log(
-      `📬 [stripe-webhook] Enqueuing job to Redis (“jobQueue”):`,
-      jobPayload
-    );
-    await redis.lpush("jobQueue", jobPayload);
-    console.log("✅ [stripe-webhook] Job successfully enqueued");    
-    // ───────────── Optional retry wrapper ─────────────
+    console.log(`📬 [stripe-webhook] Enqueuing job to Redis (“jobQueue”):`, jobPayload);
+
+    // Optional retry wrapper
     const maxAttempts = 5;
     let attempt = 0;
     while (attempt < maxAttempts) {
@@ -77,13 +85,11 @@ export async function POST(req: Request) {
         if (attempt === maxAttempts) {
           return new NextResponse("Redis enqueue failed", { status: 500 });
         }
-        // exponential backoff
-        await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
+        await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt)); // exponential backoff
       }
     }
-
   } else {
-    console.log("ℹ️ [stripe-webhook] Ignored event type:", event.type);            // ← (8)
+    console.log("ℹ️ [stripe-webhook] Ignored event type:", event.type);
   }
 
   return new NextResponse("Received", { status: 200 });
