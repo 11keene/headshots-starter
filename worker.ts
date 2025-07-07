@@ -210,7 +210,12 @@ async function processJob(job: any) {
     body: JSON.stringify({ userId, packId, packType }),
   });
   if (!promptRes.ok) throw new Error("Prompt fetch failed");
-  const { prompts } = await promptRes.json();
+  let { prompts } = await promptRes.json();
+  if (Array.isArray(prompts)) {
+    prompts = prompts.slice(0, 15); // cap at 15 prompts
+  } else {
+    throw new Error("Invalid GPT response: prompts is not an array");
+  }
 
   // 5) Process each prompt
   for (const promptText of prompts) {
