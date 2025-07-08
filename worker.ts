@@ -349,59 +349,54 @@ const astriaPrompt = `sks ${className} ${promptText}`;
   }, 20 * 60 * 1000);
 }
 
-async function main() {
-console.log("🚀 Worker started");
-  console.log("[worker] 🎧 Listening for jobs on queue 'jobQueue'");while (true) {
-// replace rpop + sleep with:
-// Replace this:
-// const raw = await redis.rpop("jobQueue");
-// if (!raw) {
-//   await new Promise((r) => setTimeout(r, 2000));
-//   continue;
-// }
+const CONCURRENCY = 5; // Number of workers to run in parallel
 
-// …with this:
-const raw = await redis.rpop("jobQueue");
-if (!raw) {
-  await new Promise((r) => setTimeout(r, 2000));
-  continue;
-}
-// raw is your payload string
+async function processJobs(workerId: number) {
+  console.log(`🚀 Worker #${workerId} started`);
+  console.log(`[worker ${workerId}] 🎧 Listening for jobs on queue 'jobQueue'`);
 
+  while (true) {
+    const raw = await redis.rpop("jobQueue");
 
-  console.log("🔄 Raw job from Redis:", raw);
-
-  let job: {
-    userId: string;
-    packId: string;
-    gender: string;
-    packType: string;
-    sessionId: string;
-  };
-
-  if (typeof raw === "string") {
-    try {
-      job = JSON.parse(raw);
-    } catch (err) {
-      console.error("❌ Could not JSON.parse job payload:", raw, err);
-      continue; // skip this bad entry
+    if (!raw) {
+      await new Promise((r) => setTimeout(r, 2000)); // Wait before retrying
+      continue;
     }
-  } else {
-    job = raw;
+
+    console.log(`[worker ${workerId}] 🔄 Raw job from Redis:`, raw);
+
+    let job: {
+      userId: string;
+      packId: string;
+      gender: string;
+      packType: string;
+      sessionId: string;
+    };
+
+    if (typeof raw === "string") {
+      try {
+        job = JSON.parse(raw);
+      } catch (err) {
+        console.error(`[worker ${workerId}] ❌ Could not JSON.parse job payload:`, raw, err);
+        continue;
+      }
+    } else {
+      job = raw;
+    }
+
+    try {
+      console.log(`[worker ${workerId}] 🎯 Processing job:`, job);
+      await processJob(job); // 👈 this is your existing function
+      console.log(`[worker ${workerId}] ✅ Completed job:`, job);
+    } catch (err) {
+      console.error(`[worker ${workerId}] ❌ Job failed:`, job, err);
+      // Optional: Re-enqueue or notify
+    }
   }
-
-  console.log("🎯 Processing job:", job);
- // ─── Wrap your existing processJob in try/catch ─────────────────────────
-    try {
-      console.log("🎯 Processing job:", job);
-      await processJob(job);
-      console.log("✅ Completed job:", job);
-    } catch (err) {
-      console.error("❌ Job failed:", job, err);
-      // (optional) re-enqueue or alert here
-    }
-
-}
 }
 
-main();
+// 🔁 Start N workers
+for (let i = 1; i <= CONCURRENCY; i++) {
+  processJobs(i);
+}
+
