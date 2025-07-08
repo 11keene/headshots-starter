@@ -139,7 +139,19 @@ async function processJob(job: any) {
   // ----------------------------------
   const { userId, packId, gender, packType, sessionId } = job;
   if (packType === "multi-purpose") return;
-  
+  // 🛑 Check if this session has already been processed
+const { data: existingJob } = await supabase
+  .from("generation_jobs")
+  .select("id")
+  .eq("session_id", sessionId)
+  .limit(1);
+
+if (existingJob && existingJob.length > 0) {
+  console.log("⛔ [worker] This session has already been processed. Skipping.");
+  return;
+}
+
+if (packType === "multi-purpose") return;
 
     // 1) Wait for uploads
   const imageUrls = await waitForUploads(supabase, packId);
@@ -148,10 +160,23 @@ async function processJob(job: any) {
   // 2) Get or create tune
   const { data: packRow, error: packErr } = await supabase
     .from("packs")
-    .select("tune_id")
+    .select("tune_id, status, prompt_count")
     .eq("id", packId)
     .single();
-  if (packErr) throw packErr;
+if (packErr || !packRow) {
+  console.error(`[worker] ❌ Failed to fetch pack ${job.packId}:`, packErr);
+  return;
+}
+
+// ✅ Check if already completed or in progress
+if (
+  packRow.status === "completed" ||
+  packRow.tune_id ||
+  packRow.prompt_count >= 15
+) {
+  console.warn(`[worker] ⚠️ Skipping already processed pack: ${job.packId}`);
+  return;
+}
 
   // (from step 2) we already computed:
   // const packIdNoHyphens = packId.replace(/-/g, "");
@@ -355,44 +380,64 @@ async function processJobs(workerId: number) {
   console.log(`🚀 Worker #${workerId} started`);
   console.log(`[worker ${workerId}] 🎧 Listening for jobs on queue 'jobQueue'`);
 
-  while (true) {
-    const raw = await redis.rpop("jobQueue");
+while (true) {
+  const raw = await redis.rpop("jobQueue");
+  if (!raw) {
+    await new Promise((r) => setTimeout(r, 2000));
+    continue;
+  }
 
-    if (!raw) {
-      await new Promise((r) => setTimeout(r, 2000)); // Wait before retrying
+  console.log("🔄 Raw job from Redis:", raw);
+
+  let job: {
+    userId: string;
+    packId: string;
+    gender: string;
+    packType: string;
+    sessionId: string;
+  };
+
+  if (typeof raw === "string") {
+    try {
+      job = JSON.parse(raw);
+    } catch (err) {
+      console.error("❌ Could not JSON.parse job payload:", raw, err);
       continue;
     }
-
-    console.log(`[worker ${workerId}] 🔄 Raw job from Redis:`, raw);
-
-    let job: {
-      userId: string;
-      packId: string;
-      gender: string;
-      packType: string;
-      sessionId: string;
-    };
-
-    if (typeof raw === "string") {
-      try {
-        job = JSON.parse(raw);
-      } catch (err) {
-        console.error(`[worker ${workerId}] ❌ Could not JSON.parse job payload:`, raw, err);
-        continue;
-      }
-    } else {
-      job = raw;
-    }
-
-    try {
-      console.log(`[worker ${workerId}] 🎯 Processing job:`, job);
-      await processJob(job); // 👈 this is your existing function
-      console.log(`[worker ${workerId}] ✅ Completed job:`, job);
-    } catch (err) {
-      console.error(`[worker ${workerId}] ❌ Job failed:`, job, err);
-      // Optional: Re-enqueue or notify
-    }
+  } else {
+    job = raw;
   }
+
+  console.log("🎯 Processing job:", job);
+
+  try {
+    // ✅ NEW: Check if tune already exists in Supabase
+    const { data: existingImages, error: checkError } = await supabase
+      .from("generated_images")
+      .select("id")
+      .eq("pack_id", job.packId)
+      .limit(1);
+
+    if (checkError) {
+      console.error("❌ Supabase check error:", checkError);
+    }
+
+    if (existingImages && existingImages.length > 0) {
+      console.log(`🛑 Tune already processed for packId ${job.packId}. Skipping job.`);
+      continue; // Skip this job
+    }
+
+    // 🚀 Continue to process the job if no existing tune
+    await processJob(job);
+    console.log("✅ Completed job:", job);
+
+  } catch (err) {
+    console.error("❌ Job failed:", job, err);
+    // Optional: re-enqueue here if needed
+  }
+}
+
+
 }
 
 // 🔁 Start N workers

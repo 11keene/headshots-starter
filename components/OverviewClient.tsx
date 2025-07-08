@@ -171,6 +171,11 @@ const tabParam = rawTab === "multi-purpose" ? "headshots" : rawTab || "headshots
           {headerText}
         </div>
       </div>
+<div className="mt-2 text-center text-sm text-muted/30font-medium px-4 max-w-2xl mx-auto">
+  <p>
+    <strong>Disclaimer:</strong> We generate 45 images for each session to give you a variety to choose from. Due to the creative nature of AI, not every image will be perfect — but most will be polished and ready to use.
+  </p>
+</div>
 
       {/* ─── Continuous Sliding Carousel ─── */}
       <div className="relative w-full max-w-xl mx-auto mt-8 overflow-hidden rounded-xl">
