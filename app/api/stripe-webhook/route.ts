@@ -56,8 +56,17 @@ export async function POST(req: Request) {
     }
 
     // 🔒 Lock job for 2 hours (7200 seconds)
-await redis.set(redisLockKey, "true", { ex: 7200 });
-
+    await fetch(`${process.env.UPSTASH_REDIS_REST_URL}/set/${redisLockKey}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        value: "true",
+        ex: 7200,
+      }),
+    });
 
     // ─── STEP 3: ENQUEUE JOB INTO REDIS ─────────────────────────────
     const jobPayload = JSON.stringify({
