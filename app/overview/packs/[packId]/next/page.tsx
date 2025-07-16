@@ -187,42 +187,50 @@ export default function UploadPage() {
   );
 
   // 6) Once uploadCount ≥ 4, enable “Continue” → Checkout
-  const goNext = () => {
-    if (!userId) {
-      router.push("/login");
-      return;
-    }
-    setIsLoading(true);
+const goNext = () => {
+  const checkbox = document.getElementById("termsCheckbox") as HTMLInputElement;
+  if (!checkbox?.checked) {
+    alert("Please confirm you agree to the terms before continuing.");
+    return;
+  }
 
-    let packType: "headshots" | "multi-purpose" = "headshots";
-    if (packId.includes("multi")) packType = "multi-purpose";
+  if (!userId) {
+    router.push("/login");
+    return;
+  }
 
-    const stripePriceId = PRICE_IDS_CLIENT[packType];
-    console.log(
-      "[UploadPage] goNext: packId =", packId,
-      "packType =", packType,
-      "stripePriceId =", stripePriceId,
-      "gender =", gender
-    );
+  setIsLoading(true);
 
-    fetch("/api/create-checkout-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        stripePriceId,
-        packId: packId,      // pass in the correct packId
-        packType,
-      }),
+  let packType: "headshots" | "multi-purpose" = "headshots";
+  if (packId.includes("multi")) packType = "multi-purpose";
+
+  const stripePriceId = PRICE_IDS_CLIENT[packType];
+  console.log(
+    "[UploadPage] goNext: packId =", packId,
+    "packType =", packType,
+    "stripePriceId =", stripePriceId,
+    "gender =", gender
+  );
+
+  fetch("/api/create-checkout-session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      stripePriceId,
+      packId: packId,
+      packType,
+    }),
+  })
+    .then((r) => r.json())
+    .then((data) => {
+      window.location.href = data.url!;
     })
-      .then((r) => r.json())
-      .then((data) => {
-        window.location.href = data.url!;
-      })
-      .catch((err) => setError(err.message));
-  };
+    .catch((err) => setError(err.message));
+};
+
 
   return (
-    <div className="p-6 sm:p-8 max-w-3xl mx-auto">
+<div className="p-6 sm:p-8 max-w-3xl mx-auto pb-40 lg:pb-48">
       {/* Back button */}
       <button
         onClick={() => router.back()}
@@ -237,6 +245,11 @@ export default function UploadPage() {
       <p className="text-gray-600 mb-6">
         Select at least <span className="font-semibold">4–6</span> photos (max 10).
       </p>
+<div className="mb-4 bg-amber-100 border-l-4 border-amber-400 text-amber-900 p-3 rounded">
+  <p className="text-sm">
+    <strong>Tip:</strong> Make sure the photos you upload match your intake answers — especially hairstyle, hair length, and overall appearance. For example, if you selected “long hair,” please upload images that reflect your current long hairstyle. This ensures the most accurate results.
+  </p>
+</div>
 
 <div className="mb-6 rounded-lg border-2 border-muted-gold bg-charcoal p-4 flex items-start gap-3">
   {/* 👁️‍🗨️ Icon in muted-gold */}
@@ -360,6 +373,24 @@ export default function UploadPage() {
           </motion.div>
         ))}
       </div>
+{/* Agreement Checkbox */}
+<div className="mt-10">
+  <label className="flex items-start space-x-2 text-sm text-gray-700">
+    <input
+      type="checkbox"
+      id="termsCheckbox"
+      className="mt-1"
+    />
+    <span>
+      I understand this is a custom AI-generated product and that{" "}
+      <strong>all sales are final and non-refundable</strong>. I am eligible for one complimentary re-render within 7 days of delivery. By continuing, I agree to the{" "}
+      <a href="/terms" target="_blank" className="text-muted-gold underline">
+        Terms of Service
+      </a>.
+    </span>
+  </label>
+</div>
+
 
       {/* Fixed footer with Continue button */}
       <div className="fixed bottom-0 left-0 right-0 bg-charcoal border-t p-4 flex justify-end items-center">

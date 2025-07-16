@@ -68,11 +68,12 @@ export default function FAQSection() {
       answer:
         "You’ll receive a curated set of 15 distinct image styles based on your intake responses. These vary by setting, wardrobe, lighting, and emotional tone — all crafted to reflect different facets of your professional identity. It’s one shoot, designed to tell your full story.",
     },
-    {
-      question: "What if I'm not satisfied with the results?",
-      answer:
-        "We strive for excellence in every image. If you’re not satisfied, we offer one complimentary re-render — where you can update or refine your intake answers. Our goal is to make sure you feel proud of how you show up. Please email us at support@aimavenstudio.com within 7 days of delivery to request a re-render. We do NOT offer refunds.",
-    },
+{
+  question: "What if I'm not satisfied with the results?",
+  answer:
+    "We strive for excellence in every image we deliver. If you're not satisfied, we offer one complimentary re-render within 7 days of delivery — allowing you to refine your intake answers or upload new photos. Due to the custom, AI-generated nature of our product, all sales are final and non-refundable. By purchasing, you agree to our Terms of Service. If you’d like to request a re-render, please email us at support@aimavenstudio.com.",
+},
+
     {
       question: "How quickly will I receive my headshots?",
       answer:
