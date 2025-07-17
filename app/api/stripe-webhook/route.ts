@@ -1,17 +1,13 @@
 // File: app/api/stripe-webhook/route.ts
+
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import redis from "@/lib/redisClient";
-import { createClient } from "@supabase/supabase-js";
 
-// 1) Ensure this runs in Node.js (so redis + supabase-js work)
+// 1️⃣ Tell Next.js to run this code in a real Node.js environment
 export const runtime = "nodejs";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
+// 2️⃣ Initialize Stripe with your secret key and API version
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-05-28.basil",
 });
@@ -19,7 +15,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export async function POST(req: Request) {
   console.log("🥁 [stripe-webhook] ENTERED webhook handler");
 
-  // 2) Grab the raw body & Stripe signature header
+  // —————————————————————————————————————————————
+  // STEP A: Read the raw text body and Stripe signature header
+  // —————————————————————————————————————————————
   const rawBody = await req.text();
   const sig = req.headers.get("stripe-signature");
   if (!sig) {
@@ -27,7 +25,9 @@ export async function POST(req: Request) {
     return new NextResponse("Missing signature", { status: 400 });
   }
 
-  // 3) Verify the signature
+  // —————————————————————————————————————————————
+  // STEP B: Verify that this really came from Stripe
+  // —————————————————————————————————————————————
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(
@@ -38,58 +38,62 @@ export async function POST(req: Request) {
     console.log("✅ [stripe-webhook] Signature verified:", event.type);
   } catch (err: any) {
     console.error("❌ [stripe-webhook] Signature verification failed:", err.message);
-    return new NextResponse(`Invalid signature: ${err.message}`, { status: 400 });
+    return new NextResponse("Invalid signature", { status: 400 });
   }
 
-  // 4) Handle the one event you care about
+  // —————————————————————————————————————————————
+  // STEP C: Immediately send Stripe a 200 OK so it stops waiting
+  // —————————————————————————————————————————————
+  // We give Stripe this quick “I got it!” before we do anything slow.
+  const immediateResponse = new NextResponse("Received", { status: 200 });
+
+  // —————————————————————————————————————————————
+  // STEP D: Offload the real work into an async “fire-and-forget” function
+  // —————————————————————————————————————————————
   if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session;
-    console.log("🔔 [stripe-webhook] checkout.session.completed:", session.id);
+    (async () => {
+      try {
+        // 🎯 Grab the session object
+        const session = event.data.object as Stripe.Checkout.Session;
+        console.log("🔔 [stripe-webhook] checkout.session.completed:", session.id);
 
-    const md = session.metadata || {};
-    const userId  = md.userId  || md.user_id;
-    const packId  = md.packId  || md.pack_id;
-    const gender  = md.gender;
-    const packType= md.packType|| md.pack_type;
+        // 🗂️ Pull metadata fields that you attached when creating the Checkout Session
+        const md       = session.metadata || {};
+        const userId   = md.userId   || md.user_id;
+        const packId   = md.packId   || md.pack_id;
+        const gender   = md.gender;
+        const packType = md.packType || md.pack_type;
 
-    if (!userId || !packId || !gender) {
-      console.error("❌ [stripe-webhook] Missing metadata:", md);
-      return new NextResponse("Missing metadata fields", { status: 400 });
-    }
+        // 🚨 If any required metadata is missing, throw an error
+        if (!userId || !packId || !gender) {
+          throw new Error("Missing metadata fields");
+        }
 
-    // → Dedupe in Postgres
-    const { data: jobs, error: supaErr } = await supabase
-      .from("generation_jobs")
-      .select("id")
-      .eq("session_id", session.id)
-      .limit(1);
-    if (supaErr) throw supaErr;
-    if (jobs && jobs.length > 0) {
-      console.log("⛔ [stripe-webhook] Duplicate session, skipping.");
-      return new NextResponse("Duplicate session", { status: 200 });
-    }
+        // 🔑 Instead of touching Supabase here, we just push a JSON job into Redis
+        const payload = JSON.stringify({
+          userId,
+          packId,
+          gender,
+          packType,
+          sessionId: session.id,
+        });
+        await redis.lpush("jobQueue", payload);
+        console.log("✅ [stripe-webhook] Job queued in Redis:", payload);
 
-    // → Redis lock per packId
-    const lockKey = `job_in_progress:${packId}`;
-    if (await redis.get(lockKey)) {
-      console.log(`ℹ️ [stripe-webhook] Already queued for ${packId}`);
-      return new NextResponse("Already queued", { status: 200 });
-    }
-    await redis.set(lockKey, "1", { ex: 2 * 60 * 60 }); // 2h TTL
-
-    // → Enqueue
-    const payload = JSON.stringify({ userId, packId, gender, packType, sessionId: session.id });
-    await redis.lpush("jobQueue", payload);
-    console.log("✅ [stripe-webhook] Job queued:", payload);
-
-    return new NextResponse("Job queued", { status: 200 });
+      } catch (err) {
+        // If anything goes wrong, we log it—but Stripe has already got its 200 OK!
+        console.error("❌ [stripe-webhook] Background processing failed:", err);
+      }
+    })();
+  } else {
+    console.log("ℹ️ [stripe-webhook] Ignoring event type:", event.type);
   }
 
-  // 5) All other events get a polite 200
-  console.log("ℹ️ [stripe-webhook] Ignoring event type:", event.type);
-  return new NextResponse("Ignored", { status: 200 });
+  // 🔚 Send our quick reply back to Stripe
+  return immediateResponse;
 }
 
+// Disallow GET requests to this endpoint
 export async function GET() {
   return new NextResponse("Method Not Allowed", { status: 405 });
 }
