@@ -1,34 +1,27 @@
-// worker.ts (very top)
 import "dotenv/config";
 
-console.log("[worker] ⚡️ Loaded worker.ts – env check:",{
-// make sure to check the UPSTASH vars, not REDIS_URL
-  UPSTASH_URL:    !!process.env.UPSTASH_REDIS_REST_URL,
-  UPSTASH_TOKEN:  !!process.env.UPSTASH_REDIS_REST_TOKEN,
-    SUPABASE: !!process.env.SUPABASE_URL,
-    ASTRIA:   !!process.env.ASTRIA_API_KEY,
-    OPENAI:   !!process.env.OPENAI_API_KEY,
-  }
-);
-
+console.log("[worker] ⚡️ Loaded worker.ts – env check:", {
+  UPSTASH_URL:   !!process.env.UPSTASH_REDIS_REST_URL,
+  UPSTASH_TOKEN: !!process.env.UPSTASH_REDIS_REST_TOKEN,
+  SUPABASE:      !!process.env.SUPABASE_URL,
+  ASTRIA:        !!process.env.ASTRIA_API_KEY,
+  OPENAI:        !!process.env.OPENAI_API_KEY,
+});
 
 process.on("unhandledRejection", (err) => {
   console.error("[worker] 🔥 Unhandled Rejection:", err);
-  // you could even notify Slack/Sentry here
 });
 process.on("uncaughtException", (err) => {
   console.error("[worker] 💥 Uncaught Exception:", err);
-  // and decide whether to process.exit() or keep going
 });
 
-
-// File: worker.ts
-import http from "http";        // ← add this
-
+import http from "http";
 import Stripe from "stripe";
 import redis from "./lib/redisClient";
 import { createClient } from "@supabase/supabase-js";
 import fetch from "node-fetch";
+import { v4 as uuidv4 } from "uuid";
+
 console.log("[worker] 🌐 Connecting to Upstash REST Redis at", process.env.UPSTASH_REDIS_REST_URL);
 
 // ─── Health‐check server ──────────────────────────────────────────────────────
@@ -130,30 +123,35 @@ async function waitForPromptImages(
 // ──────────────────────────────────────────────────────────────────────────────
 // Main job processing
 // ──────────────────────────────────────────────────────────────────────────────
-async function processJob(job: any) {
+async function processJob(job: {
+  userId: string;
+  packId: string;
+  gender: string;
+  packType: string;
+  sessionId: string;
+}) {
   console.log("🎯 Processing job:", job);
-    // -------------- NEW --------------
+
+  // -------------- NEW --------------
   // Astria expects a class name like "pack<id-without-hyphens>"
   const packIdNoHyphens = job.packId.replace(/-/g, "");
   const className       = `pack${packIdNoHyphens}`;
   // ----------------------------------
   const { userId, packId, gender, packType, sessionId } = job;
-  if (packType === "multi-purpose") return;
+
   // 🛑 Check if this session has already been processed
-const { data: existingJob } = await supabase
-  .from("generation_jobs")
-  .select("id")
-  .eq("session_id", sessionId)
-  .limit(1);
+  const { data: existingJob } = await supabase
+    .from("generation_jobs")
+    .select("id")
+    .eq("session_id", sessionId)
+    .limit(1);
 
-if (existingJob && existingJob.length > 0) {
-  console.log("⛔ [worker] This session has already been processed. Skipping.");
-  return;
-}
+  if (existingJob && existingJob.length > 0) {
+    console.log("⛔ [worker] This session has already been processed. Skipping.");
+    return;
+  }
 
-if (packType === "multi-purpose") return;
-
-    // 1) Wait for uploads
+  // 1) Wait for uploads
   const imageUrls = await waitForUploads(supabase, packId);
   console.log("🖼️ Upload URLs:", imageUrls);
 
@@ -163,29 +161,24 @@ if (packType === "multi-purpose") return;
     .select("tune_id, status, prompt_count")
     .eq("id", packId)
     .single();
-if (packErr || !packRow) {
-  console.error(`[worker] ❌ Failed to fetch pack ${job.packId}:`, packErr);
-  return;
-}
+  if (packErr || !packRow) {
+    console.error(`[worker] ❌ Failed to fetch pack ${job.packId}:`, packErr);
+    return;
+  }
 
-// ✅ Check if already completed or in progress
-if (
-  packRow.status === "completed" ||
-  packRow.tune_id ||
-  packRow.prompt_count >= 15
-) {
-  console.warn(`[worker] ⚠️ Skipping already processed pack: ${job.packId}`);
-  return;
-}
+  // ✅ Check if already completed or in progress
+  if (
+    packRow.status === "completed" ||
+    packRow.tune_id ||
+    packRow.prompt_count >= 15
+  ) {
+    console.warn(`[worker] ⚠️ Skipping already processed pack: ${job.packId}`);
+    return;
+  }
 
-  // (from step 2) we already computed:
-  // const packIdNoHyphens = packId.replace(/-/g, "");
-  // const className       = `pack${packIdNoHyphens}`;
-
-  let tuneId = packRow?.tune_id;
+  let tuneId = packRow.tune_id;
   if (!tuneId) {
     console.log(`Creating new tune for pack ${packId} with className ${className}`);
-
     const tuneRes = await fetch("https://api.astria.ai/tunes", {
       method: "POST",
       headers: {
@@ -194,7 +187,7 @@ if (
       },
       body: JSON.stringify({
         tune: {
-          name:           className,            // use hyphen-free className
+          name:           className,
           title:          `PackTune-${packId}`,
           branch:         "flux1",
           model_type:     "lora",
@@ -235,23 +228,13 @@ if (
     body: JSON.stringify({ userId, packId, packType }),
   });
   if (!promptRes.ok) throw new Error("Prompt fetch failed");
-  let { prompts } = await promptRes.json();
-  if (Array.isArray(prompts)) {
-    prompts = prompts.slice(0, 15); // cap at 15 prompts
-  } else {
-    throw new Error("Invalid GPT response: prompts is not an array");
-  }
+  const { prompts: rawPrompts } = await promptRes.json();
+  if (!Array.isArray(rawPrompts)) throw new Error("Invalid GPT response: prompts is not an array");
+  const prompts = rawPrompts.slice(0, 15);
 
   // 5) Process each prompt
   for (const promptText of prompts) {
-// after:
-// inside your for-each-prompt loop, after tuneId and packId are known:
-
-// 1) Reconstruct the exact tune name you used when creating it:
-
-// 2) Prefix EVERY prompt text with both `sks` and your tuneName:
-// Reuse the exact className we passed into tune.name
-const astriaPrompt = `sks ${className} ${promptText}`;
+    const astriaPrompt = `sks ${className} ${promptText}`;
     console.log(`Submitting prompt: ${astriaPrompt}`);
 
     const sendRes = await fetch(
@@ -263,13 +246,13 @@ const astriaPrompt = `sks ${className} ${promptText}`;
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: astriaPrompt,
-          num_images: 3,
+          text:             astriaPrompt,
+          num_images:       3,
           super_resolution: true,
-          inpaint_faces: true,
-          width: 896,
-          height: 1152,
-          sampler: "euler_a",
+          inpaint_faces:    true,
+          width:            896,
+          height:           1152,
+          sampler:          "euler_a",
         }),
       }
     );
@@ -283,24 +266,60 @@ const astriaPrompt = `sks ${className} ${promptText}`;
     if (!promptId) continue;
 
     let images: string[] = [];
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 0; i < 10; i++) {
       images = await waitForPromptImages(tuneId, promptId);
       if (images.length === 3) break;
       await new Promise((r) => setTimeout(r, 3000));
     }
     if (images.length !== 3) console.warn(`⚠️ Only received ${images.length}/3 images for prompt ${promptId}`);
 
-    const insertData = images.map((url) => ({
-      prompt_id: promptId,
-      pack_id: packId,
-      image_url: url,
-      url: `https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`,
-      created_at: new Date().toISOString(),
-    }));
-    await supabase.from("generated_images").insert(insertData);
-  }
+const supabaseUploads = await Promise.all(
+  images.map(async (astriaUrl) => {
+    const response = await fetch(astriaUrl);
+    const buffer = await response.arrayBuffer();
+    const fileName = `packs/${packId}/${uuidv4()}.jpg`;
 
-  // 6) Fire GHL webhook
+    const { error: uploadErr } = await supabase.storage
+      .from("generated")
+      .upload(fileName, buffer, {
+        contentType: "image/jpeg",
+        upsert: true,
+      });
+
+    if (uploadErr) {
+      console.error("❌ Supabase upload failed:", uploadErr);
+      return null;
+    }
+
+    // ✅ Correct way to get the public URL
+    const { data: urlData } = supabase.storage
+      .from("generated")
+      .getPublicUrl(fileName);
+
+    const publicUrl = urlData?.publicUrl;
+    if (!publicUrl) {
+      console.error("❌ Failed to generate public URL");
+      return null;
+    }
+
+    return {
+      prompt_id:  promptId,
+      pack_id:    packId,
+      image_url:  publicUrl,
+      url:        astriaUrl,
+      created_at: new Date().toISOString(),
+    };
+  })
+);
+
+// Filter out any failed uploads
+await supabase
+  .from("generated_images")
+  .insert(supabaseUploads.filter(Boolean));
+
+
+
+  // 6) Send Zapier “Photos Ready” webhook
   let userEmail = "";
   let firstName = "";
   let lastName = "";
@@ -325,11 +344,10 @@ const astriaPrompt = `sks ${className} ${promptText}`;
     console.error("❌ Could not load user info:", err);
   }
 
-// 6) Send “Photos Ready” to Zapier (instead of GHL inbound)
   if (userEmail) {
     const { data: allRows } = await supabase
       .from("generated_images")
-     .select("image_url")
+      .select("image_url")
       .eq("pack_id", packId);
     const galleryUrls = (allRows || []).map((r) => r.image_url);
 
@@ -340,7 +358,7 @@ const astriaPrompt = `sks ${className} ${promptText}`;
       const zapRes = await fetch(process.env.ZAPIER_PHOTOS_READY_HOOK!, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-       body:    JSON.stringify(payload),
+        body:    JSON.stringify(payload),
       });
 
       if (!zapRes.ok) {
@@ -348,8 +366,8 @@ const astriaPrompt = `sks ${className} ${promptText}`;
         console.error(`❌ Zapier hook failed (${zapRes.status}):`, text);
       } else {
         console.log("✅ Zapier Photos Ready webhook sent");
-     }
-   } catch (err) {
+      }
+    } catch (err) {
       console.error("❌ Error sending Zapier webhook:", err);
     }
   } else {
@@ -367,81 +385,93 @@ const astriaPrompt = `sks ${className} ${promptText}`;
       await fetch(process.env.GHL_INBOUND_WEBHOOK_URL!, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail, firstName, lastName, packId, galleryUrls: (rowsAfter20 ?? []).map((r) => r.image_url), note: `Only ${count}/45 images after 20 minutes` }),
+        body: JSON.stringify({
+          email:        userEmail,
+          firstName,
+          lastName,
+          packId,
+          galleryUrls: (rowsAfter20 ?? []).map((r) => r.image_url),
+          note:         `Only ${count}/45 images after 20 minutes`,
+        }),
       });
       console.log(`⚠️ Fallback GHL webhook sent`);
     }
   }, 20 * 60 * 1000);
+
+  // 8) Record processed session to prevent duplicates
+  try {
+    await supabase
+      .from("generation_jobs")
+      .insert({ session_id: sessionId });
+    console.log("✅ Recorded session in generation_jobs:", sessionId);
+  } catch (err) {
+    console.error("❌ Failed to record generation_job:", err);
+  }
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Stripe-event listener
+// ──────────────────────────────────────────────────────────────────────────────
 const CONCURRENCY = 5; // Number of workers to run in parallel
 
 async function processJobs(workerId: number) {
   console.log(`🚀 Worker #${workerId} started`);
-  console.log(`[worker ${workerId}] 🎧 Listening for jobs on queue 'jobQueue'`);
+console.log(`[worker ${workerId}] 🎧 Listening for Stripe events on queue 'jobQueue'`);
 
-while (true) {
-  const raw = await redis.rpop("jobQueue");
-  if (!raw) {
-    await new Promise((r) => setTimeout(r, 2000));
-    continue;
-  }
-
-  console.log("🔄 Raw job from Redis:", raw);
-
-  let job: {
-    userId: string;
-    packId: string;
-    gender: string;
-    packType: string;
-    sessionId: string;
-  };
-
-  if (typeof raw === "string") {
+  while (true) {
     try {
-      job = JSON.parse(raw);
-    } catch (err) {
-      console.error("❌ Could not JSON.parse job payload:", raw, err);
-      continue;
-    }
+const raw = await redis.rpop("jobQueue");
+      if (!raw) {
+        await new Promise((r) => setTimeout(r, 60_000)); // no event, wait and retry
+        continue;
+      }
+console.log(`[worker ${workerId}] 💤 No jobs in queue. Retrying in 60s.`);
+
+    let envelope: { id: string; type: string; data: any };
+
+try {
+  if (typeof raw === "string") {
+    envelope = JSON.parse(raw);
   } else {
-    job = raw;
+    console.warn(`[worker ${workerId}] ⚠️ Expected string but got:`, typeof raw);
+    continue; // Skip this job if format is wrong
   }
-
-  console.log("🎯 Processing job:", job);
-
-  try {
-    // ✅ NEW: Check if tune already exists in Supabase
-    const { data: existingImages, error: checkError } = await supabase
-      .from("generated_images")
-      .select("id")
-      .eq("pack_id", job.packId)
-      .limit(1);
-
-    if (checkError) {
-      console.error("❌ Supabase check error:", checkError);
-    }
-
-    if (existingImages && existingImages.length > 0) {
-      console.log(`🛑 Tune already processed for packId ${job.packId}. Skipping job.`);
-      continue; // Skip this job
-    }
-
-    // 🚀 Continue to process the job if no existing tune
-    await processJob(job);
-    console.log("✅ Completed job:", job);
-
-  } catch (err) {
-    console.error("❌ Job failed:", job, err);
-    // Optional: re-enqueue here if needed
-  }
+} catch (err) {
+  console.error(`[worker ${workerId}] ❌ Failed to parse Redis job:`, err);
+  console.error(`[worker ${workerId}] Raw value:`, raw);
+  continue;
 }
 
 
+      console.log(`🔔 [worker ${workerId}] Got Stripe event:`, envelope.type);
+
+      if (envelope.type !== "checkout.session.completed") {
+        console.log(`ℹ️ [worker ${workerId}] Ignoring event type ${envelope.type}`);
+        continue;
+      }
+
+      const session = envelope.data as Stripe.Checkout.Session;
+      const md       = session.metadata || {};
+      const userId   = md.user_id || md.userId;
+      const packId   = md.pack_id || md.packId;
+      const gender   = md.gender;
+      const packType = md.pack_type || md.packType;
+
+      if (!userId || !packId) {
+        console.error(`[worker ${workerId}] Missing metadata on session ${session.id}`);
+        continue;
+      }
+
+      await processJob({ userId, packId, gender, packType, sessionId: session.id });
+      console.log(`✅ [worker ${workerId}] Enqueued job for session ${session.id}`);
+    } catch (err) {
+      console.error(`[worker ${workerId}] Loop error:`, err);
+      await new Promise((r) => setTimeout(r, 5000)); // pause on error then retry
+    }
+  }
 }
 
-// 🔁 Start N workers
 for (let i = 1; i <= CONCURRENCY; i++) {
   processJobs(i);
 }
-
+}
