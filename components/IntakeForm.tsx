@@ -56,49 +56,7 @@ const WOMEN_QUESTIONS: Question[] = [
     ]
   },
   
-  {
-    key: "hairLength",
-    type: "images",
-    title: "What is your hair length?",
-    options: [
-      { label: "Pixie Cut", value: "pixie", img: "/pixiecut.png" },
-      { label: "Bob Cut", value: "bob", img: "/bobcut.png" },
-      { label: "Shoulder", value: "shoulder", img: "/shoulder.png" },
-      { label: "Past Shoulder", value: "past-shoulder", img: "/pastshoulder.png" },
-      { label: "Midback", value: "midback", img: "/midback.png" },
-      { label: "Long", value: "long", img: "/longg.png" }
-
-    ]
-  },
-
-
-  {
-    key: "hairTexture",
-    type: "images",
-    title: "What is your hair texture?",
-    options: [
-      { label: "Straight", value: "straight", img: "/Straight.png" },
-      { label: "Wavy", value: "wavy", img: "/wavy.png" },
-      { label: "Curly", value: "curly", img: "/curly.png" },
-      { label: "Coily", value: "coily", img: "/coily.png" },
-            { label: "Locs", value: "locs", img: "/dreads.png" },
-
-
-    ]
-  },
-  {
-    key: "bodyType",
-    type: "images",
-    title: "What is your body type?",
-    options: [
-      { label: "Slim", value: "slim", img: "/Slimwoman.png" },
-      { label: "Athletic", value: "athletic", img: "/athleticwoman.png" },
-      { label: "Average", value: "average", img: "/averagewoman.png" },
-      { label: "Curvy", value: "curvy", img: "/curvywoman.png" },
-      { label: "Plus Size", value: "plus size", img: "/plussize.png" },
-      
-    ]
-  },
+  
   {
     key: "attire",
     type: "images",
@@ -268,37 +226,7 @@ const MEN_QUESTIONS: Question[] = [
     ]
   },
   
-  {
-    key: "hairLength",
-    type: "images",
-    title: "Which best describes your hair?",
-    options: [
-      { label: "Bald", value: "bald", img: "/Bald.png" },
-      { label: "Buzz Cut", value: "buzz", img: "/BuzzCut.png" },
-      { label: "Medium", value: "medium", img: "/MediumLength.png" },
-            { label: "Curly", value: "curly", img: "/curlymen.png" },
-                     
-      { label: "Long", value: "long", img: "/Longhair.png" },  
-            { label: "Locs", value: "locs", img: "/locsmen.png" },
-
-
-
-    ]
-  },
-  {
-    key: "bodyType",
-    type: "images",
-    title: "What is your body type?",
-    options: [
-      { label: "Slim", value: "slim", img: "/Slimmale.png" },
-      { label: "Average", value: "average", img: "/averageman.png" },
-      { label: "Athletic", value: "athletic", img: "/athmen.png" },
-      { label: "Muscular", value: "muscular", img: "/muscularman.png" },
-      { label: "Broad", value: "broad", img: "/broadman.png" },
-   
-    ]
-  },
-
+  
   {
     key: "attire",
     type: "images",
@@ -517,9 +445,6 @@ const next = async () => {
     const intakePayload = {
         gender: answers.gender?.[0] || null, // ALWAYS “man” or “woman”
       age: answers.age?.[0] || null,
-      hairLength: answers.hairLength || null,
-      hairTexture: answers.hairTexture || null,
-      bodyType: answers.bodyType || null,
       attire: answers.attire || [],
       uniform: uniformText || null,
       setting: answers.setting || [],
