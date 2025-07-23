@@ -11,7 +11,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
-// Helper to convert ReadableStream to Buffer
+// Helper to convert ReadableStream to Buffersss
 async function buffer(readable: ReadableStream<Uint8Array> | null): Promise<Buffer> {
   const reader = readable?.getReader();
   const chunks = [];
