@@ -189,8 +189,22 @@ export default function UploadPage() {
   // 6) Once uploadCount ≥ 4, enable “Continue” → Checkout
 const goNext = () => {
   const checkbox = document.getElementById("termsCheckbox") as HTMLInputElement;
+
   if (!checkbox?.checked) {
     alert("Please confirm you agree to the terms before continuing.");
+    
+    // Scroll the checkbox into view
+    checkbox.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+
+    // Optional: highlight it briefly for attention
+    checkbox.classList.add("ring-2", "ring-red-500");
+    setTimeout(() => {
+      checkbox.classList.remove("ring-2", "ring-red-500");
+    }, 2000);
+
     return;
   }
 
@@ -227,6 +241,7 @@ const goNext = () => {
     })
     .catch((err) => setError(err.message));
 };
+
 
 
   return (
