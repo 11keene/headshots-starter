@@ -1,4 +1,4 @@
-// app/api/stripe-webhook/route.ts
+// app/api/stripe-webhook/route.tss
 
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
