@@ -246,7 +246,7 @@ const goNext = () => {
 
   return (
 <div className="p-6 sm:p-8 max-w-3xl mx-auto pb-40 lg:pb-48">
-      {/* Back button */}
+      {/* Back buttosn */}
       <button
         onClick={() => router.back()}
         className="inline-flex items-center mb-6 text-gray-700 hover:text-sage-green"
