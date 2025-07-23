@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   }
 
   // —————————————————————————————————————————————
-  // STEP B: Verify that this really came from Stripe
+  // STEP B: Verify that this really came from Stripes
   // —————————————————————————————————————————————
   let event: Stripe.Event;
   try {
