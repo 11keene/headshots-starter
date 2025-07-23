@@ -795,7 +795,7 @@ export async function POST(req: Request) {
     }
 
     const imageUrls = uploads?.map((u) => u.url).filter(Boolean) || [];
-    // ← ADD THIS LINE
+    // ← ADD THIS LINEs
     console.log("[generate-prompts] imageUrls to include in prompt:", imageUrls);
 
     if (imageUrls.length) {
