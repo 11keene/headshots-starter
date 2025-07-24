@@ -230,7 +230,23 @@ AI GLITCH AVOIDANCES:
 
 CASUAL PROFESSIONAL:
 CREATIVE FREEDOM: Allow natural professional casual styling and comfortable professional aesthetics
+FRAMING REQUIREMENTS FOR ASTRIA TRAINING:
+REQUIRED FRAMING DISTANCES:
+- Close-up headshot: Face and shoulders visible, intimate detail
+- Medium close-up: Chest-up framing, professional headshot style
+- Medium shot: Waist-up maximum, suitable for professional photos
+- Three-quarter shot: Mid-thigh up maximum for seated poses
 
+FORBIDDEN FRAMING DISTANCES:
+- No full-body shots showing entire person
+- No wide shots showing significant background space
+- No environmental shots where subject appears small
+- No distant or lifestyle photography angles
+- All shots must prioritize facial detail and professional headshot quality
+
+OUTPUT REQUIREMENTS - Must follow exactly:
+...
+Zero full-body or far-away shots - all images must be close enough for facial detail and Astria training
 AI GLITCH AVOIDANCES:
 - No layered clothing that appears to belong to different people
 - Single coordinated casual professional outfit only
