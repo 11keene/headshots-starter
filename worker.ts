@@ -308,7 +308,7 @@ const insertData = images.map((url) => ({
     await supabase.from("generated_images").insert(insertData);
   }
 
-  // 6) Fire GHL webhook
+  // 6) Fire GHL webhooks
   let userEmail = "";
   let firstName = "";
   let lastName = "";
