@@ -275,28 +275,36 @@ const astriaPrompt = `sks ${className} ${promptText}`;
     );
 
     if (!sendRes.ok) {
-      const errText = await sendRes.text();
-      console.error(`❌ Failed to submit prompt to Astria: ${sendRes.status} ${errText}`);
-      continue;
-    }
-    const { id: promptId } = await sendRes.json();
-    if (!promptId) continue;
+  const errText = await sendRes.text();
+  console.error(`❌ Failed to submit prompt to Astria: ${sendRes.status} ${errText}`);
+  continue;
+}
 
-    let images: string[] = [];
-    for (let i = 1; i <= 10; i++) {
-      images = await waitForPromptImages(tuneId, promptId);
-      if (images.length === 3) break;
-      await new Promise((r) => setTimeout(r, 3000));
-    }
-    if (images.length !== 3) console.warn(`⚠️ Only received ${images.length}/3 images for prompt ${promptId}`);
+const { id: promptId } = await sendRes.json();
+if (!promptId) {
+  console.warn(`⚠️ No promptId returned for promptText: ${promptText}`);
+  continue;
+}
 
-    const insertData = images.map((url) => ({
-      prompt_id: promptId,
-      pack_id: packId,
-      image_url: url,
-      url: `https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`,
-      created_at: new Date().toISOString(),
-    }));
+let images: string[] = [];
+for (let attempt = 1; attempt <= 10; attempt++) {
+  images = await waitForPromptImages(tuneId, promptId);
+  console.log(`Attempt ${attempt}: received ${images.length}/3 images for prompt ${promptId}`);
+  if (images.length === 3) break;
+  await new Promise((r) => setTimeout(r, 3000));
+}
+
+if (images.length !== 3) {
+  console.warn(`⚠️ Only received ${images.length}/3 images for prompt ${promptId}`);
+}
+
+const insertData = images.map((url) => ({
+  prompt_id:  promptId,
+  pack_id:    packId,
+  image_url:  url,
+  url:        `https://api.astria.ai/tunes/${tuneId}/prompts/${promptId}.json`,
+  created_at: new Date().toISOString(),
+}));
     await supabase.from("generated_images").insert(insertData);
   }
 
