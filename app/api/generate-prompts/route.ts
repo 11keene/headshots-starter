@@ -435,7 +435,7 @@ export async function POST(req: Request) {
         ].join("\n"),
       });
     }
-    // ──────────────────────────────────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────────s
 
     const wrapperMessage: ChatCompletionMessageParam = {
       role: "system",
