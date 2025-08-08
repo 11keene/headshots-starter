@@ -393,16 +393,39 @@ export async function POST(req: Request) {
     }
 
     const supabase = createRouteHandlerClient({ cookies });
-    const { data: packRow, error: packErr } = await supabase
-      .from("packs")
-      .select("pack_type, intake")
-      .eq("id", packId)
-      .single();
+ // ─── WITH THIS UPDATED BLOCK ────────────────────────────────────────────────
+const { data: packRow, error: packErr } = await supabase
+  .from("packs")
+  .select("pack_type, intake")
+  .eq("id", packId)
+  .maybeSingle();  // ← allow 0 rows without throwing
 
-    if (packErr || !packRow) {
-      console.error("[generate-prompts] ❌ Could not fetch pack row:", packErr);
-      return NextResponse.json({ error: "Pack not found" }, { status: 404 });
+if (packErr) {
+  console.error(
+    "[generate-prompts] ❌ Supabase error fetching pack:",
+    {
+      packId,
+      code:    packErr.code,
+      message: packErr.message,
+      details: packErr.details,
     }
+  );
+  return NextResponse.json(
+    { error: "Database error: " + packErr.message },
+    { status: 500 }
+  );
+}
+
+if (!packRow) {
+  console.error(
+    "[generate-prompts] ❌ No pack found for ID:",
+    packId
+  );
+  return NextResponse.json(
+    { error: "Pack not found for ID " + packId },
+    { status: 404 }
+  );
+}
 
     const packType: string = packRow.pack_type;
     const intakeData: Record<string, any> | null = (packRow.intake as any) || null;
@@ -435,7 +458,7 @@ export async function POST(req: Request) {
         ].join("\n"),
       });
     }
-    // ──────────────────────────────────────────────────────────────────────────s
+    // ──────────────────────────────────────────────────────────────────────────
 
     const wrapperMessage: ChatCompletionMessageParam = {
       role: "system",
