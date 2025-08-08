@@ -24,11 +24,11 @@ process.on("uncaughtException", (err) => {
 
 // File: worker.ts
 import http from "http";        // ← add this
-import { Redis } from "@upstash/redis";
+
 import Stripe from "stripe";
-// import redis from "./lib/redisClient"; // Removed to fix naming conflict
+import redis from "./lib/redisClient";
 import { createClient } from "@supabase/supabase-js";
-import fetch from "node-fetch";
+import fetch, { Response as FetchResponse } from "node-fetch";
 console.log("[worker] 🌐 Connecting to Upstash REST Redis at", process.env.UPSTASH_REDIS_REST_URL);
 
 // ─── Health‐check server ──────────────────────────────────────────────────────
@@ -387,39 +387,25 @@ function sleep(ms: number): Promise<void> {
   return new Promise((res) => setTimeout(res, ms));
 }
 
-const CONCURRENCY = 5;
+const CONCURRENCY = 5; // your desired parallelism
 
-// initialize once, re-use across workers:
-const redis = new Redis({
-  url:   process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
-// ── Bullet-proof, low-cost worker loop ──────────────────────────────────
+// ── Lightweight, low-cost polling worker loop ─────────────────────────────
 async function processJobs(workerId: number) {
-  console.log(`🚀 Worker #${workerId} started — blocking pop up to 60s`);
+  console.log(`🚀 Worker #${workerId} started – polling every 60s`);
 
   while (true) {
-    let rawJob: string | null = null;
+    // 1) Try to pop one job off the queue
+    const raw = await redis.rpop("jobQueue");
 
-    try {
-      // brpop returns [key, value] or null
-      const rawJobValue = await redis.rpop("jobQueue");
-      if (rawJobValue) {
-        rawJob = rawJobValue;   // rpop returns the payload string directly
-      }
-    } catch (err) {
-      console.error(`[worker ${workerId}] 🔥 brpop error:`, err);
-      // if you want backoff on errors:
-      await new Promise((r) => setTimeout(r, 5000));
+    // 2) If no job, wait 60s before trying again (only 1 Redis call/min)
+    if (!raw) {
+      await sleep(60_000);
       continue;
     }
 
-    // nothing arrived in 60s → loop again
-    if (!rawJob) continue;
+    console.log(`[worker ${workerId}] 🔄 Raw job from Redis:`, raw);
 
-    console.log(`[worker ${workerId}] 🔄 Raw job from Redis:`, rawJob);
-
-    // parse it
+    // 3) Parse or pass-through the payload
     let job: {
       userId:   string;
       packId:   string;
@@ -427,23 +413,55 @@ async function processJobs(workerId: number) {
       packType: string;
       sessionId:string;
     };
-    try {
-      job = JSON.parse(rawJob);
-    } catch (err) {
+    if (typeof raw === "string") {
+      try {
+        job = JSON.parse(raw);
+      } catch (err) {
+        console.error(
+          `[worker ${workerId}] ❌ JSON.parse failed:`,
+          raw,
+          err
+        );
+        continue;
+      }
+    } else if (raw && typeof raw === "object") {
+      job = raw as any;
+    } else {
       console.error(
-        `[worker ${workerId}] ❌ JSON.parse failed for payload:`,
-        rawJob, err
+        `[worker ${workerId}] ❌ Unexpected payload type, skipping:`,
+        raw
       );
       continue;
     }
 
     console.log(`[worker ${workerId}] 🎯 Processing job:`, job);
 
-    // …and hand off to your existing processJob(job)…
+    // 4) Duplicate-check in your Supabase table
     try {
+      const { data: existingImages, error: checkError } = await supabase
+        .from("generated_images")
+        .select("id")
+        .eq("pack_id", job.packId)
+        .limit(1);
+
+      if (checkError) {
+        console.error(
+          `[worker ${workerId}] ❌ Supabase check error:`,
+          checkError
+        );
+        continue;
+      }
+      if (existingImages && existingImages.length > 0) {
+        console.log(
+          `🛑 [worker ${workerId}] Pack ${job.packId} already processed; skipping.`
+        );
+        continue;
+      }
+
+      // 5) Your unchanged heavy-lifting function
       await processJob(job);
       console.log(
-        `✅ [worker ${workerId}] Completed pack ${job.packId}`
+        `✅ [worker ${workerId}] Completed job for pack ${job.packId}`
       );
     } catch (err) {
       console.error(`[worker ${workerId}] ❌ processJob threw:`, err);
@@ -451,7 +469,7 @@ async function processJobs(workerId: number) {
   }
 }
 
-// spin up N workers
+// ── Spin up all workers ───────────────────────────────────────────────────
 for (let i = 1; i <= CONCURRENCY; i++) {
   processJobs(i);
 }
