@@ -382,73 +382,110 @@ const insertData = images.map((url) => ({
   }, 20 * 60 * 1000);
 }
 
-const CONCURRENCY = 5; // Number of workers to run in parallel
+// ── utils ────────────────────────────────────────────────────────────────
+function sleep(ms: number): Promise<void> {
+  return new Promise((res) => setTimeout(res, ms));
+}
 
+const CONCURRENCY = 5;
+
+// ── Bullet-proof, low-cost worker loop ──────────────────────────────────
 async function processJobs(workerId: number) {
-  console.log(`🚀 Worker #${workerId} started`);
-  console.log(`[worker ${workerId}] 🎧 Listening for jobs on queue 'jobQueue'`);
+  console.log(`🚀 Worker #${workerId} started — blocking pop every 60s`);
 
-while (true) {
-  const raw = await redis.rpop("jobQueue");
-  if (!raw) {
-    await new Promise((r) => setTimeout(r, 2000));
-    continue;
-  }
+  const url   = process.env.UPSTASH_REDIS_REST_URL!;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN!;
 
-  console.log("🔄 Raw job from Redis:", raw);
+  while (true) {
+    // BLOCKING POP: no extra Redis calls when idle
+    const res = await fetch(
+      `${url}/commands/BRPOP/jobQueue/60`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
-  let job: {
-    userId: string;
-    packId: string;
-    gender: string;
-    packType: string;
-    sessionId: string;
-  };
-
-  if (typeof raw === "string") {
-    try {
-      job = JSON.parse(raw);
-    } catch (err) {
-      console.error("❌ Could not JSON.parse job payload:", raw, err);
+    if (!res.ok) {
+      const body = await res.text().catch(() => "<no body>");
+      console.error(
+        `[worker ${workerId}] 🔥 BRPOP HTTP ${res.status}:`,
+        body
+      );
+      await sleep(5000);
       continue;
     }
-  } else {
-    job = raw;
-  }
 
-  console.log("🎯 Processing job:", job);
+    const { result } = await res.json().catch((err) => {
+      console.error(`[worker ${workerId}] 🔥 BRPOP JSON parse error:`, err);
+      return { result: null };
+    });
 
-  try {
-    // ✅ NEW: Check if tune already exists in Supabase
-    const { data: existingImages, error: checkError } = await supabase
-      .from("generated_images")
-      .select("id")
-      .eq("pack_id", job.packId)
-      .limit(1);
+    // no job in 60s → loop again (zero Redis calls in that window)
+    if (!result) continue;
 
-    if (checkError) {
-      console.error("❌ Supabase check error:", checkError);
+    // result is ["jobQueue", "<payload>"]
+    const raw = result[1];
+    console.log(`[worker ${workerId}] 🔄 Raw job:`, raw);
+
+    // parse JSON payload
+    let job: {
+      userId:   string;
+      packId:   string;
+      gender:   string;
+      packType: string;
+      sessionId:string;
+    };
+    try {
+      job = typeof raw === "string" ? JSON.parse(raw) : raw;
+    } catch (err) {
+      console.error(
+        `[worker ${workerId}] ❌ JSON.parse failed for payload:`, raw, err
+      );
+      continue;
     }
 
-    if (existingImages && existingImages.length > 0) {
-      console.log(`🛑 Tune already processed for packId ${job.packId}. Skipping job.`);
-      continue; // Skip this job
+    console.log(`[worker ${workerId}] 🎯 Processing job:`, job);
+
+    // duplicate-check & hand off
+    try {
+      const supabaseAdmin = createClient(
+        process.env.SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+
+      const { data: existing, error: dupErr } = await supabaseAdmin
+        .from("generated_images")
+        .select("id")
+        .eq("pack_id", job.packId)
+        .limit(1);
+
+      if (dupErr) {
+        console.error(
+          `[worker ${workerId}] ❌ Supabase duplicate-check error:`, dupErr
+        );
+        continue;
+      }
+      if (existing && existing.length > 0) {
+        console.log(
+          `🛑 [worker ${workerId}] Pack ${job.packId} already processed; skipping.`
+        );
+        continue;
+      }
+
+      // ← Your unchanged processJob(job) function
+      await processJob(job);
+      console.log(
+        `✅ [worker ${workerId}] Completed job for pack ${job.packId}`
+      );
+
+    } catch (err) {
+      console.error(`[worker ${workerId}] ❌ Job failed:`, err);
     }
-
-    // 🚀 Continue to process the job if no existing tune
-    await processJob(job);
-    console.log("✅ Completed job:", job);
-
-  } catch (err) {
-    console.error("❌ Job failed:", job, err);
-    // Optional: re-enqueue here if needed
   }
 }
 
-
-}
-
-// 🔁 Start N workers
+// ── spin up workers ───────────────────────────────────────────────────────
 for (let i = 1; i <= CONCURRENCY; i++) {
   processJobs(i);
 }
