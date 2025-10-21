@@ -2,6 +2,7 @@
 import { Redis as UpstashRedis } from "@upstash/redis";
 
 type Client = {
+  blpop(arg0: string, arg1: number): [any, any] | PromiseLike<[any, any]>;
   get(redisLockKey: string): unknown;
   set(key: string, value: string, opts: { ex: number }): Promise<"OK" | null>;
   lpush(key: string, val: string): Promise<number>;
@@ -18,6 +19,7 @@ if (!url || !token) {
     "[Redis] ⚠️ Missing UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN—using no-op stub."
   );
   client = {
+    blpop: async () => [null, null],
     get: async () => undefined,
     set: async () => "OK",
     lpush: async () => 0,
@@ -27,6 +29,19 @@ if (!url || !token) {
   const redis = new UpstashRedis({ url, token });
 
   client = {
+    blpop: async (key: string, timeout: number) => {
+      // UpstashRedis does not have a direct blpop, so simulate with polling
+      const pollInterval = 500; // ms
+      const endTime = Date.now() + timeout * 1000;
+      while (Date.now() < endTime) {
+        const value = await redis.rpop(key);
+        if (value) {
+          return [key, typeof value === "object" && "result" in value ? (value as any).result : value];
+        }
+        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      }
+      return [null, null];
+    },
     get: async (redisLockKey: string) => {
       const raw = await redis.get(redisLockKey);
       if (raw && typeof raw === "object" && "result" in raw) {
