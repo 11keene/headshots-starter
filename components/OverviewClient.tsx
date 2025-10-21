@@ -17,13 +17,11 @@ type Tab = "headshots" | "multi-purpose" | "teams";
 
 const previewImages: Record<Tab, string[]> = {
   headshots: [
-    "https://sdbooth2-production.s3.amazonaws.com/jmhmm4yn07dtr687nl2ir6zgptyn",
-    "https://sdbooth2-production.s3.amazonaws.com/72tpgztgtucn8g1leq8h4h8ezdsn",
-    "https://sdbooth2-production.s3.amazonaws.com/b6izing8haworbs85wtd2ys2g59p",
+    "LisaAfter.jpg",
     "/eryn.png",
-        "https://sdbooth2-production.s3.amazonaws.com/14faz1iwfc4am8e96023gzyn66uj",
-            "https://sdbooth2-production.s3.amazonaws.com/qabd979c6hr61yqdfm6h321wyyqb",
-                "https://sdbooth2-production.s3.amazonaws.com/akgabemjdyhbp097wa2j6gke66zw",
+    "henryafter.jpg",
+    "/chan.png",
+       
 
 
 
